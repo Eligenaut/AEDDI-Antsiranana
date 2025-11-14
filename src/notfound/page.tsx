@@ -1,8 +1,9 @@
 "use client";
 
+import { Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
-export default function GoogleNotFoundPage() {
+function GoogleNotFoundContent() {
   const params = useSearchParams();
   const router = useRouter();
   const email = params.get('email') || '';
@@ -23,5 +24,13 @@ export default function GoogleNotFoundPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function GoogleNotFoundPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Chargement...</div>}>
+      <GoogleNotFoundContent />
+    </Suspense>
   );
 }
