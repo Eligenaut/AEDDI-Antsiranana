@@ -39,7 +39,7 @@ export function ImagesSlider() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="relative h-64 md:h-80 lg:h-96 rounded-lg overflow-hidden shadow-lg"
+        className="relative h-72 md:h-96 lg:h-[500px] xl:h-[600px] rounded-2xl overflow-hidden shadow-2xl border border-purple-100/30"
       >
         <div className="relative w-full h-full">
           <AnimatePresence initial={false} custom={direction.current}>
@@ -60,17 +60,37 @@ export function ImagesSlider() {
                 className="object-cover"
                 priority={sliderImages[currentSlide].id === 1}
               />
+              {/* Overlay avec gradient */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              
+              {/* Titre de l'image */}
+              <div className="absolute bottom-16 left-0 right-0 px-6 z-10">
+                <motion.h3
+                  key={`title-${currentSlide}`}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-white text-xl md:text-2xl font-bold drop-shadow-lg"
+                >
+                  {sliderImages[currentSlide].title}
+                </motion.h3>
+              </div>
             </motion.div>
           </AnimatePresence>
         </div>
+        
+        {/* Indicateurs de navigation améliorés */}
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 z-10">
           {sliderImages.map((_, index) => (
             <button
               key={index}
               onClick={() => handleDotClick(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
-                index === currentSlide ? "bg-white scale-125" : "bg-white bg-opacity-50"
+              className={`rounded-full transition-all duration-300 ${
+                index === currentSlide 
+                  ? "bg-white w-8 h-2 shadow-lg" 
+                  : "bg-white/50 w-2 h-2 hover:bg-white/75"
               }`}
+              aria-label={`Aller à l'image ${index + 1}`}
             />
           ))}
         </div>

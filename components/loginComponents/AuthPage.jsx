@@ -12,7 +12,7 @@ export default function AuthPage() {
 
   return (
     <LoginProvider>
-      <div className="flex items-center justify-center bg-white p-1">
+      <div className="flex items-center justify-center bg-white w-full">
         {showRegister ? (
           useNewFlow ? (
             <RegistrationFlow />

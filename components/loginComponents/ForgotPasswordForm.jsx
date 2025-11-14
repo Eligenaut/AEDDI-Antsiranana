@@ -108,12 +108,12 @@ export function ForgotPasswordForm({ onBack }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
+    <div className="flex items-center justify-center bg-white w-full">
       <motion.div
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white/80 dark:bg-gray-800/90 backdrop-blur-lg rounded-3xl w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl flex flex-col items-center relative transition-all duration-300 p-6 sm:p-6 md:p-8"
+        className="bg-white/80 dark:bg-gray-800/90 backdrop-blur-lg rounded-3xl w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl flex flex-col items-center relative transition-all duration-300 px-4 sm:px-6 md:px-8 py-6 sm:py-6 md:py-8"
         style={{
           boxShadow: '0 2px 16px 0 rgba(124, 58, 237, 0.15)',
           borderColor: '#a78bfa',
@@ -125,7 +125,7 @@ export function ForgotPasswordForm({ onBack }) {
           <span className="text-3xl text-white">🔑</span>
         </div>
         
-        <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-800 dark:text-white tracking-tight">
+        <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-800 dark:text-white tracking-tight px-2">
           {step === 'email' && 'Mot de passe oublié'}
           {step === 'code' && 'Code de vérification'}
           {step === 'reset' && 'Nouveau mot de passe'}
@@ -137,7 +137,7 @@ export function ForgotPasswordForm({ onBack }) {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="space-y-4 w-full"
+            className="space-y-4 w-full px-0"
             onSubmit={handleEmailSubmit}
           >
             <div>
@@ -150,7 +150,7 @@ export function ForgotPasswordForm({ onBack }) {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full p-3 pl-10 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 dark:bg-gray-700/70 text-gray-900 dark:text-white shadow-sm transition-all"
+                  className="w-full p-3 pl-10 border rounded-[6px] focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 dark:bg-gray-700/70 text-gray-900 dark:text-white shadow-sm transition-all"
                   placeholder="exemple@aeddi.mg"
                   required
                 />
@@ -165,7 +165,7 @@ export function ForgotPasswordForm({ onBack }) {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold py-3 rounded-xl shadow-lg transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold py-3 rounded-[6px] shadow-lg transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
               disabled={loading}
             >
               {loading && (
@@ -182,7 +182,7 @@ export function ForgotPasswordForm({ onBack }) {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="space-y-4 w-full"
+            className="space-y-4 w-full px-0"
             onSubmit={handleCodeSubmit}
           >
             <div>
@@ -195,7 +195,7 @@ export function ForgotPasswordForm({ onBack }) {
                   name="code"
                   value={formData.code}
                   onChange={handleChange}
-                  className="w-full p-3 pl-10 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 dark:bg-gray-700/70 text-gray-900 dark:text-white shadow-sm transition-all text-center text-2xl tracking-widest"
+                  className="w-full p-3 pl-10 border rounded-[6px] focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 dark:bg-gray-700/70 text-gray-900 dark:text-white shadow-sm transition-all text-center text-2xl tracking-widest"
                   placeholder="000000"
                   maxLength={6}
                   required
@@ -215,7 +215,7 @@ export function ForgotPasswordForm({ onBack }) {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold py-3 rounded-xl shadow-lg transition-all duration-200 active:scale-95"
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold py-3 rounded-[6px] shadow-lg transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
             >
               Vérifier le code
             </button>
@@ -228,7 +228,7 @@ export function ForgotPasswordForm({ onBack }) {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="space-y-4 w-full"
+            className="space-y-4 w-full px-0"
             onSubmit={handleResetSubmit}
           >
             <div>
@@ -241,7 +241,7 @@ export function ForgotPasswordForm({ onBack }) {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full p-3 pl-10 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 dark:bg-gray-700/70 text-gray-900 dark:text-white shadow-sm transition-all"
+                  className="w-full p-3 pl-10 border rounded-[6px] focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 dark:bg-gray-700/70 text-gray-900 dark:text-white shadow-sm transition-all"
                   placeholder="Votre nouveau mot de passe"
                   required
                   minLength={8}
@@ -265,7 +265,7 @@ export function ForgotPasswordForm({ onBack }) {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full p-3 pl-10 border rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 dark:bg-gray-700/70 text-gray-900 dark:text-white shadow-sm transition-all"
+                  className="w-full p-3 pl-10 border rounded-[6px] focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 dark:bg-gray-700/70 text-gray-900 dark:text-white shadow-sm transition-all"
                   placeholder="Confirmez votre mot de passe"
                   required
                   minLength={8}
@@ -281,7 +281,7 @@ export function ForgotPasswordForm({ onBack }) {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold py-3 rounded-xl shadow-lg transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold py-3 rounded-[6px] shadow-lg transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
               disabled={loading}
             >
               {loading && (
@@ -297,7 +297,7 @@ export function ForgotPasswordForm({ onBack }) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400"
+          className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400 px-2"
         >
           <button
             type="button"
