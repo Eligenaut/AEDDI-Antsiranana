@@ -6,7 +6,7 @@ export { Header } from './layoutComponents/Header';
 
 // Form Components
 export { AccueilContent } from './loginComponents/AccueilContent';
-export { default as LoginForm } from './loginComponents/LoginForm';
+export { LoginForm } from './loginComponents/LoginForm';
 export { RegisterForm } from './loginComponents/RegisterForm';
 
 // Dashboard Components
