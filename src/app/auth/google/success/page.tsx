@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-export default function GoogleSuccessPage() {
+function GoogleSuccessContent() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -41,6 +41,14 @@ export default function GoogleSuccessPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function GoogleSuccessPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Chargement...</div>}>
+      <GoogleSuccessContent />
+    </Suspense>
   );
 }
 
