@@ -1,0 +1,494 @@
+'use client';
+
+import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { DollarSign, Plus, Search, Filter, Calendar, Users, TrendingUp, AlertCircle, CheckCircle, Clock, X, Edit, Trash2, Eye, CreditCard, Loader2 } from 'lucide-react';
+import { AddCotisation } from './AddCotisation';
+import axios from 'axios';
+import { url } from '../context/url.js';
+import { getAuthHeaders } from '../context/headers.jsx';
+import { hasPermission, getUserRole, ROLES } from '../context/roles.js';
+import { ShowCotisation } from './ShowCotisation';
+import Notiflix from 'notiflix';
+import { ModalConfirmation } from '../common/ModalConfirmation';
+
+export function DashboardCotisations() {
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [cotisationToEdit, setCotisationToEdit] = useState(null);
+  const [cotisations, setCotisations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  // Ajout pour les stats membres
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+
+  // Ajout pour les stats admin (globaux)
+  const [adminStats, setAdminStats] = useState(null);
+  const [adminStatsLoading, setAdminStatsLoading] = useState(false);
+
+  // Ajout pour l'affichage des détails d'une cotisation
+  const [showCotisationId, setShowCotisationId] = useState(null);
+  // Supprimer les états liés au modal de confirmation
+  const [cotisationToDelete, setCotisationToDelete] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // Fonction pour récupérer les cotisations et stats depuis le backend
+  const fetchCotisations = async () => {
+    try {
+      setLoading(true);
+      const userRole = getUserRole();
+      
+      // Pour les membres, on charge aussi les stats
+      if (userRole !== ROLES.ADMIN) {
+        setStatsLoading(true);
+      }
+      
+      // Pour les membres, endpoint spécifique
+      const endpoint = userRole === ROLES.ADMIN ? 'cotisations' : 'cotisations/member';
+      const response = await axios.get(`${url}${endpoint}`, {
+        headers: getAuthHeaders()
+      });
+      if (response.data.success) {
+        setCotisations(response.data.data);
+        if (response.data.stats) {
+          setStats(response.data.stats);
+        }
+      } else {
+        setError('Erreur lors du chargement des cotisations');
+      }
+    } catch (error) {
+      setError('Erreur lors du chargement des cotisations');
+    } finally {
+      setLoading(false);
+      setStatsLoading(false);
+    }
+  };
+
+  // Fonction pour récupérer les stats cotisations (admin)
+  const fetchAdminStats = async () => {
+    try {
+      setAdminStatsLoading(true);
+      const response = await axios.get(`${url}members/cotisation-stats`, {
+        headers: getAuthHeaders()
+      });
+      if (response.data.success) {
+        const stats = response.data.stats;
+        setAdminStats({
+          total: stats.total,
+          non_payees: stats.non_payees,
+          payees: stats.payees,
+          montant_non_paye: stats.montant_non_paye
+        });
+      }
+    } catch (e) {
+      // rien
+    } finally {
+      setAdminStatsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      fetchCotisations();
+      if (getUserRole() === ROLES.ADMIN) {
+        fetchAdminStats();
+      }
+    } else {
+      setError('Vous devez être connecté pour accéder à cette page');
+      setLoading(false);
+    }
+  }, []);
+  const formatMontant = (montant) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'MGA',
+      minimumFractionDigits: 0
+    }).format(montant).replace('MGA', 'AR');
+  };
+
+  const formatDate = (date) => {
+    return new Date(date).toLocaleDateString('fr-FR');
+  };
+
+  // Fonctions pour les statuts de paiement (membres)
+  const getPaymentStatusColor = (statut) => {
+    switch (statut) {
+      case 'paye': return 'bg-green-100 text-green-800';
+      case 'non_paye': return 'bg-red-100 text-red-800';
+      case 'reste': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getPaymentStatusLabel = (statut, montantRestant) => {
+    switch (statut) {
+      case 'paye': return 'Payé';
+      case 'non_paye': return 'Non payé';
+      case 'reste': return `Reste (${formatMontant(montantRestant || 0)})`;
+      default: return statut;
+    }
+  };
+
+  const getPaymentStatusIcon = (statut) => {
+    switch (statut) {
+      case 'paye': return <CheckCircle className="w-4 h-4" />;
+      case 'non_paye': return <X className="w-4 h-4" />;
+      case 'reste': return <Clock className="w-4 h-4" />;
+      default: return <Clock className="w-4 h-4" />;
+    }
+  };
+
+  // Composant de chargement pour les statistiques
+  const LoadingSpinner = () => (
+    <span className="flex items-center justify-center">
+      <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+    </span>
+  );
+  const handleAddCotisation = async (newCotisation) => {
+    try {
+      let response;
+      if (cotisationToEdit) {
+        // Edition
+        response = await axios.put(`${url}cotisations/${cotisationToEdit.id}`, {
+          ...newCotisation,
+        }, {
+          headers: getAuthHeaders()
+        });
+      } else {
+        // Création
+        response = await axios.post(`${url}cotisations`, {
+          ...newCotisation,
+          statut: 'en_preparation'
+        }, {
+          headers: getAuthHeaders()
+        });
+      }
+
+      if (response.data.success) {
+        await fetchCotisations();
+        alert(`Cotisation "${newCotisation.nom}" ${cotisationToEdit ? 'modifiée' : 'créée et dispatchée'} avec succès !`);
+      } else {
+        alert('Erreur lors de la ' + (cotisationToEdit ? 'modification' : 'création') + ' de la cotisation');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la ' + (cotisationToEdit ? 'modification' : 'création') + ' de la cotisation:', error);
+      alert('Erreur lors de la ' + (cotisationToEdit ? 'modification' : 'création') + ' de la cotisation');
+    }
+  };
+
+  // Calculs des statistiques
+  const totalCotisations = cotisations.length;
+  const cotisationsActives = cotisations.filter(c => c.statut === 'active').length;
+  const cotisationsTerminees = cotisations.filter(c => c.statut === 'terminee').length;
+  const cotisationsEnPreparation = cotisations.filter(c => c.statut === 'en_preparation').length;
+  
+  const montantTotal = cotisations.reduce((sum, c) => sum + c.montant, 0);
+  const montantActif = cotisations.filter(c => c.statut === 'active').reduce((sum, c) => sum + c.montant, 0);
+
+  const isAdmin = getUserRole() === ROLES.ADMIN;
+
+  // Fonction de suppression
+  const handleDeleteCotisation = async () => {
+    if (!cotisationToDelete) return;
+    try {
+      const response = await axios.delete(`${url}cotisations/${cotisationToDelete.id}`, {
+        headers: getAuthHeaders()
+      });
+      if (response.data.success) {
+        await fetchCotisations();
+        Notiflix.Notify.success('Cotisation supprimée avec succès !');
+      } else {
+        Notiflix.Notify.failure('Erreur lors de la suppression de la cotisation');
+      }
+    } catch (error) {
+      console.error('Erreur lors de la suppression de la cotisation:', error);
+      Notiflix.Notify.failure('Erreur lors de la suppression de la cotisation');
+    } finally {
+      setShowDeleteModal(false);
+      setCotisationToDelete(null);
+    }
+  };
+
+  return (
+    <main className="flex-1 overflow-y-auto p-2 sm:p-6 pb-20 lg:pb-6">
+      {/* En-tête */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="mb-8"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-lg font-semibold text-gray-900 mb-1 sm:text-3xl sm:font-bold sm:mb-2">
+              {getUserRole() === ROLES.ADMIN ? 'Gestion des Cotisations 💰' : 'Mes Cotisations 💰'}
+            </h1>
+          </div>
+          {hasPermission('canCreate') && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowAddModal(true)}
+              className="bg-green-600 hover:bg-green-700 text-white px-2 py-1.5 text-xs rounded-lg flex items-center space-x-2 transition-colors sm:px-3 sm:py-2 sm:text-sm"
+            >
+              <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Nouvelle cotisation</span>
+            </motion.button>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Statistiques rapides */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+      >
+        {/* Ligne 1 - Colonne 1: Total Cotisations */}
+        <div className="bg-white p-3 sm:p-6 rounded-lg shadow-md border border-gray-200">
+          <div className="flex items-center space-x-3">
+            <div className="bg-blue-100 p-2 rounded-lg">
+              <DollarSign className="w-6 h-6 text-blue-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Total Cotisations</p>
+              <div className="text-2xl font-bold text-gray-900">
+                {getUserRole() === ROLES.ADMIN 
+                  ? (adminStatsLoading ? <LoadingSpinner /> : (adminStats ? adminStats.total : '-'))
+                  : (statsLoading ? <LoadingSpinner /> : (stats ? stats.total_cotisations : '-'))
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Ligne 1 - Colonne 2: Payé */}
+        <div className="bg-green-100 p-3 sm:p-6 rounded-lg shadow-md border border-gray-200">
+          <div className="flex items-center space-x-3">
+            <div className="bg-green-200 p-2 rounded-lg">
+              <CheckCircle className="w-6 h-6 text-green-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Payé</p>
+              <div className="text-2xl font-bold text-gray-900">
+                {getUserRole() === ROLES.ADMIN 
+                  ? (adminStatsLoading ? <LoadingSpinner /> : (adminStats ? adminStats.payees : '-'))
+                  : (statsLoading ? <LoadingSpinner /> : (stats ? stats.total_paye : '-'))
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Ligne 2 - Colonne 1: Montant restant */}
+        <div className="bg-yellow-100 p-3 sm:p-6 rounded-lg shadow-md border border-gray-200">
+          <div className="flex items-center space-x-3">
+            <div className="bg-yellow-200 p-2 rounded-lg">
+              <TrendingUp className="w-6 h-6 text-yellow-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Montant restant</p>
+              <div className="text-xl font-bold text-gray-900">
+                {getUserRole() === ROLES.ADMIN 
+                  ? (adminStatsLoading ? <LoadingSpinner /> : (adminStats ? formatMontant(adminStats.montant_non_paye) : '-'))
+                  : (statsLoading ? <LoadingSpinner /> : (stats ? formatMontant(stats.montant_total_restant) : '-'))
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Ligne 2 - Colonne 2: Non payé */}
+        <div className="bg-red-100 p-3 sm:p-6 rounded-lg shadow-md border border-gray-200">
+          <div className="flex items-center space-x-3">
+            <div className="bg-red-200 p-2 rounded-lg">
+              <X className="w-6 h-6 text-red-600" />
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Non payé</p>
+              <div className="text-2xl font-bold text-gray-900">
+                {getUserRole() === ROLES.ADMIN 
+                  ? (adminStatsLoading ? <LoadingSpinner /> : (adminStats ? adminStats.non_payees : '-'))
+                  : (statsLoading ? <LoadingSpinner /> : (stats ? stats.total_non_paye : '-'))
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6"
+        >
+          <div className="flex items-center space-x-2">
+            <AlertCircle className="w-5 h-5 text-red-600" />
+            <p className="text-red-800">{error}</p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Tableau des cotisations */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="bg-white p-3 sm:p-6 rounded-lg shadow-md border border-gray-200 overflow-hidden"
+      >
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date début</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date fin</th>
+                {getUserRole() === ROLES.ADMIN ? (
+                  <>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </>
+                ) : (
+                  <>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut Paiement</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </>
+                )}
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                      <span>Chargement des cotisations...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : cotisations.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                    <div className="flex flex-col items-center space-y-4">
+                      <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center">
+                        <DollarSign className="w-10 h-10 text-gray-400" />
+                      </div>
+                      <div className="text-lg font-medium text-gray-600">
+                        Aucun donnée enregistré
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                cotisations.map((cotisation) => (
+                <motion.tr
+                  key={cotisation.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="hover:bg-gray-50 transition-colors"
+                >
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900">{cotisation.nom}</div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="text-sm text-gray-900 max-w-xs truncate">{cotisation.description}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-bold text-gray-900">{formatMontant(cotisation.montant)}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {formatDate(cotisation.date_debut)}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {formatDate(cotisation.date_fin)}
+                  </td>
+                  
+                  {getUserRole() === ROLES.ADMIN ? (
+                    <>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold">
+                          {cotisation.membres_payes}/{cotisation.total_membres}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center space-x-2">
+                          {/* Bouton Voir - Visible pour tous */}
+                          <button className="text-blue-600 hover:text-blue-900" title="Voir les détails" onClick={() => setShowCotisationId(cotisation.id)}>
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          
+                          {/* Boutons Admin - Visibles seulement pour les admins */}
+                          {hasPermission('canEdit') && (
+                            <button className="text-green-600 hover:text-green-900" title="Modifier" onClick={() => { setCotisationToEdit(cotisation); setShowAddModal(true); }}>
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          )}                        
+                          {hasPermission('canDelete') && (
+                            <button className="text-red-600 hover:text-red-900" title="Supprimer" onClick={() => { setCotisationToDelete(cotisation); setShowDeleteModal(true); }}>
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getPaymentStatusColor(cotisation.statut_paiement || 'non_paye')}`}>
+                          {getPaymentStatusIcon(cotisation.statut_paiement || 'non_paye')}
+                          <span className="ml-1">{getPaymentStatusLabel(cotisation.statut_paiement || 'non_paye', cotisation.montant_restant)}</span>
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center space-x-2">
+                          {/* Bouton Voir - Visible pour tous */}
+                          <button className="text-blue-600 hover:text-blue-900" title="Voir les détails" onClick={() => setShowCotisationId(cotisation.id)}>
+                            <Eye className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </>
+                  )}
+                </motion.tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </motion.div>
+
+      {/* Modal d'ajout de cotisation - Visible seulement pour les admins */}
+      {hasPermission('canCreate') && (
+        <AddCotisation
+          isOpen={showAddModal}
+          onClose={() => { setShowAddModal(false); setCotisationToEdit(null); }}
+          onSubmit={handleAddCotisation}
+          initialValues={cotisationToEdit}
+        />
+      )}
+
+      {/* Modal de détails de cotisation */}
+      {showCotisationId && (
+        <ShowCotisation 
+          isOpen={!!showCotisationId} 
+          onClose={() => setShowCotisationId(null)} 
+          cotisationId={showCotisationId} 
+          isAdmin={isAdmin}
+          cotisations={cotisations}
+        />
+      )}
+
+      {/* Modal de confirmation de suppression */}
+      <ModalConfirmation
+        isOpen={showDeleteModal}
+        onClose={() => { setShowDeleteModal(false); setCotisationToDelete(null); }}
+        onConfirm={handleDeleteCotisation}
+        title="Supprimer la cotisation ?"
+        message={`Êtes-vous sûr de vouloir supprimer la cotisation "${cotisationToDelete?.nom}" ? Cette action est irréversible.`}
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+      />
+    </main>
+  );
+}

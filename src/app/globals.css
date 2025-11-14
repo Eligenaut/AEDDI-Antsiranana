@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "nprogress/nprogress.css";
 
 :root {
   --background: #ffffff;
@@ -23,4 +24,34 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Styles pour nprogress - Barre de progression en haut, au-dessus de tout */
+#nprogress {
+  pointer-events: none !important;
+}
+
+  /* Barre de progression principale */
+#nprogress .bar {
+  background: #ec4899 !important;
+  background: linear-gradient(to right, #ec4899, #f472b6, #f9a8d4) !important;
+  position: fixed !important;
+  z-index: 999999 !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 4px !important;
+  box-shadow: 0 0 10px rgba(236, 72, 153, 0.9), 0 0 5px rgba(236, 72, 153, 0.7) !important;
+}
+
+/* Effet brillant (peg) */
+#nprogress .peg {
+  display: block !important;
+  position: absolute !important;
+  right: 0px !important;
+  width: 100px !important;
+  height: 100% !important;
+  box-shadow: 0 0 10px rgba(236, 72, 153, 1), 0 0 5px rgba(236, 72, 153, 0.8) !important;
+  opacity: 1.0 !important;
+  transform: rotate(3deg) translate(0px, -4px) !important;
 }
