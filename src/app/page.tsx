@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation';
 import { AccueilContent } from '../../components/loginComponents/AccueilContent.jsx';
 import AuthPage from '../../components/loginComponents/AuthPage.jsx';
 export default function HomePage() {

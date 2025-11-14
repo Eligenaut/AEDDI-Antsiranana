@@ -27,7 +27,7 @@ export default function GoogleErrorPage() {
           Erreur de connexion
         </h1>
         <p className="text-gray-600 dark:text-gray-400 mb-6">
-          Une erreur s'est produite lors de la connexion avec Google.
+          Une erreur s&apos;est produite lors de la connexion avec Google.
         </p>
         <button
           onClick={handleRetry}

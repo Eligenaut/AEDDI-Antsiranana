@@ -1,4 +1,3 @@
-import { Header } from '../../components/layoutComponents/Header';
 export default function DashboardLayout({
   children,
 }: {

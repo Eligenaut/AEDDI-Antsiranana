@@ -12,7 +12,7 @@ export default function NotFoundPage() {
       <div className="bg-red-50 border border-red-200 rounded-lg p-8 shadow-lg text-center">
         <h1 className="text-2xl font-bold text-red-700 mb-4">Compte introuvable</h1>
         <p className="mb-4">
-          Le compte Google <span className="font-semibold">{email}</span> n'existe pas encore dans notre base de données.
+          Le compte Google <span className="font-semibold">{email}</span> n&apos;existe pas encore dans notre base de données.
         </p>
         <p className="mb-6">Vous pouvez devenir membre en créant un compte :</p>
         <button
