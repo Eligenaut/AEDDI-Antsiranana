@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-export default function GoogleErrorPage() {
+function GoogleErrorContent() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -37,5 +37,13 @@ export default function GoogleErrorPage() {
         </button>
       </div>
     </div>
+  );
+}
+
+export default function GoogleErrorPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Chargement...</div>}>
+      <GoogleErrorContent />
+    </Suspense>
   );
 }
