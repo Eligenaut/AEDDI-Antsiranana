@@ -1,7 +1,7 @@
 'use client';
 
 import { User } from 'lucide-react';
-import { baseUrl } from '../context/url.js';
+import { url } from '../context/url.js';
 
 export function UserAvatar({ user, size = 'md', className = '', showFallback = true }) {
   // Fonction utilitaire pour les initiales
@@ -28,7 +28,7 @@ export function UserAvatar({ user, size = 'md', className = '', showFallback = t
   };
 
   const hasImage = user && (user.avatar || user.profile_image);
-  const imageSrc = user?.avatar || (user?.profile_image ? `${baseUrl}/storage/${user.profile_image}` : null);
+  const imageSrc = user?.avatar || (user?.profile_image ? `${url}/storage/${user.profile_image}` : null);
   const initials = user ? getInitials(user.nom || user.name || '') : 'U';
 
   return (

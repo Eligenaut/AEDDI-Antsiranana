@@ -44,8 +44,7 @@ export function LoginProvider({ children }) {
   };
 
   const connecterGoogle = async () => {
-    Notify.info('Connexion Google non implémentée');
-    return { success: false, error: 'Non implémenté' };
+    window.location.href = 'http://localhost:8000/auth/google';
   };
 
   const deconnecter = () => {

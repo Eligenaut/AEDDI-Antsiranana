@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { url } from '../context/url.js';
 import { getAuthHeaders } from '../context/headers.jsx';
-import { Home, Calendar, Users, CreditCard, User, MessageCircle, Bell, LogOut, Settings } from 'lucide-react';
+import { Home, Calendar, Users, CreditCard, User, MessageCircle, Bell, LogOut, Settings, ChevronRight, ChevronLeft } from 'lucide-react';
 
 const menuItems = [
   { id: 'accueil', label: 'Accueil', icon: Home, active: true, badge: null },
@@ -20,14 +20,91 @@ const userMenuItems = [
 ];
 export function DashboardSidebar({ isOpen, onToggle, currentSection, onSectionChange }) {
   const [activeItem, setActiveItem] = useState(currentSection);
+  
+  // Initialiser isExpanded directement depuis localStorage pour éviter le flash
+  const getInitialExpanded = () => {
+    if (typeof window === 'undefined') return false;
+    const desktop = window.innerWidth >= 1024;
+    if (desktop) {
+      const savedExpanded = localStorage.getItem('sidebarExpanded');
+      return savedExpanded === 'true';
+    }
+    return false;
+  };
+  
+  const [isExpanded, setIsExpanded] = useState(getInitialExpanded);
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth >= 1024;
+  });
+  const wasDesktopRef = useRef(isDesktop);
+
   useEffect(() => {
     setActiveItem(currentSection);
   }, [currentSection]);
 
+  useEffect(() => {
+    let isMounted = true;
+    
+    const checkIsDesktop = () => {
+      if (!isMounted) return;
+      
+      const desktop = window.innerWidth >= 1024;
+      const wasDesktop = wasDesktopRef.current;
+      
+      // Seulement changer l'état expanded si on change de mode (desktop <-> mobile)
+      if (desktop && !wasDesktop) {
+        // Passage de mobile à desktop : restaurer depuis localStorage
+        const savedExpanded = localStorage.getItem('sidebarExpanded');
+        if (savedExpanded !== null) {
+          setIsExpanded(savedExpanded === 'true');
+        } else {
+          setIsExpanded(false);
+        }
+      } else if (!desktop && wasDesktop) {
+        // Passage de desktop à mobile : toujours expanded
+        setIsExpanded(true);
+      }
+      // Si on reste sur desktop, ne JAMAIS toucher à isExpanded
+      // pour éviter les réinitialisations lors des changements de route
+      
+      setIsDesktop(desktop);
+      wasDesktopRef.current = desktop;
+    };
+
+    // Ne pas réinitialiser au montage si on est déjà sur desktop
+    // L'état initial est déjà correct grâce à getInitialExpanded()
+    const desktop = window.innerWidth >= 1024;
+    if (!desktop) {
+      setIsExpanded(true);
+    }
+    
+    // Ne vérifier que lors du resize, pas au montage initial
+    window.addEventListener('resize', checkIsDesktop);
+    return () => {
+      isMounted = false;
+      window.removeEventListener('resize', checkIsDesktop);
+    };
+  }, []);
+
   const handleMenuClick = (itemId) => {
     setActiveItem(itemId);
     onSectionChange(itemId);
+    // Ne pas fermer la sidebar expanded sur desktop après un clic
+    // L'état isExpanded reste inchangé
   };
+
+  const toggleExpand = () => {
+    const newExpanded = !isExpanded;
+    setIsExpanded(newExpanded);
+    // Sauvegarder l'état dans localStorage pour desktop immédiatement
+    if (isDesktop) {
+      localStorage.setItem('sidebarExpanded', newExpanded.toString());
+    }
+  };
+  
+  // Synchroniser l'état avec localStorage uniquement lors des changements manuels
+  // Ne pas réinitialiser lors des re-renders causés par les changements de route
 
   const handleLogout = async () => {
     try {
@@ -46,6 +123,11 @@ export function DashboardSidebar({ isOpen, onToggle, currentSection, onSectionCh
       window.location.href = '/';
     }
   };
+
+  // Sur mobile, toujours expanded quand ouvert
+  const sidebarExpanded = isDesktop ? isExpanded : isOpen;
+  const sidebarWidth = sidebarExpanded ? 'w-64' : 'w-20';
+
   return (
     <>
       {isOpen && (
@@ -57,20 +139,44 @@ export function DashboardSidebar({ isOpen, onToggle, currentSection, onSectionCh
       )}
       <div
         className={`
-          fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white shadow-xl border-r border-gray-200
-          flex flex-col
+          fixed lg:static inset-y-0 left-0 z-50 bg-white shadow-xl border-r border-gray-200
+          flex flex-col transition-all duration-300 ease-in-out
+          ${sidebarWidth}
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
-        <div className="flex items-center justify-center h-34 md:h-21 px-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50">
-          <div className="flex items-center space-x-4 py-4">
-            <img src="/images/aeddi.png" alt="AEDDI" className="h-30 sm:h-24 md:h-16 w-auto rounded-md shadow bg-white" />
-            <h1 className="text-2xl sm:text-3xl md:text-2xl font-bold text-gray-900">AEDDI</h1>
+        {/* Header */}
+        <div className="flex items-center justify-center h-34 md:h-21 px-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50 overflow-hidden">
+          <div className={`flex items-center transition-all duration-300 ${sidebarExpanded ? 'space-x-4' : 'justify-center'}`}>
+            <img src="/images/aeddi.png" alt="AEDDI" className="h-30 sm:h-24 md:h-16 w-auto rounded-md shadow bg-white flex-shrink-0" />
+            <h1 className={`text-2xl sm:text-3xl md:text-2xl font-bold text-gray-900 transition-all duration-300 whitespace-nowrap ${
+              sidebarExpanded ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0 overflow-hidden'
+            }`}>
+              AEDDI
+            </h1>
           </div>
         </div>
-        <nav className="mt-6 px-4 flex-1">
+
+        {/* Bouton toggle expand/collapse - Desktop seulement */}
+        {isDesktop && (
+          <button
+            onClick={toggleExpand}
+            className="absolute top-20 -right-3 z-10 bg-white border border-gray-200 rounded-full p-1.5 shadow-md hover:shadow-lg transition-all duration-200 hover:bg-gray-50 group"
+            aria-label={isExpanded ? 'Réduire la sidebar' : 'Agrandir la sidebar'}
+          >
+            {isExpanded ? (
+              <ChevronLeft className="w-4 h-4 text-gray-600 group-hover:text-purple-600 transition-colors" />
+            ) : (
+              <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-purple-600 transition-colors" />
+            )}
+          </button>
+        )}
+
+        <nav className="mt-6 px-4 flex-1 overflow-y-auto">
           <div className="mb-6">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">
+            <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3 transition-all duration-300 ${
+              sidebarExpanded ? 'opacity-100' : 'opacity-0 h-0 mb-0 overflow-hidden'
+            }`}>
               Navigation
             </h3>
             <ul className="space-y-1">
@@ -78,17 +184,26 @@ export function DashboardSidebar({ isOpen, onToggle, currentSection, onSectionCh
                 <li key={item.id}>
                   <button
                     onClick={() => handleMenuClick(item.id)}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-left transition-all duration-200 ${
+                    className={`w-full flex items-center transition-all duration-200 rounded-lg ${
+                      sidebarExpanded ? 'justify-between px-4 py-3' : 'justify-center px-2 py-3'
+                    } ${
                       activeItem === item.id
                         ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 border-l-4 border-purple-500'
                         : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                     }`}
+                    title={!sidebarExpanded ? item.label : ''}
                   >
-                    <div className="flex items-center space-x-3">
-                      <item.icon className="w-5 h-5 text-gray-600" />
-                      <span className="font-medium">{item.label}</span>
+                    <div className={`flex items-center transition-all duration-300 ${
+                      sidebarExpanded ? 'space-x-3' : 'justify-center'
+                    }`}>
+                      <item.icon className="w-5 h-5 text-gray-600 flex-shrink-0" />
+                      <span className={`font-medium transition-all duration-300 whitespace-nowrap ${
+                        sidebarExpanded ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0 overflow-hidden'
+                      }`}>
+                        {item.label}
+                      </span>
                     </div>
-                    {item.badge && (
+                    {item.badge && sidebarExpanded && (
                       <span className="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded-full">
                         {item.badge}
                       </span>
@@ -138,13 +253,21 @@ export function DashboardSidebar({ isOpen, onToggle, currentSection, onSectionCh
           </div>
         </nav>
 
+        {/* Bouton déconnexion - Desktop */}
         <div className="px-4 pb-4 hidden lg:block">
           <button
             onClick={handleLogout}
-            className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg text-left transition-all duration-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+            className={`w-full flex items-center transition-all duration-300 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 ${
+              sidebarExpanded ? 'justify-start space-x-3 px-4 py-3' : 'justify-center px-2 py-3'
+            }`}
+            title={!sidebarExpanded ? 'Se déconnecter' : ''}
           >
-            <LogOut className="w-5 h-5" />
-            <span className="font-medium">Se déconnecter</span>
+            <LogOut className="w-5 h-5 flex-shrink-0" />
+            <span className={`font-medium transition-all duration-300 whitespace-nowrap ${
+              sidebarExpanded ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0 overflow-hidden'
+            }`}>
+              Se déconnecter
+            </span>
           </button>
         </div>
       </div>
