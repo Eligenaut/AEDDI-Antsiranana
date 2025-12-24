@@ -52,7 +52,7 @@ export function DashboardSidebar({ isOpen, onToggle, currentSection, onSectionCh
       const desktop = window.innerWidth >= 1024;
       const wasDesktop = wasDesktopRef.current;
       
-      // Seulement changer l'état expanded si on change de mode (desktop <-> mobile)
+        // Seulement changer l'état expanded si on change de mode (desktop <-> mobile)
       if (desktop && !wasDesktop) {
         // Passage de mobile à desktop : restaurer depuis localStorage
         const savedExpanded = localStorage.getItem('sidebarExpanded');
