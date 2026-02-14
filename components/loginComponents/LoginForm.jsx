@@ -68,7 +68,7 @@ export function LoginForm({ onSwitchToRegister }) {
         </div>
 
         <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-800 dark:text-white tracking-tight px-2">
-          Connexion à AEDDI
+          Connexion à AEDDI-DIEGO
         </h1>
         {/* Bouton Google */}
         <motion.div
