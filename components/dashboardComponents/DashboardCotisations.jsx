@@ -181,7 +181,6 @@ export function DashboardCotisations() {
   const totalCotisations = cotisations.length;
   const cotisationsActives = cotisations.filter(c => c.statut === 'active').length;
   const cotisationsTerminees = cotisations.filter(c => c.statut === 'terminee').length;
-  const cotisationsEnPreparation = cotisations.filter(c => c.statut === 'en_preparation').length;
   
   const montantTotal = cotisations.reduce((sum, c) => sum + c.montant, 0);
   const montantActif = cotisations.filter(c => c.statut === 'active').reduce((sum, c) => sum + c.montant, 0);
@@ -212,7 +211,6 @@ export function DashboardCotisations() {
 
   return (
     <main className="flex-1 overflow-y-auto p-2 sm:p-6 pb-20 lg:pb-6">
-      {/* En-tête */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

@@ -29,14 +29,13 @@ export function DashboardUser() {
   const [editUser, setEditUser] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [exporting, setExporting] = useState(false);
-  
+
   const handleOpenEdit = async (member) => {
     try {
       const response = await axios.get(`${url}members/${member.id}`, {
         headers: getAuthHeaders()
       });
       const userData = response.data.data;
-      // Normaliser les données pour UserEdit
       const normalizedData = {
         ...userData,
         nom: userData.nom || userData.name || '',
@@ -60,13 +59,12 @@ export function DashboardUser() {
       setEditUser(null);
     }
   };
-  
+
   const handleCloseEdit = () => {
     setEditUser(null);
   };
-  
+
   const handleSaveEdit = (updatedData) => {
-    // Callback appelé après sauvegarde réussie dans UserEdit
     setEditUser(null);
     fetchMembers();
   };
@@ -128,7 +126,7 @@ export function DashboardUser() {
       const link = document.createElement('a');
       const downloadUrl = window.URL.createObjectURL(blob);
       link.setAttribute('href', downloadUrl);
-      
+
       const contentDisposition = response.headers['content-disposition'];
       let filename = 'utilisateurs_aeddi.xlsx';
       if (contentDisposition) {
@@ -137,14 +135,14 @@ export function DashboardUser() {
           filename = filenameMatch[1];
         }
       }
-      
+
       link.setAttribute('download', filename);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
-      
+
     } catch (err) {
       console.error('Erreur lors de l\'exportation XLSX:', err);
       alert('Erreur lors de l\'exportation XLSX des données');
@@ -213,45 +211,22 @@ export function DashboardUser() {
       setLoading(false);
     }
   };
-  const AddEmailModal = () => (
-    showAddModal ? (
-      <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.05)' }}>
-        <div className="bg-white rounded-xl shadow-2xl p-1 w-full max-w-2xl mx-4 h-[80vh] max-h-[80vh] overflow-y-auto relative">
-          <button
-            onClick={() => setShowAddModal(false)}
-            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
-          >
-            ✕
-          </button>
-          <h2 className="text-xl font-bold mb-4">Ajouter un nouvel email autorisé</h2>
-          <AddAuthorizedEmail onEmailAdded={() => setShowAddModal(false)} />
-        </div>
-      </div>
-    ) : null
-  );
-
   return (
     <>
-      {AddEmailModal()}
+      <AddAuthorizedEmail
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onEmailAdded={() => setShowAddModal(true)}
+      />
       {editUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0, 0, 0, 0.15)' }}>
-          <div className="bg-white rounded-xl shadow-2xl p-1 w-full max-w-2xl mx-4 h-[90vh] max-h-[90vh] overflow-y-auto relative">
-            <button
-              onClick={handleCloseEdit}
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl font-bold"
-            >✕</button>
-            <h2 className="text-xl font-bold mb-4 mt-2 ml-2">Modifier l'utilisateur</h2>
-            <div className="p-2">
-              <UserEdit
-                initialData={editUser}
-                onSave={handleSaveEdit}
-                onCancel={handleCloseEdit}
-                userId={editUser?.id}
-                showRole={isAdmin()}
-              />
-            </div>
-          </div>
-        </div>
+        <UserEdit
+          isOpen={!!editUser}
+          initialData={editUser}
+          onSave={handleSaveEdit}
+          onCancel={handleCloseEdit}
+          userId={editUser?.id}
+          showRole={isAdmin()}
+        />
       )}
       <main className="flex-1 overflow-y-auto p-2 sm:p-6 pb-20 lg:pb-6 flex flex-col">
         <motion.div
@@ -271,7 +246,7 @@ export function DashboardUser() {
                   className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1.5 text-xs rounded-lg flex items-center space-x-2 transition-colors sm:px-3 sm:py-2 sm:text-sm"
                 >
                   <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                  <span>Ajouter un email autorisé</span>
+                  <span>Ajouter un membre</span>
                 </button>
               )}
             </div>
@@ -416,7 +391,6 @@ export function DashboardUser() {
                             <Eye className="w-4 h-4" />
                           </button>
 
-                          {/* Boutons Admin - Visibles seulement pour les admins */}
                           {hasPermission('canEdit') && (
                             <button className="text-green-600 hover:text-green-900" title="Modifier le membre" onClick={() => handleOpenEdit(member)}>
                               <Edit className="w-4 h-4" />

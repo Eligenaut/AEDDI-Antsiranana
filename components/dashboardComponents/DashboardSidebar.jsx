@@ -20,8 +20,7 @@ const userMenuItems = [
 ];
 export function DashboardSidebar({ isOpen, onToggle, currentSection, onSectionChange }) {
   const [activeItem, setActiveItem] = useState(currentSection);
-  
-  // Initialiser isExpanded directement depuis localStorage pour éviter le flash
+
   const getInitialExpanded = () => {
     if (typeof window === 'undefined') return false;
     const desktop = window.innerWidth >= 1024;
@@ -51,10 +50,8 @@ export function DashboardSidebar({ isOpen, onToggle, currentSection, onSectionCh
       
       const desktop = window.innerWidth >= 1024;
       const wasDesktop = wasDesktopRef.current;
-      
-        // Seulement changer l'état expanded si on change de mode (desktop <-> mobile)
+
       if (desktop && !wasDesktop) {
-        // Passage de mobile à desktop : restaurer depuis localStorage
         const savedExpanded = localStorage.getItem('sidebarExpanded');
         if (savedExpanded !== null) {
           setIsExpanded(savedExpanded === 'true');
@@ -62,24 +59,16 @@ export function DashboardSidebar({ isOpen, onToggle, currentSection, onSectionCh
           setIsExpanded(false);
         }
       } else if (!desktop && wasDesktop) {
-        // Passage de desktop à mobile : toujours expanded
         setIsExpanded(true);
       }
-      // Si on reste sur desktop, ne JAMAIS toucher à isExpanded
-      // pour éviter les réinitialisations lors des changements de route
-      
+
       setIsDesktop(desktop);
       wasDesktopRef.current = desktop;
     };
-
-    // Ne pas réinitialiser au montage si on est déjà sur desktop
-    // L'état initial est déjà correct grâce à getInitialExpanded()
     const desktop = window.innerWidth >= 1024;
     if (!desktop) {
       setIsExpanded(true);
     }
-    
-    // Ne vérifier que lors du resize, pas au montage initial
     window.addEventListener('resize', checkIsDesktop);
     return () => {
       isMounted = false;
@@ -90,21 +79,16 @@ export function DashboardSidebar({ isOpen, onToggle, currentSection, onSectionCh
   const handleMenuClick = (itemId) => {
     setActiveItem(itemId);
     onSectionChange(itemId);
-    // Ne pas fermer la sidebar expanded sur desktop après un clic
-    // L'état isExpanded reste inchangé
   };
 
   const toggleExpand = () => {
     const newExpanded = !isExpanded;
     setIsExpanded(newExpanded);
-    // Sauvegarder l'état dans localStorage pour desktop immédiatement
     if (isDesktop) {
       localStorage.setItem('sidebarExpanded', newExpanded.toString());
     }
   };
   
-  // Synchroniser l'état avec localStorage uniquement lors des changements manuels
-  // Ne pas réinitialiser lors des re-renders causés par les changements de route
 
   const handleLogout = async () => {
     try {
@@ -145,7 +129,6 @@ export function DashboardSidebar({ isOpen, onToggle, currentSection, onSectionCh
           ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >
-        {/* Header */}
         <div className="flex items-center justify-center h-34 md:h-21 px-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50 overflow-hidden">
           <div className={`flex items-center transition-all duration-300 ${sidebarExpanded ? 'space-x-4' : 'justify-center'}`}>
             <img src="/images/aeddi.png" alt="AEDDI" className="h-30 sm:h-24 md:h-16 w-auto rounded-md shadow bg-white flex-shrink-0" />
@@ -156,8 +139,6 @@ export function DashboardSidebar({ isOpen, onToggle, currentSection, onSectionCh
             </h1>
           </div>
         </div>
-
-        {/* Bouton toggle expand/collapse - Desktop seulement */}
         {isDesktop && (
           <button
             onClick={toggleExpand}

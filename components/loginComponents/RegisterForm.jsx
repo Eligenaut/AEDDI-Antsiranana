@@ -565,7 +565,7 @@ export function RegisterForm({onSwitchToLogin, onRegistrationSubmit, isSubmittin
                 name="etablissement"
                 value={selectedEtablissement}
                 onChange={handleEtablissementChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
+                className="w-full px-3 text-black py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
                 required
               >
                 <option value="">Sélectionner un établissement</option>
@@ -587,7 +587,7 @@ export function RegisterForm({onSwitchToLogin, onRegistrationSubmit, isSubmittin
                 name="parcours"
                 value={selectedParcours}
                 onChange={handleParcoursChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
+                className="w-full px-3 py-2 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
                 required
                 disabled={!selectedEtablissement}
               >
@@ -614,7 +614,7 @@ export function RegisterForm({onSwitchToLogin, onRegistrationSubmit, isSubmittin
                 name="niveau"
                 value={formData.niveau}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
+                className="w-full px-3 py-2 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
                 required
                 disabled={!selectedParcours}
               >
@@ -637,7 +637,7 @@ export function RegisterForm({onSwitchToLogin, onRegistrationSubmit, isSubmittin
                 name="promotion"
                 value={formData.promotion}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
+                className="w-full px-3 py-2 text-black border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
                 required
               >
                 <option value="">Sélectionner une promotion</option>
@@ -702,7 +702,7 @@ export function RegisterForm({onSwitchToLogin, onRegistrationSubmit, isSubmittin
                   name="campusType"
                   value={selectedCampusType}
                   onChange={handleCampusTypeChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
+                  className="w-full px-3 py-2 border text-black border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
                   required
                 >
                   <option value="">Sélectionner un type</option>
@@ -718,14 +718,14 @@ export function RegisterForm({onSwitchToLogin, onRegistrationSubmit, isSubmittin
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 1.0 }}
                 >
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-200 mb-2">
                     {optionsCampus[selectedCampusType]?.nom} - Chambre *
                   </label>
                   <select
                     name="blocCampus"
                     value={formData.blocCampus}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
+                    className="w-full px-3 py-2 border border-gray-300 text-black rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
                     required
                   >
                     <option value="">Sélectionner une chambre</option>
