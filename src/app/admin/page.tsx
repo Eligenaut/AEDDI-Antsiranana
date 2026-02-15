@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState } from 'react';
 import AddAuthorizedEmail from '../../../components/loginComponents/AddAuthorizedEmail.jsx';
 
@@ -19,7 +17,6 @@ export default function AdminEmailsPage() {
               onClose={() => setIsOpen(false)}
               onEmailAdded={handleEmailAdded}
             />
-
           </div>
         </div>
       </div>

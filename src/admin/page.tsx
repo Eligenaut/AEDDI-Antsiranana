@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useState } from 'react';
 import AddAuthorizedEmail from '../../components/loginComponents/AddAuthorizedEmail.jsx';
 
