@@ -13,7 +13,6 @@ import { FilterUser } from './FilterUser';
 import AddAuthorizedEmail from '../loginComponents/AddAuthorizedEmail.jsx';
 import UserEdit from './UserEdit';
 
-
 export function DashboardUser() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [members, setMembers] = useState([]);
@@ -22,19 +21,14 @@ export function DashboardUser() {
   const [error, setError] = useState(null);
   const [modalUser, setModalUser] = useState(null);
   const [showMemberId, setShowMemberId] = useState(null);
-  const [filters, setFilters] = useState({
-    etablissement: '',
-    promotion: ''
-  });
+  const [filters, setFilters] = useState({ etablissement: '', promotion: '' });
   const [editUser, setEditUser] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [exporting, setExporting] = useState(false);
 
   const handleOpenEdit = async (member) => {
     try {
-      const response = await axios.get(`${url}members/${member.id}`, {
-        headers: getAuthHeaders()
-      });
+      const response = await axios.get(`${url}members/${member.id}`, { headers: getAuthHeaders() });
       const userData = response.data.data;
       const normalizedData = {
         ...userData,
@@ -60,24 +54,17 @@ export function DashboardUser() {
     }
   };
 
-  const handleCloseEdit = () => {
-    setEditUser(null);
-  };
+  const handleCloseEdit = () => setEditUser(null);
+  const handleSaveEdit = () => { setEditUser(null); fetchMembers(); };
 
-  const handleSaveEdit = (updatedData) => {
-    setEditUser(null);
-    fetchMembers();
-  };
   const fetchMembers = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('auth_token');
-      if (!token) {
-        throw new Error('Token d\'authentification manquant');
-      }
-      const response = await axios.get(`${url}members`, {
-        headers: getAuthHeaders()
-      });
+      // ✅ localStorage uniquement côté client
+      const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+      if (!token) throw new Error('Token d\'authentification manquant');
+
+      const response = await axios.get(`${url}members`, { headers: getAuthHeaders() });
       const membersData = response.data.data || [];
       setMembers(membersData);
       setFilteredMembers(membersData);
@@ -88,8 +75,10 @@ export function DashboardUser() {
       setLoading(false);
     }
   };
+
+  // ✅ localStorage protégé dans useEffect (s'exécute uniquement côté client)
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     if (token) {
       fetchMembers();
       fetchCurrentUser();
@@ -98,11 +87,10 @@ export function DashboardUser() {
       setLoading(false);
     }
   }, []);
+
   const fetchCurrentUser = async () => {
     try {
-      const response = await axios.get(`${url}auth/me`, {
-        headers: getAuthHeaders()
-      });
+      const response = await axios.get(`${url}auth/me`, { headers: getAuthHeaders() });
       if (response.data.success && response.data.user) {
         setCurrentUser(response.data.user);
       }
@@ -110,19 +98,23 @@ export function DashboardUser() {
       console.error('Erreur lors de la récupération de l\'utilisateur:', err);
     }
   };
+
   const handleExportXLSX = async () => {
     if (!canExportUsers(currentUser)) {
       alert('Vous n\'avez pas les permissions pour exporter les données');
       return;
     }
-
     setExporting(true);
     try {
       const response = await axios.get(`${url}export/users/xlsx`, {
         headers: getAuthHeaders(),
         responseType: 'blob'
       });
-      const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+
+      // ✅ document uniquement dans un handler (déclenché par l'utilisateur = côté client)
       const link = document.createElement('a');
       const downloadUrl = window.URL.createObjectURL(blob);
       link.setAttribute('href', downloadUrl);
@@ -131,9 +123,7 @@ export function DashboardUser() {
       let filename = 'utilisateurs_aeddi.xlsx';
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-        if (filenameMatch) {
-          filename = filenameMatch[1];
-        }
+        if (filenameMatch) filename = filenameMatch[1];
       }
 
       link.setAttribute('download', filename);
@@ -142,7 +132,6 @@ export function DashboardUser() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
-
     } catch (err) {
       console.error('Erreur lors de l\'exportation XLSX:', err);
       alert('Erreur lors de l\'exportation XLSX des données');
@@ -151,59 +140,28 @@ export function DashboardUser() {
     }
   };
 
-  // Appliquer les filtres
   useEffect(() => {
     let filtered = [...members];
-
     if (filters.etablissement) {
-      filtered = filtered.filter(member =>
-        member.etablissement === filters.etablissement
-      );
+      filtered = filtered.filter(m => m.etablissement === filters.etablissement);
     }
-
-    // Filtre par promotion
     if (filters.promotion) {
-      filtered = filtered.filter(member =>
-        member.promotion === filters.promotion
-      );
+      filtered = filtered.filter(m => m.promotion === filters.promotion);
     }
-
     setFilteredMembers(filtered);
   }, [members, filters]);
 
-  // Fonction pour gérer les changements de filtres
-  const handleFiltersChange = (newFilters) => {
-    setFilters(newFilters);
-  };
+  const handleFiltersChange = (newFilters) => setFilters(newFilters);
 
-
-  // Fonction pour obtenir le type de membre (Google ou classique)
-  const getMemberType = (member) => {
-    // Pour l'instant, tous les membres sont des "membres" normaux
-    // On pourrait ajouter une logique pour déterminer les membres du bureau
-    return 'membre';
-  };
-
-  const getTypeColor = (type) => {
-    return type === 'bureau' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800';
-  };
-
-  const getTypeLabel = (type) => {
-    return type === 'bureau' ? 'Bureau' : 'Membre';
-  };
-
-  const handleCotisations = (member) => {
-    console.log(`Gérer les cotisations pour: ${member.name}`);
-    // Ici vous pourriez ouvrir un modal ou naviguer vers la page des cotisations
-  };
+  const getMemberType = (member) => 'membre';
+  const getTypeColor = (type) => type === 'bureau' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800';
+  const getTypeLabel = (type) => type === 'bureau' ? 'Bureau' : 'Membre';
 
   const handleDeleteMember = async (id) => {
     if (!window.confirm('Voulez-vous vraiment supprimer ce membre ?')) return;
     try {
       setLoading(true);
-      await axios.delete(`${url}members/${id}`, {
-        headers: getAuthHeaders()
-      });
+      await axios.delete(`${url}members/${id}`, { headers: getAuthHeaders() });
       fetchMembers();
     } catch (err) {
       setError('Erreur lors de la suppression du membre.');
@@ -211,6 +169,7 @@ export function DashboardUser() {
       setLoading(false);
     }
   };
+
   return (
     <>
       <AddAuthorizedEmail
@@ -237,7 +196,9 @@ export function DashboardUser() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-lg font-semibold text-gray-900 mb-1 sm:text-3xl sm:font-bold sm:mb-2">Gestion des Membres 👥</h1>
+              <h1 className="text-lg font-semibold text-gray-900 mb-1 sm:text-3xl sm:font-bold sm:mb-2">
+                Gestion des Membres 👥
+              </h1>
             </div>
             <div className="flex items-center space-x-2">
               {hasPermission('canManageUsers') && (
@@ -252,6 +213,7 @@ export function DashboardUser() {
             </div>
           </div>
         </motion.div>
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -273,14 +235,12 @@ export function DashboardUser() {
             className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg"
           >
             <p className="text-red-800">{error}</p>
-            <button
-              onClick={fetchMembers}
-              className="mt-2 text-red-600 hover:text-red-800 underline"
-            >
+            <button onClick={fetchMembers} className="mt-2 text-red-600 hover:text-red-800 underline">
               Réessayer
             </button>
           </motion.div>
         )}
+
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -291,28 +251,16 @@ export function DashboardUser() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Membre
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Contact
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Membre</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                   {getUserRole() === ROLES.ADMIN && (
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Adhésion
-                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Adhésion</th>
                   )}
                   {getUserRole() === ROLES.ADMIN && (
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Cotisations
-                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cotisations</th>
                   )}
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white">
@@ -358,9 +306,7 @@ export function DashboardUser() {
                             )}
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
-                              {member.name}
-                            </div>
+                            <div className="text-sm font-medium text-gray-900">{member.name}</div>
                           </div>
                         </div>
                       </td>
@@ -386,27 +332,19 @@ export function DashboardUser() {
                       )}
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-2">
-                          {/* Bouton Voir - Visible pour tous */}
                           <button className="text-blue-600 hover:text-blue-900" title="Voir les détails" onClick={() => setShowMemberId(member.id)}>
                             <Eye className="w-4 h-4" />
                           </button>
-
                           {hasPermission('canEdit') && (
                             <button className="text-green-600 hover:text-green-900" title="Modifier le membre" onClick={() => handleOpenEdit(member)}>
                               <Edit className="w-4 h-4" />
                             </button>
                           )}
-
                           {hasPermission('canManageUsers') && (
-                            <button
-                              onClick={() => setModalUser(member)}
-                              className="p-1 md:p-2 rounded-full hover:bg-green-100 transition-colors"
-                              title="Gérer les cotisations"
-                            >
+                            <button onClick={() => setModalUser(member)} className="p-1 md:p-2 rounded-full hover:bg-green-100 transition-colors" title="Gérer les cotisations">
                               <DollarSign className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
                             </button>
                           )}
-
                           {hasPermission('canDelete') && (
                             <button className="text-red-600 hover:text-red-900" onClick={() => handleDeleteMember(member.id)} title="Supprimer le membre">
                               <Trash2 className="w-4 h-4" />
@@ -421,6 +359,7 @@ export function DashboardUser() {
             </table>
           </div>
         </motion.div>
+
         <CotisationModal
           isOpen={!!modalUser}
           onClose={() => setModalUser(null)}
