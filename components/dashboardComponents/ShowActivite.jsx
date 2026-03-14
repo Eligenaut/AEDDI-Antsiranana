@@ -8,9 +8,14 @@ import { url } from '../context/url.js';
 import { getAuthHeaders } from '../context/headers.jsx';
 
 export function ShowActivite({ isOpen, onClose, activiteId }) {
+  const [mounted, setMounted] = useState(false); // ✅ ajouté
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activite, setActivite] = useState(null);
+
+  useEffect(() => {
+    setMounted(true); // ✅ ajouté
+  }, []);
 
   useEffect(() => {
     if (isOpen && activiteId) {
@@ -27,6 +32,9 @@ export function ShowActivite({ isOpen, onClose, activiteId }) {
         .finally(() => setLoading(false));
     }
   }, [isOpen, activiteId]);
+
+  // ✅ Bloque le rendu côté serveur
+  if (!mounted) return null;
 
   return createPortal(
     <AnimatePresence>
@@ -49,7 +57,7 @@ export function ShowActivite({ isOpen, onClose, activiteId }) {
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 260, damping: 25 }}
-            onClick={(e) => e.stopPropagation()} // éviter la fermeture si on clique à l'intérieur
+            onClick={(e) => e.stopPropagation()}
           >
             {/* HEADER */}
             <div className="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4 text-white flex items-center justify-between">
