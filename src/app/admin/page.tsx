@@ -1,3 +1,5 @@
+"use client";
+
 import AddAuthorizedEmail from '../../../components/loginComponents/AddAuthorizedEmail';
 
 export default function AdminEmailsPage() {
