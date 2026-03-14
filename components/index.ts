@@ -5,7 +5,6 @@ export { Button } from './uiComponents/Button';
 export { Header } from './layoutComponents/Header';
 
 // Form Components
-export { AccueilContent } from './loginComponents/AccueilContent';
 export { LoginForm } from './loginComponents/LoginForm';
 export { RegisterForm } from './loginComponents/RegisterForm';
 
