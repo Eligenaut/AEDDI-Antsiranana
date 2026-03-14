@@ -61,13 +61,13 @@ export default function UserEdit({ isOpen, onCancel = () => {}, onClose = () => 
     }
   }, [isOpen, mounted]);
 
-  // Prévenir scroll body
+  // ✅ Protégé par mounted
   useEffect(() => {
+    if (!mounted) return;
     document.body.style.overflow = isVisible ? 'hidden' : 'unset';
     return () => { document.body.style.overflow = 'unset'; };
-  }, [isVisible]);
+  }, [isVisible, mounted]);
 
-  // Met à jour le type de campus si blocCampus est déjà défini
   useEffect(() => {
     if (formData.blocCampus) {
       const type = Object.keys(optionsCampus).find(key =>
@@ -118,7 +118,6 @@ export default function UserEdit({ isOpen, onCancel = () => {}, onClose = () => 
       setError('Le champ "bloc campus" est requis lorsque le logement est campus.');
       return;
     }
-
     if (formData.logement === 'ville' && !formData.quartier) {
       setError('Le champ "quartier" est requis lorsque le logement est en ville.');
       return;
@@ -143,7 +142,6 @@ export default function UserEdit({ isOpen, onCancel = () => {}, onClose = () => 
       }
 
       const endpoint = userId ? `${url}members/${userId}` : `${url}auth/me`;
-
       const res = await fetch(endpoint, {
         method: 'PUT',
         headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
@@ -197,34 +195,18 @@ export default function UserEdit({ isOpen, onCancel = () => {}, onClose = () => 
     >
       {isVisible && (
         <>
-          {/* Backdrop */}
-          <motion.div
-            className="fixed inset-0 bg-black/30 z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={handleClose}
-          />
-
-          {/* Panel */}
+          <motion.div className="fixed inset-0 bg-black/30 z-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} onClick={handleClose} />
           <motion.div
             className="fixed top-0 right-0 h-full w-full sm:w-[600px] bg-white shadow-2xl z-50 overflow-y-auto"
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
+            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 260, damping: 25 }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold">Modifier le profil</h2>
-              <button onClick={handleClose} className="text-gray-500 hover:text-gray-700">
-                <X className="w-6 h-6" />
-              </button>
+              <button onClick={handleClose} className="text-gray-500 hover:text-gray-700"><X className="w-6 h-6" /></button>
             </div>
 
-            {/* Form */}
             <div className="p-6 space-y-6">
               {success && <Alert type="success" message={success} />}
               {error && <Alert type="error" message={error} />}
@@ -278,9 +260,7 @@ export default function UserEdit({ isOpen, onCancel = () => {}, onClose = () => 
                 </div>
 
                 <div className="flex justify-end gap-4 pt-4 border-t">
-                  <button type="button" onClick={handleClose} className="px-6 py-2 border rounded-lg text-gray-700 hover:bg-gray-50">
-                    Annuler
-                  </button>
+                  <button type="button" onClick={handleClose} className="px-6 py-2 border rounded-lg text-gray-700 hover:bg-gray-50">Annuler</button>
                   <button type="submit" disabled={saving} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                     {saving ? 'Mise à jour...' : 'Mettre à jour'}
                   </button>

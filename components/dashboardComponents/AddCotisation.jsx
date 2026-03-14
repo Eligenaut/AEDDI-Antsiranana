@@ -32,10 +32,12 @@ export function AddCotisation({ isOpen, onClose, onSubmit, initialValues }) {
     }
   }, [initialValues, isOpen]);
 
+  // ✅ Protégé par mounted — document.body accessible seulement côté client
   useEffect(() => {
+    if (!mounted) return;
     document.body.style.overflow = isOpen ? 'hidden' : 'unset';
     return () => { document.body.style.overflow = 'unset'; };
-  }, [isOpen]);
+  }, [isOpen, mounted]);
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -61,7 +63,7 @@ export function AddCotisation({ isOpen, onClose, onSubmit, initialValues }) {
 
     setIsSubmitting(true);
     try {
-      await new Promise(r => setTimeout(r, 1000)); // simulate API delay
+      await new Promise(r => setTimeout(r, 1000));
       onSubmit({
         nom: formData.nom.trim(),
         description: formData.description.trim(),
@@ -91,7 +93,6 @@ export function AddCotisation({ isOpen, onClose, onSubmit, initialValues }) {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* BACKDROP */}
           <motion.div
             className="fixed inset-0 z-[9999] bg-black/30"
             initial={{ opacity: 0 }}
@@ -99,8 +100,6 @@ export function AddCotisation({ isOpen, onClose, onSubmit, initialValues }) {
             exit={{ opacity: 0 }}
             onClick={handleClose}
           />
-
-          {/* PANEL */}
           <motion.div
             className="fixed top-0 right-0 h-full w-full sm:w-[500px] bg-white shadow-2xl z-[10000] overflow-y-auto"
             initial={{ x: '100%' }}
@@ -109,7 +108,6 @@ export function AddCotisation({ isOpen, onClose, onSubmit, initialValues }) {
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
             onClick={e => e.stopPropagation()}
           >
-            {/* HEADER */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center space-x-3">
                 <div className="bg-green-100 p-2 rounded-lg">
@@ -124,56 +122,35 @@ export function AddCotisation({ isOpen, onClose, onSubmit, initialValues }) {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={handleClose}
-                disabled={isSubmitting}
-                className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50"
-              >
+              <button onClick={handleClose} disabled={isSubmitting} className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50">
                 <X className="w-6 h-6" />
               </button>
             </div>
 
-            {/* FORM */}
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Nom *</label>
-                <input
-                  type="text"
-                  value={formData.nom}
-                  onChange={e => handleInputChange('nom', e.target.value)}
+                <input type="text" value={formData.nom} onChange={e => handleInputChange('nom', e.target.value)}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.nom ? 'border-red-300' : 'border-gray-300'}`}
-                  placeholder="Ex: Cotisation Annuelle 2024"
-                  disabled={isSubmitting}
-                />
+                  placeholder="Ex: Cotisation Annuelle 2024" disabled={isSubmitting} />
                 {errors.nom && <p className="mt-1 text-sm text-red-600">{errors.nom}</p>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
-                <textarea
-                  value={formData.description}
-                  onChange={e => handleInputChange('description', e.target.value)}
-                  rows={3}
+                <textarea value={formData.description} onChange={e => handleInputChange('description', e.target.value)} rows={3}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.description ? 'border-red-300' : 'border-gray-300'}`}
-                  placeholder="Description détaillée..."
-                  disabled={isSubmitting}
-                />
+                  placeholder="Description détaillée..." disabled={isSubmitting} />
                 {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Montant (AR) *</label>
                 <div className="relative">
-                  <input
-                    type="number"
-                    value={formData.montant}
-                    onChange={e => handleInputChange('montant', e.target.value)}
-                    min="0"
-                    step="100"
+                  <input type="number" value={formData.montant} onChange={e => handleInputChange('montant', e.target.value)}
+                    min="0" step="100"
                     className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.montant ? 'border-red-300' : 'border-gray-300'}`}
-                    placeholder="0"
-                    disabled={isSubmitting}
-                  />
+                    placeholder="0" disabled={isSubmitting} />
                   <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 </div>
                 {errors.montant && <p className="mt-1 text-sm text-red-600">{errors.montant}</p>}
@@ -183,28 +160,19 @@ export function AddCotisation({ isOpen, onClose, onSubmit, initialValues }) {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Date de début *</label>
                   <div className="relative">
-                    <input
-                      type="date"
-                      value={formData.date_debut}
-                      onChange={e => handleInputChange('date_debut', e.target.value)}
+                    <input type="date" value={formData.date_debut} onChange={e => handleInputChange('date_debut', e.target.value)}
                       className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.date_debut ? 'border-red-300' : 'border-gray-300'}`}
-                      disabled={isSubmitting}
-                    />
+                      disabled={isSubmitting} />
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   </div>
                   {errors.date_debut && <p className="mt-1 text-sm text-red-600">{errors.date_debut}</p>}
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Date de fin *</label>
                   <div className="relative">
-                    <input
-                      type="date"
-                      value={formData.date_fin}
-                      onChange={e => handleInputChange('date_fin', e.target.value)}
+                    <input type="date" value={formData.date_fin} onChange={e => handleInputChange('date_fin', e.target.value)}
                       className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.date_fin ? 'border-red-300' : 'border-gray-300'}`}
-                      disabled={isSubmitting}
-                    />
+                      disabled={isSubmitting} />
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   </div>
                   {errors.date_fin && <p className="mt-1 text-sm text-red-600">{errors.date_fin}</p>}
@@ -212,29 +180,16 @@ export function AddCotisation({ isOpen, onClose, onSubmit, initialValues }) {
               </div>
 
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={handleClose}
-                  disabled={isSubmitting}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
-                >
+                <button type="button" onClick={handleClose} disabled={isSubmitting}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50">
                   Annuler
                 </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center space-x-2 disabled:opacity-50"
-                >
+                <button type="submit" disabled={isSubmitting}
+                  className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg flex items-center space-x-2 disabled:opacity-50">
                   {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{initialValues ? 'Mise à jour...' : 'Création...'}</span>
-                    </>
+                    <><Loader2 className="w-4 h-4 animate-spin" /><span>{initialValues ? 'Mise à jour...' : 'Création...'}</span></>
                   ) : (
-                    <>
-                      <Save className="w-4 h-4" />
-                      <span>{initialValues ? 'Mettre à jour' : 'Créer'}</span>
-                    </>
+                    <><Save className="w-4 h-4" /><span>{initialValues ? 'Mettre à jour' : 'Créer'}</span></>
                   )}
                 </button>
               </div>
