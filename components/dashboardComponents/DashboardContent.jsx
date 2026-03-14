@@ -1,9 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import NProgress from 'nprogress';
 import { DashboardSidebar } from './DashboardSidebar';
 import { DashboardHeader } from './DashboardHeader';
 import { DashboardMain } from './DashboardMain';
@@ -12,16 +11,8 @@ import { DashboardCotisations } from './DashboardCotisations';
 import { DashboardActivites } from './DashboardActivites';
 import DashboardSetting from './DashboardSetting';
 
-// Configurer nprogress
-NProgress.configure({
-  showSpinner: false,
-  trickleSpeed: 100,
-  minimum: 0.2,
-  easing: 'ease',
-  speed: 500,
-});
+// ✅ Plus d'import NProgress ici — chargé dynamiquement dans useEffect
 
-// Mapping entre les sections et les chemins URL
 const sectionToPath = {
   'accueil': '/dashboard',
   'membres': '/dashboard/membres',
@@ -30,7 +21,6 @@ const sectionToPath = {
   'parametres': '/dashboard/parametres',
 };
 
-// Mapping inverse entre les chemins URL et les sections
 const pathToSection = {
   '/dashboard': 'accueil',
   '/dashboard/membres': 'membres',
@@ -44,16 +34,29 @@ export function DashboardContent() {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  
-  // Initialiser currentSection directement depuis l'URL de manière synchrone
+  const np = useRef(null); // ✅ NProgress stocké dans un ref
+
+  // ✅ Charger NProgress uniquement côté client
+  useEffect(() => {
+    import('nprogress').then((mod) => {
+      np.current = mod.default;
+      np.current.configure({
+        showSpinner: false,
+        trickleSpeed: 100,
+        minimum: 0.2,
+        easing: 'ease',
+        speed: 500,
+      });
+    });
+  }, []);
+
   const getSectionFromPath = (path) => pathToSection[path] || 'accueil';
-  
-  // Utiliser directement pathname pour éviter les états intermédiaires
   const currentSection = getSectionFromPath(pathname);
-  
+
+  // ✅ window uniquement dans useEffect
   useEffect(() => {
     const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 1024); 
+      setIsMobile(window.innerWidth < 1024);
       if (window.innerWidth >= 1024) {
         setSidebarOpen(true);
       }
@@ -61,33 +64,28 @@ export function DashboardContent() {
 
     checkIsMobile();
     window.addEventListener('resize', checkIsMobile);
-    
     return () => window.removeEventListener('resize', checkIsMobile);
   }, []);
 
-  // Gérer la barre de progression lors des changements de route
+  // ✅ NProgress via ref — jamais appelé au prerendering
   useEffect(() => {
-    // Ne rien faire au premier chargement
-    if (!pathname) return;
-    
-    // Démarrer la barre de progression
-    NProgress.start();
-    
-    // Simuler une progression fluide
+    if (!pathname || !np.current) return;
+
+    np.current.start();
+
     const interval = setInterval(() => {
-      NProgress.inc(0.15);
+      np.current?.inc(0.15);
     }, 80);
-    
-    // Terminer après un délai
+
     const timer = setTimeout(() => {
       clearInterval(interval);
-      NProgress.done();
+      np.current?.done();
     }, 800);
 
     return () => {
       clearInterval(interval);
       clearTimeout(timer);
-      NProgress.done();
+      np.current?.done();
     };
   }, [pathname]);
 
@@ -96,34 +94,28 @@ export function DashboardContent() {
   };
 
   const handleSectionChange = (section) => {
-    // Mettre à jour l'URL - le state sera mis à jour automatiquement via pathname
     const path = sectionToPath[section] || '/dashboard';
-    
-    // Vérifier si on est déjà sur la bonne route pour éviter les navigations inutiles
+
     if (pathname !== path) {
-      // Démarrer la barre de progression avant la navigation
-      NProgress.start();
-      // Simuler une progression pendant la navigation
+      np.current?.start();
+
       const progressInterval = setInterval(() => {
-        NProgress.inc();
+        np.current?.inc();
       }, 100);
-      
+
       router.push(path);
-      
-      // Arrêter après un délai
+
       setTimeout(() => {
         clearInterval(progressInterval);
-        NProgress.done();
+        np.current?.done();
       }, 600);
     }
-    
-    // Fermer la sidebar sur mobile après sélection
+
     if (isMobile) {
       setSidebarOpen(false);
     }
   };
 
-  // Fonction pour rendre le composant approprié
   const renderCurrentSection = () => {
     switch (currentSection) {
       case 'accueil':
@@ -143,24 +135,20 @@ export function DashboardContent() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <DashboardSidebar 
-        isOpen={sidebarOpen} 
+      <DashboardSidebar
+        isOpen={sidebarOpen}
         onToggle={toggleSidebar}
         currentSection={currentSection}
         onSectionChange={handleSectionChange}
       />
 
-      {/* Contenu principal */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <DashboardHeader 
+        <DashboardHeader
           onMenuClick={toggleSidebar}
           currentSection={currentSection}
           onSectionChange={handleSectionChange}
         />
 
-        {/* Contenu principal - change selon la section sélectionnée */}
         {renderCurrentSection()}
       </div>
     </div>
