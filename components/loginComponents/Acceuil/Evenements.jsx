@@ -1,72 +1,47 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { url } from "../../context/url.js";
 
-// ─── Données ──────────────────────────────────────────────────────────────────
-const evenements = [
-  {
-    id: 1,
-    titre: "Tournoi Inter-Associations",
-    description:
-      "Grand tournoi sportif réunissant les associations étudiantes de Diego. Football, basketball et athlétisme au programme pour une journée de cohésion et de compétition amicale.",
-    image: "https://images.unsplash.com/photo-1547347298-4074fc3086f0?w=900&q=85",
-    dateDebut: "2025-03-15",
-    dateFin: "2025-03-16",
-    lieu: "Stade Municipal de Diego-Suarez",
-    statut: "terminé",
-    categorie: "Sport",
-    emoji: "⚽",
-    couleur: "from-orange-500 to-red-500",
-    bg: "bg-orange-50",
-    border: "border-orange-100",
-    badge: "bg-orange-100 text-orange-700",
-  },
-  {
-    id: 2,
-    titre: "Soirée Culturelle AEDDI",
-    description:
-      "Une soirée mêlant danses traditionnelles malgaches et performances modernes. Showcase de talents, musique live et exposition artisanale.",
-    image: "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=900&q=85",
-    dateDebut: "2025-04-20",
-    dateFin: "2025-04-20",
-    lieu: "Salle des Fêtes de la Mairie, Diego",
-    statut: "en cours",
-    categorie: "Culture",
-    emoji: "🎭",
-    couleur: "from-purple-500 to-pink-500",
-    bg: "bg-purple-50",
-    border: "border-purple-100",
-    badge: "bg-purple-100 text-purple-700",
-  },
-  {
-    id: 3,
-    titre: "Séminaire Leadership Étudiant",
-    description:
-      "Formation intensive de 2 jours sur le leadership, la gestion de projet et l'entrepreneuriat. Intervenants professionnels et ateliers pratiques.",
-    image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=900&q=85",
-    dateDebut: "2025-05-10",
-    dateFin: "2025-05-11",
-    lieu: "ESPA — Antsiranana, Ampasitra",
-    statut: "en cours",
-    categorie: "Formation",
-    emoji: "🎓",
-    couleur: "from-blue-500 to-cyan-500",
-    bg: "bg-blue-50",
-    border: "border-blue-100",
-    badge: "bg-blue-100 text-blue-700",
-  },
-];
+// ─── Mapping catégorie → styles ───────────────────────────────────────────────
+const CATEGORIE_STYLES = {
+  Sport:     { emoji: "⚽", couleur: "from-orange-500 to-red-500",   bg: "bg-orange-50",  border: "border-orange-100",  badge: "bg-orange-100 text-orange-700"  },
+  Culture:   { emoji: "🎭", couleur: "from-purple-500 to-pink-500",  bg: "bg-purple-50",  border: "border-purple-100",  badge: "bg-purple-100 text-purple-700"  },
+  Formation: { emoji: "🎓", couleur: "from-blue-500 to-cyan-500",    bg: "bg-blue-50",    border: "border-blue-100",    badge: "bg-blue-100 text-blue-700"      },
+  Autre:     { emoji: "📌", couleur: "from-gray-400 to-gray-600",    bg: "bg-gray-50",    border: "border-gray-100",    badge: "bg-gray-100 text-gray-700"      },
+};
+
+function getStyles(categorie) {
+  return CATEGORIE_STYLES[categorie] || CATEGORIE_STYLES["Autre"];
+}
 
 function formatDate(dateStr) {
+  if (!dateStr) return "";
   return new Date(dateStr).toLocaleDateString("fr-FR", {
     day: "2-digit", month: "short", year: "numeric",
   });
 }
 
+// ─── Skeleton carte ───────────────────────────────────────────────────────────
+function SkeletonCard() {
+  return (
+    <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm bg-white flex flex-col animate-pulse">
+      <div className="h-56 bg-gray-200" />
+      <div className="flex-1 p-5 bg-gray-50 space-y-3">
+        <div className="h-4 bg-gray-200 rounded w-3/4" />
+        <div className="h-3 bg-gray-200 rounded w-full" />
+        <div className="h-3 bg-gray-200 rounded w-5/6" />
+        <div className="h-3 bg-gray-200 rounded w-1/2 mt-4" />
+      </div>
+    </div>
+  );
+}
+
 // ─── Carte événement ──────────────────────────────────────────────────────────
 function EventCard({ evt, index }) {
-  const isTermine = evt.statut === "terminé";
+  const isTermine = evt.statut === "terminee" || evt.statut === "terminé";
+  const styles    = getStyles(evt.categorie);
 
   return (
     <motion.div
@@ -75,23 +50,29 @@ function EventCard({ evt, index }) {
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
       whileHover={{ y: -6, transition: { duration: 0.2 } }}
-      className={`group rounded-2xl overflow-hidden border ${evt.border} shadow-sm hover:shadow-xl transition-all duration-300 bg-white flex flex-col`}
+      className={`group rounded-2xl overflow-hidden border ${styles.border} shadow-sm hover:shadow-xl transition-all duration-300 bg-white flex flex-col`}
     >
       {/* Image */}
-      <div className="relative h-56 overflow-hidden">
-        <img
-          src={evt.image}
-          alt={evt.titre}
-          className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${isTermine ? "grayscale-[30%]" : ""}`}
-        />
+      <div className="relative h-56 overflow-hidden bg-gray-100">
+        {evt.image ? (
+          <img
+            src={evt.image}
+            alt={evt.nom}
+            className={`w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ${isTermine ? "grayscale-[30%]" : ""}`}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-5xl bg-gray-100">
+            {styles.emoji}
+          </div>
+        )}
 
         {/* Overlay dégradé */}
-        <div className={`absolute inset-0 bg-gradient-to-t ${evt.couleur} opacity-40 group-hover:opacity-50 transition-opacity duration-300`} />
+        <div className={`absolute inset-0 bg-gradient-to-t ${styles.couleur} opacity-40 group-hover:opacity-50 transition-opacity duration-300`} />
 
         {/* Badge catégorie */}
         <div className="absolute top-3 left-3">
-          <span className={`text-sm font-bold px-2.5 py-1 rounded-full ${evt.badge} backdrop-blur-sm`}>
-            {evt.emoji} {evt.categorie}
+          <span className={`text-sm font-bold px-2.5 py-1 rounded-full ${styles.badge} backdrop-blur-sm`}>
+            {styles.emoji} {evt.categorie}
           </span>
         </div>
 
@@ -109,11 +90,11 @@ function EventCard({ evt, index }) {
       </div>
 
       {/* Contenu */}
-      <div className={`flex-1 p-5 ${evt.bg}`}>
+      <div className={`flex-1 p-5 ${styles.bg}`}>
         <h3 className="text-lg font-extrabold text-gray-800 mb-2 leading-tight">
-          {evt.titre}
+          {evt.nom}
         </h3>
-        <p className="text-gray-500 text-sm leading-relaxed mb-4">
+        <p className="text-gray-500 text-sm leading-relaxed mb-4 line-clamp-3">
           {evt.description}
         </p>
 
@@ -126,20 +107,22 @@ function EventCard({ evt, index }) {
             <line x1="3" y1="10" x2="21" y2="10" />
           </svg>
           <span className="text-gray-600 text-xs font-semibold">
-            {evt.dateDebut === evt.dateFin
-              ? formatDate(evt.dateDebut)
-              : `${formatDate(evt.dateDebut)} → ${formatDate(evt.dateFin)}`}
+            {evt.date_debut === evt.date_fin
+              ? formatDate(evt.date_debut)
+              : `${formatDate(evt.date_debut)} → ${formatDate(evt.date_fin)}`}
           </span>
         </div>
 
         {/* Lieu */}
-        <div className="flex items-center gap-2">
-          <svg className="text-gray-400 shrink-0" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-            <circle cx="12" cy="10" r="3" />
-          </svg>
-          <span className="text-gray-500 text-xs">{evt.lieu}</span>
-        </div>
+        {evt.lieu && (
+          <div className="flex items-center gap-2">
+            <svg className="text-gray-400 shrink-0" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <span className="text-gray-500 text-xs">{evt.lieu}</span>
+          </div>
+        )}
       </div>
     </motion.div>
   );
@@ -147,6 +130,24 @@ function EventCard({ evt, index }) {
 
 // ─── Section Événements ───────────────────────────────────────────────────────
 export default function Evenements() {
+  const [activites, setActivites] = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(null);
+
+  useEffect(() => {
+    fetch(`${url}accueil/activites`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setActivites(data.data);
+        } else {
+          setError("Impossible de charger les activités.");
+        }
+      })
+      .catch(() => setError("Erreur de connexion au serveur."))
+      .finally(() => setLoading(false));
+  }, []);
+
   return (
     <section id="evenements" className="w-full py-16 px-4 sm:px-6 lg:px-8 bg-white">
 
@@ -187,33 +188,50 @@ export default function Evenements() {
         </motion.p>
       </div>
 
-      {/* Grille 3 cartes */}
+      {/* Grille */}
       <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {evenements.map((evt, i) => (
-          <EventCard key={evt.id} evt={evt} index={i} />
-        ))}
+        {loading ? (
+          // Skeletons pendant le chargement
+          [1, 2, 3].map(i => <SkeletonCard key={i} />)
+        ) : error ? (
+          // Message d'erreur
+          <div className="col-span-3 text-center py-16 text-gray-400">
+            <span className="text-4xl mb-3 block">😕</span>
+            <p className="text-sm">{error}</p>
+          </div>
+        ) : activites.length === 0 ? (
+          // Aucune activité
+          <div className="col-span-3 text-center py-16 text-gray-400">
+            <span className="text-4xl mb-3 block">📭</span>
+            <p className="text-sm">Aucune activité pour le moment.</p>
+          </div>
+        ) : (
+          activites.slice(0, 3).map((evt, i) => (
+            <EventCard key={evt.id} evt={evt} index={i} />
+          ))
+        )}
       </div>
 
-      {/* Légende + lien */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ delay: 0.4 }}
-        className="max-w-6xl mx-auto mt-10 flex flex-col sm:flex-row items-center justify-between gap-4"
-      >
-
-        {/* Voir tous */}
-        <a
-          href="/evenements"
-          className="flex items-center gap-2 text-purple-600 hover:text-pink-500 text-sm font-bold transition-colors"
+      {/* Voir tous */}
+      {!loading && activites.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.4 }}
+          className="max-w-6xl mx-auto mt-10 flex justify-start"
         >
-          Voir tous les activités
-          <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="4 13 10 7 4 1" />
-          </svg>
-        </a>
-      </motion.div>
+          <a
+            href="/evenements"
+            className="flex items-center gap-2 text-purple-600 hover:text-pink-500 text-sm font-bold transition-colors"
+          >
+            Voir tous les activités
+            <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="4 13 10 7 4 1" />
+            </svg>
+          </a>
+        </motion.div>
+      )}
 
     </section>
   );
