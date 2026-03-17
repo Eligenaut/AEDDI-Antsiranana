@@ -2,11 +2,11 @@
 
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { Button } from '../uiComponents/Button';
+import { Button } from '../uiComponents/Button.jsx';
 import { url } from '../context/url.js';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
-export function PasswordCreation({ email, onPasswordCreated }) {
+export function RegisterPassword({ email, token, onPasswordCreated }) {
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: ''
@@ -54,39 +54,67 @@ export function PasswordCreation({ email, onPasswordCreated }) {
 
     if (!passwordValidation.isValid) {
       setError('Le mot de passe ne respecte pas tous les critères requis.');
+      Notify.failure('Le mot de passe ne respecte pas tous les critères requis.');
       return;
     }
 
     if (!passwordsMatch) {
       setError('Les mots de passe ne correspondent pas.');
+      Notify.failure('Les mots de passe ne correspondent pas.');
       return;
     }
 
     setIsCreating(true);
 
     try {
-      const resp = await fetch(`${url}auth/create-password`, {
+      const response = await fetch(`${url}auth/create-password`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password: formData.password, confirmPassword: formData.confirmPassword })
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ 
+          email, 
+          token,
+          password: formData.password, 
+          confirmPassword: formData.confirmPassword 
+        })
       });
-      const data = await resp.json();
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.message || 'Erreur lors de la création du mot de passe');
+        Notify.failure(errorData.message || 'Erreur lors de la création du mot de passe');
+        setIsCreating(false);
+        return;
+      }
+
+      const data = await response.json();
 
       if (data.success) {
         setMessage('✅ Mot de passe créé avec succès ! Redirection en cours...');
         Notify.success('Mot de passe créé avec succès !');
         
-        // Le token est déjà stocké après la vérification, on redirige directement
+        // Stocker le token d'authentification retourné par le serveur
+        if (data.token) {
+          localStorage.setItem('auth_token', data.token);
+          localStorage.setItem('user_id', data.user?.id);
+          localStorage.setItem('user_email', email);
+          localStorage.setItem('user_name', data.user?.name);
+        }
+
         setTimeout(() => {
-          onPasswordCreated('token-already-stored');
+          onPasswordCreated(data.token || '');
         }, 2000);
       } else {
         setError(data.message || 'Erreur lors de la création du mot de passe');
         Notify.failure(data.message || 'Erreur lors de la création du mot de passe');
       }
     } catch (error) {
-      setError('Erreur lors de la création du mot de passe. Veuillez réessayer.');
-      Notify.failure('Erreur lors de la création du mot de passe. Veuillez réessayer.');
+      console.error('Erreur:', error);
+      const errorMsg = 'Erreur lors de la création du mot de passe. Veuillez réessayer.';
+      setError(errorMsg);
+      Notify.failure(errorMsg);
     } finally {
       setIsCreating(false);
     }
@@ -112,37 +140,40 @@ export function PasswordCreation({ email, onPasswordCreated }) {
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
           Créer votre mot de passe
         </h1>
-        <p className="text-gray-600 dark:text-white">
+        <p className="text-gray-600 dark:text-gray-400">
           Votre email a été vérifié avec succès !
         </p>
-        <p className="text-sm text-gray-500 dark:text-white mt-1">
+        <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
           {email}
         </p>
       </motion.div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Champ Mot de Passe */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Nouveau mot de passe
           </label>
           <div className="relative">
             <input
+              id="password"
               type={showPassword ? 'text' : 'password'}
               name="password"
               value={formData.password}
               onChange={handleChange}
               placeholder="Créez un mot de passe sécurisé"
-              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
+              className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all dark:bg-gray-700 dark:text-white"
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
             >
               {showPassword ? (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,30 +187,70 @@ export function PasswordCreation({ email, onPasswordCreated }) {
               )}
             </button>
           </div>
+
+          {/* Critères de validation */}
+          {formData.password && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-2"
+            >
+              <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">Critères :</p>
+              <div className="space-y-1">
+                {[
+                  { label: '8 caractères minimum', valid: passwordValidation.checks.minLength },
+                  { label: 'Une majuscule', valid: passwordValidation.checks.hasUpperCase },
+                  { label: 'Une minuscule', valid: passwordValidation.checks.hasLowerCase },
+                  { label: 'Un chiffre', valid: passwordValidation.checks.hasNumbers },
+                  { label: 'Un caractère spécial (!@#$%^&*)', valid: passwordValidation.checks.hasSpecialChar }
+                ].map((check, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <span className={`w-4 h-4 rounded-full flex items-center justify-center text-xs ${
+                      check.valid 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-gray-300 dark:bg-gray-600 text-gray-400'
+                    }`}>
+                      {check.valid && '✓'}
+                    </span>
+                    <span className={`text-xs ${
+                      check.valid 
+                        ? 'text-green-700 dark:text-green-400' 
+                        : 'text-gray-500 dark:text-gray-400'
+                    }`}>
+                      {check.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
         </motion.div>
 
+        {/* Champ Confirmation Mot de Passe */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Confirmer le mot de passe
           </label>
           <div className="relative">
             <input
+              id="confirmPassword"
               type={showConfirmPassword ? 'text' : 'password'}
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="Confirmez votre mot de passe"
-              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all"
+              className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all dark:bg-gray-700 dark:text-white"
               required
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              aria-label={showConfirmPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
             >
               {showConfirmPassword ? (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -193,15 +264,40 @@ export function PasswordCreation({ email, onPasswordCreated }) {
               )}
             </button>
           </div>
+
+          {/* Indicateur de correspondance */}
+          {formData.confirmPassword && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className={`mt-2 p-2 rounded-lg flex items-center gap-2 ${
+                passwordsMatch
+                  ? 'bg-green-50 dark:bg-green-900/30'
+                  : 'bg-red-50 dark:bg-red-900/30'
+              }`}
+            >
+              <span className={`w-4 h-4 rounded-full ${
+                passwordsMatch ? 'bg-green-500' : 'bg-red-500'
+              }`}></span>
+              <span className={`text-xs font-medium ${
+                passwordsMatch
+                  ? 'text-green-700 dark:text-green-400'
+                  : 'text-red-700 dark:text-red-400'
+              }`}>
+                {passwordsMatch ? 'Les mots de passe correspondent' : 'Les mots de passe ne correspondent pas'}
+              </span>
+            </motion.div>
+          )}
         </motion.div>
+
         {/* Messages */}
         {message && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-3 bg-green-50 border border-green-200 rounded-lg"
+            className="p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg"
           >
-            <p className="text-sm text-green-800">{message}</p>
+            <p className="text-sm text-green-800 dark:text-green-300">{message}</p>
           </motion.div>
         )}
 
@@ -209,12 +305,13 @@ export function PasswordCreation({ email, onPasswordCreated }) {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-3 bg-red-50 border border-red-200 rounded-lg"
+            className="p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg"
           >
-            <p className="text-sm text-red-800">{error}</p>
+            <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
           </motion.div>
         )}
 
+        {/* Bouton Soumettre */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -227,18 +324,26 @@ export function PasswordCreation({ email, onPasswordCreated }) {
             className="w-full"
             disabled={isCreating || !passwordValidation.isValid || !passwordsMatch}
           >
-            {isCreating ? 'Création en cours...' : 'Créer mon mot de passe'}
+            {isCreating ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="animate-spin inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
+                Création en cours...
+              </span>
+            ) : (
+              'Créer mon mot de passe'
+            )}
           </Button>
         </motion.div>
       </form>
 
+      {/* Message de sécurité */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7 }}
-        className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg"
+        className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg"
       >
-        <p className="text-xs text-blue-800">
+        <p className="text-xs text-blue-800 dark:text-blue-300">
           <strong>🔒 Sécurité :</strong> Votre mot de passe est chiffré et stocké de manière sécurisée. 
           Ne le partagez jamais avec d'autres personnes.
         </p>

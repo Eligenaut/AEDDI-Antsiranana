@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { url } from '../context/url.js';
 import { getAuthHeaders } from '../context/headers.jsx';
-import { getUserRole, ROLES } from '../context/roles.js';
 import { User, MessageCircle, Bell, LogOut } from 'lucide-react';
 import { UserAvatar } from '../uiComponents/UserAvatar.jsx';
 
@@ -24,7 +23,6 @@ export function DashboardHeader({ onMenuClick, currentSection, onSectionChange }
         setUser(null);
       }
     }
-    setUserRole(getUserRole());
   }, []);
 
   const handleLogout = async () => {

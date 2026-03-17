@@ -43,35 +43,64 @@ export function RegisterForm({ onSwitchToLogin, onRegistrationSubmit, isSubmitti
   };
 
   const handleEmailCheck = async () => {
-    if (!formData.email.trim()) return;
+    const email = formData.email.trim();
+    
+    if (!email) {
+      Notify.failure('Veuillez entrer un email');
+      return;
+    }
+
     setEmailValidation({ isValid: false, isChecking: true });
 
     try {
-      const resp = await fetch(`${url}auth/check-email-allowed`, {
+      const response = await fetch(`${url}auth/check-email-allowed`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email.trim() })
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ email })
       });
-      const response = await resp.json();
 
-      if (response.success) {
+      // Vérifier le statut HTTP
+      if (!response.ok) {
+        const errorData = await response.json();
+        setEmailValidation({ isValid: false, isChecking: false });
+        Notify.failure(errorData.message || 'Email non autorisé');
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
         setEmailValidation({ isValid: true, isChecking: false });
         Notify.success('Email autorisé !');
       } else {
         setEmailValidation({ isValid: false, isChecking: false });
-        Notify.failure(response.message || 'Email non autorisé');
+        Notify.failure(data.message || 'Email non autorisé');
       }
     } catch (error) {
+      console.error('Erreur lors de la vérification email:', error);
       setEmailValidation({ isValid: false, isChecking: false });
-      Notify.failure('Erreur lors de la vérification');
+      Notify.failure('Erreur de connexion. Vérifiez votre serveur.');
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.email.trim()) {
+    const email = formData.email.trim();
+
+    if (!email) {
       Notify.failure('Veuillez entrer un email');
+      return;
+    }
+
+    // Vérifier que les champs obligatoires sont remplis
+    if (!formData.nom || !formData.prenom || !formData.etablissement || 
+        !formData.parcours || !formData.niveau || !formData.promotion || 
+        !formData.telephone) {
+      Notify.failure('Veuillez remplir tous les champs obligatoires');
       return;
     }
 
@@ -79,12 +108,23 @@ export function RegisterForm({ onSwitchToLogin, onRegistrationSubmit, isSubmitti
 
     try {
       // 1. Vérifier email
-      const checkResp = await fetch(`${url}auth/check-email-allowed`, {
+      const checkResponse = await fetch(`${url}auth/check-email-allowed`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email.trim() }),
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ email })
       });
-      const checkData = await checkResp.json();
+
+      if (!checkResponse.ok) {
+        const errorData = await checkResponse.json();
+        Notify.failure(errorData.message || 'Email non autorisé');
+        setIsLoading(false);
+        return;
+      }
+
+      const checkData = await checkResponse.json();
 
       if (!checkData.success) {
         Notify.failure(checkData.message || 'Email non autorisé');
@@ -92,44 +132,67 @@ export function RegisterForm({ onSwitchToLogin, onRegistrationSubmit, isSubmitti
         return;
       }
 
-      // 2. Préparer payload avec image
-      let payload = { ...formData };
+      // 2. Préparer le payload avec image
+      let payload = { 
+        ...formData,
+        email,
+        url_frontend 
+      };
+
       const hasFile = formData.image && formData.image instanceof File;
       if (hasFile) {
         const toBase64 = (file) => new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.readAsDataURL(file);
           reader.onload = () => resolve(reader.result);
-          reader.onerror = reject;
+          reader.onerror = () => reject(new Error('Erreur de lecture du fichier'));
         });
-        const base64Image = await toBase64(formData.image);
-        payload = {
-          ...payload,
-          image: base64Image,
-          imageName: formData.image.name,
-          imageType: formData.image.type
-        };
+
+        try {
+          const base64Image = await toBase64(formData.image);
+          payload = {
+            ...payload,
+            image: base64Image,
+            imageName: formData.image.name,
+            imageType: formData.image.type
+          };
+        } catch (imgError) {
+          console.error('Erreur conversion image:', imgError);
+          Notify.failure('Erreur lors du traitement de l\'image');
+          setIsLoading(false);
+          return;
+        }
       }
 
-      // 3. Inscription
-      const resp = await fetch(`${url}auth/register`, {
+      // 3. Soumettre l'inscription
+      const registerResponse = await fetch(`${url}auth/register`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...payload, url_frontend }),
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
       });
-      const data = await resp.json();
 
-      if (data.success) {
+      const registerData = await registerResponse.json();
+
+      if (!registerResponse.ok) {
+        console.error('Erreurs inscription:', registerData.errors || registerData);
+        Notify.failure(registerData.message || "Erreur lors de l'inscription");
+        setIsLoading(false);
+        return;
+      }
+
+      if (registerData.success) {
         Notify.success('Inscription réussie ! Vérifiez votre email pour créer votre mot de passe.');
-        if (onRegistrationSubmit) onRegistrationSubmit(data);
+        if (onRegistrationSubmit) onRegistrationSubmit(registerData);
         setCurrentStep('success');
       } else {
-        console.log('Erreurs:', data.errors);
-        Notify.failure(data.message || "Erreur lors de l'inscription");
+        Notify.failure(registerData.message || "Erreur lors de l'inscription");
       }
     } catch (error) {
-      console.error(error);
-      Notify.failure('Erreur réseau');
+      console.error('Erreur réseau:', error);
+      Notify.failure('Erreur de connexion au serveur');
     } finally {
       setIsLoading(false);
     }

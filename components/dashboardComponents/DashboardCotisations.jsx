@@ -7,7 +7,6 @@ import { AddCotisation } from './AddCotisation';
 import axios from 'axios';
 import { url } from '../context/url.js';
 import { getAuthHeaders } from '../context/headers.jsx';
-import { hasPermission, getUserRole, ROLES } from '../context/roles.js';
 import { ShowCotisation } from './ShowCotisation';
 import Notiflix from 'notiflix';
 import { ModalConfirmation } from '../common/ModalConfirmation';

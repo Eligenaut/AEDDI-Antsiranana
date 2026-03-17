@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Filter, Download } from 'lucide-react';
 import { etablissements, getPromotionsOptions } from '../loginComponents/DataRegister';
-import { canExportUsers } from '../context/roles';
 
 export function FilterUser({ onFiltersChange, className = '', currentUser, onExportXLSX }) {
   const [filters, setFilters] = useState({

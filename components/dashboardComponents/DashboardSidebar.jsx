@@ -3,14 +3,18 @@
 import { useState, useEffect, useRef } from 'react';
 import { url } from '../context/url.js';
 import { getAuthHeaders } from '../context/headers.jsx';
-import { Home, Calendar, Users, CreditCard, User, MessageCircle, Bell, LogOut, Settings, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Home, Calendar, Users, CreditCard, User, MessageCircle, Bell, LogOut, Settings, ChevronRight, ChevronLeft, ChevronDown } from 'lucide-react';
 
 const menuItems = [
   { id: 'accueil', label: 'Accueil', icon: Home, active: true, badge: null },
   { id: 'activites', label: 'Activités', icon: Calendar, active: false, badge: null },
   { id: 'membres', label: 'Membres', icon: Users, active: false, badge: null },
   { id: 'cotisations', label: 'Cotisations', icon: CreditCard, active: false, badge: null },
-  { id: 'parametres', label: 'Paramètres', icon: Settings, active: false, badge: null },
+];
+
+const parametresSubItems = [
+  { id: 'moncompte', label: 'Mon compte', icon: User },
+  { id: 'permissions', label: 'Permissions', icon: Settings },
 ];
 
 const userMenuItems = [
@@ -18,8 +22,10 @@ const userMenuItems = [
   { id: 'messages', label: 'Messages', icon: MessageCircle, badge: '3' },
   { id: 'notifications', label: 'Notifications', icon: Bell, badge: '5' },
 ];
+
 export function DashboardSidebar({ isOpen, onToggle, currentSection, onSectionChange }) {
   const [activeItem, setActiveItem] = useState(currentSection);
+  const [parametresExpanded, setParametresExpanded] = useState(false);
 
   const getInitialExpanded = () => {
     if (typeof window === 'undefined') return false;
@@ -40,6 +46,10 @@ export function DashboardSidebar({ isOpen, onToggle, currentSection, onSectionCh
 
   useEffect(() => {
     setActiveItem(currentSection);
+    // Ouvrir le sous-menu si l'item actif est dans paramètres
+    if (parametresSubItems.some(item => item.id === currentSection)) {
+      setParametresExpanded(true);
+    }
   }, [currentSection]);
 
   useEffect(() => {
@@ -79,6 +89,10 @@ export function DashboardSidebar({ isOpen, onToggle, currentSection, onSectionCh
   const handleMenuClick = (itemId) => {
     setActiveItem(itemId);
     onSectionChange(itemId);
+  };
+
+  const toggleParametres = () => {
+    setParametresExpanded(!parametresExpanded);
   };
 
   const toggleExpand = () => {
@@ -192,8 +206,80 @@ export function DashboardSidebar({ isOpen, onToggle, currentSection, onSectionCh
                   </button>
                 </li>
               ))}
+              
+              {/* Paramètres - juste un toggle, pas un lien */}
+              <li key="parametres">
+                <button
+                  onClick={toggleParametres}
+                  className={`w-full flex items-center transition-all duration-200 rounded-lg ${
+                    sidebarExpanded ? 'justify-between px-4 py-3' : 'justify-center px-2 py-3'
+                  } text-gray-700 hover:bg-gray-100 hover:text-gray-900`}
+                  title={!sidebarExpanded ? 'Paramètres' : ''}
+                >
+                  <div className={`flex items-center transition-all duration-300 ${
+                    sidebarExpanded ? 'space-x-3' : 'justify-center'
+                  }`}>
+                    <Settings className="w-5 h-5 text-gray-600 flex-shrink-0" />
+                    <span className={`font-medium transition-all duration-300 whitespace-nowrap ${
+                      sidebarExpanded ? 'opacity-100 max-w-full' : 'opacity-0 max-w-0 overflow-hidden'
+                    }`}>
+                      Paramètres
+                    </span>
+                  </div>
+                  {sidebarExpanded && (
+                    <ChevronDown
+                      className={`w-4 h-4 text-gray-600 transition-transform duration-300 flex-shrink-0 ${
+                        parametresExpanded ? 'rotate-180' : ''
+                      }`}
+                    />
+                  )}
+                </button>
+
+                {/* Sous-menu Paramètres */}
+                {parametresExpanded && sidebarExpanded && (
+                  <ul className="mt-1 space-y-1 pl-4 border-l-2 border-purple-200">
+                    {parametresSubItems.map((item) => (
+                      <li key={item.id}>
+                        <button
+                          onClick={() => handleMenuClick(item.id)}
+                          className={`w-full flex items-center px-4 py-2 rounded-lg text-sm transition-all duration-200 ${
+                            activeItem === item.id
+                              ? 'bg-purple-100 text-purple-700 font-medium'
+                              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                          }`}
+                        >
+                          <item.icon className="w-4 h-4 mr-3 flex-shrink-0" />
+                          <span>{item.label}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {/* Version condensée - afficher les sous-items en icônes quand sidebar réduite */}
+                {parametresExpanded && !sidebarExpanded && (
+                  <ul className="mt-1 space-y-1">
+                    {parametresSubItems.map((item) => (
+                      <li key={item.id}>
+                        <button
+                          onClick={() => handleMenuClick(item.id)}
+                          className={`w-full flex justify-center p-2 rounded-lg transition-all duration-200 ${
+                            activeItem === item.id
+                              ? 'bg-purple-100 text-purple-700'
+                              : 'text-gray-600 hover:bg-gray-100'
+                          }`}
+                          title={item.label}
+                        >
+                          <item.icon className="w-4 h-4 flex-shrink-0" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
             </ul>
           </div>
+          
           <div className="mb-6 lg:hidden">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3">
               Mon espace

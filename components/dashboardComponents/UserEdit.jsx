@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { getAuthHeaders } from '../context/headers';
 import { url } from '../context/url';
 import { etablissements, optionsCampus, quartiers, getNiveauxOptions, getPromotionsOptions } from '../loginComponents/DataRegister';
-import { SUB_ROLES, SUB_ROLE_LABELS } from '../context/roles';
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';

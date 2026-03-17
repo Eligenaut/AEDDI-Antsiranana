@@ -6,7 +6,6 @@ import { Calendar, Plus, Search, Filter, AlertCircle, CheckCircle, Clock, X, Edi
 import axios from 'axios';
 import { url } from '../context/url.js';
 import { getAuthHeaders } from '../context/headers.jsx';
-import { hasPermission } from '../context/roles.js';
 import { AddActivite } from './AddActivite';
 import { ShowActivite } from './ShowActivite';
 import { ModalConfirmation } from '../common/ModalConfirmation.jsx';

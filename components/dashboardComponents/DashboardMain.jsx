@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { url } from '../context/url.js';
 import { getAuthHeaders } from '../context/headers.jsx';
-import { getUserRole, ROLES } from '../context/roles.js';
 
 export function DashboardMain() {
   const [dashboardStats, setDashboardStats] = useState(null);
@@ -44,7 +43,6 @@ export function DashboardMain() {
 
   useEffect(() => {
     setIsClient(true);
-    setUserRole(getUserRole());
     
     const token = localStorage.getItem('auth_token');
     if (token) {
@@ -127,17 +125,17 @@ export function DashboardMain() {
               <div>
                 <p className="text-sm text-gray-500 mb-1">Cotisations (Total de cotisation)</p>
                 <h3 className="text-2xl font-bold text-gray-800">
-                  {!isClient || userRole === ROLES.ADMIN 
-                    ? '-' 
-                    : (loading ? <LoadingSpinner /> : (dashboardStats ? dashboardStats.cotisations.total_cotisations : '-'))
-                  }
+   
+
+                    (loading ? <LoadingSpinner /> : (dashboardStats ? dashboardStats.cotisations.total_cotisations : '-'))
+
                 </h3>
               </div>
               <div className="bg-green-100 p-3 rounded-full">
                 <DollarSign className="h-6 w-6 text-green-600" />
               </div>
             </div>
-            {isClient && userRole !== ROLES.ADMIN && (
+
               <div className="mt-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">
@@ -148,7 +146,7 @@ export function DashboardMain() {
                   Non payé: {loading ? <LoadingSpinner /> : (dashboardStats ? dashboardStats.cotisations.total_non_paye : '-')}
                 </div>
               </div>
-            )}
+
             </div>
 
           {/* Carte des activités */}
@@ -176,23 +174,22 @@ export function DashboardMain() {
               <div>
                 <p className="text-sm text-gray-500 mb-1">Montants</p>
                 <h3 className="text-xl font-bold text-gray-800">
-                  {!isClient || userRole === ROLES.ADMIN 
-                    ? '-' 
-                    : (loading ? <LoadingSpinner /> : (dashboardStats ? formatMontant(dashboardStats.cotisations.montant_restant) : '-'))
-                  }
+
+
+                    (loading ? <LoadingSpinner /> : (dashboardStats ? formatMontant(dashboardStats.cotisations.montant_restant) : '-'))
+                  
                 </h3>
             </div>
               <div className="bg-yellow-100 p-3 rounded-full">
                 <BarChart className="h-6 w-6 text-yellow-600" />
                   </div>
                   </div>
-            {isClient && userRole !== ROLES.ADMIN && (
+
               <div className="mt-4">
                 <p className="text-sm text-gray-600">
                   Restant: {loading ? <LoadingSpinner /> : (dashboardStats ? formatMontant(dashboardStats.cotisations.montant_restant) : '-')}
                 </p>
               </div>
-            )}
           </div>
         </motion.div>
 
@@ -263,11 +260,7 @@ export function DashboardMain() {
           <div className="bg-white p-6 rounded-lg shadow-md border border-gray-200">
             <h3 className="text-lg font-semibold mb-4 text-gray-800">État des cotisations</h3>
             <div className="h-64">
-              {!isClient || userRole === ROLES.ADMIN ? (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                  Graphique non disponible pour l'admin
-                </div>
-              ) : (
+             (
                 <div className="space-y-4">
                   {loading ? (
                     <div className="flex items-center justify-center h-full">
@@ -327,7 +320,6 @@ export function DashboardMain() {
                     </div>
                   )}
                 </div>
-              )}
             </div>
           </div>
         </motion.div>

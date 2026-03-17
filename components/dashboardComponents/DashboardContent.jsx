@@ -9,7 +9,8 @@ import { DashboardMain } from './DashboardMain';
 import { DashboardUser } from './DashboardUser';
 import { DashboardCotisations } from './DashboardCotisations';
 import { DashboardActivites } from './DashboardActivites';
-import DashboardSetting from './DashboardSetting';
+import UserDetail from './UserDetail';
+import ManagePermission from './ManagePermission';
 
 // ✅ Plus d'import NProgress ici — chargé dynamiquement dans useEffect
 
@@ -18,7 +19,8 @@ const sectionToPath = {
   'membres': '/dashboard/membres',
   'cotisations': '/dashboard/cotisations',
   'activites': '/dashboard/activites',
-  'parametres': '/dashboard/parametres',
+  'moncompte': '/dashboard/parametres/moncompte',
+  'permissions': '/dashboard/parametres/permissions',
 };
 
 const pathToSection = {
@@ -26,7 +28,8 @@ const pathToSection = {
   '/dashboard/membres': 'membres',
   '/dashboard/cotisations': 'cotisations',
   '/dashboard/activites': 'activites',
-  '/dashboard/parametres': 'parametres',
+  '/dashboard/parametres/moncompte': 'moncompte',
+  '/dashboard/parametres/permissions': 'permissions',
 };
 
 export function DashboardContent() {
@@ -126,8 +129,17 @@ export function DashboardContent() {
         return <DashboardCotisations />;
       case 'activites':
         return <DashboardActivites />;
-      case 'parametres':
-        return <DashboardSetting />;
+      case 'moncompte':
+        return <UserDetail />;
+      case 'permissions':
+        return (
+          <ManagePermission
+            onSave={(permissions) => {
+              console.log('Permissions sauvegardées:', permissions);
+            }}
+            onBack={() => handleSectionChange('accueil')}
+          />
+        );
       default:
         return <DashboardMain />;
     }

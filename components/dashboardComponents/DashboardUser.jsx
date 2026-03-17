@@ -6,7 +6,6 @@ import { Users, Plus, Search, Filter, MoreVertical, Edit, Trash2, Eye, DollarSig
 import axios from 'axios';
 import { url } from '../context/url.js';
 import { getAuthHeaders } from '../context/headers.jsx';
-import { hasPermission, getUserRole, ROLES, isAdmin, canExportUsers } from '../context/roles.js';
 import { CotisationModal } from './CotisationModal';
 import { ShowMember } from './ShowMember';
 import { FilterUser } from './FilterUser';
