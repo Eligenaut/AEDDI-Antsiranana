@@ -80,23 +80,23 @@ export function DashboardUser() {
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     if (token) {
       fetchMembers();
-      fetchCurrentUser();
+      // fetchCurrentUser();
     } else {
       setError('Vous devez être connecté pour accéder à cette page');
       setLoading(false);
     }
   }, []);
 
-  const fetchCurrentUser = async () => {
-    try {
-      const response = await axios.get(`${url}auth/me`, { headers: getAuthHeaders() });
-      if (response.data.success && response.data.user) {
-        setCurrentUser(response.data.user);
-      }
-    } catch (err) {
-      console.error('Erreur lors de la récupération de l\'utilisateur:', err);
-    }
-  };
+  // const fetchCurrentUser = async () => {
+  //   try {
+  //     const response = await axios.get(`${url}auth/me`, { headers: getAuthHeaders() });
+  //     if (response.data.success && response.data.user) {
+  //       setCurrentUser(response.data.user);
+  //     }
+  //   } catch (err) {
+  //     console.error('Erreur lors de la récupération de l\'utilisateur:', err);
+  //   }
+  // };
 
   const handleExportXLSX = async () => {
     if (!canExportUsers(currentUser)) {
@@ -113,7 +113,6 @@ export function DashboardUser() {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
       });
 
-      // ✅ document uniquement dans un handler (déclenché par l'utilisateur = côté client)
       const link = document.createElement('a');
       const downloadUrl = window.URL.createObjectURL(blob);
       link.setAttribute('href', downloadUrl);
@@ -183,7 +182,7 @@ export function DashboardUser() {
           onSave={handleSaveEdit}
           onCancel={handleCloseEdit}
           userId={editUser?.id}
-          showRole={isAdmin()}
+          showRole={true}
         />
       )}
       <main className="flex-1 overflow-y-auto p-2 sm:p-6 pb-20 lg:pb-6 flex flex-col">
@@ -200,7 +199,6 @@ export function DashboardUser() {
               </h1>
             </div>
             <div className="flex items-center space-x-2">
-              {hasPermission('canManageUsers') && (
                 <button
                   onClick={() => setShowAddModal(true)}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1.5 text-xs rounded-lg flex items-center space-x-2 transition-colors sm:px-3 sm:py-2 sm:text-sm"
@@ -208,7 +206,6 @@ export function DashboardUser() {
                   <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
                   <span>Ajouter un membre</span>
                 </button>
-              )}
             </div>
           </div>
         </motion.div>
@@ -253,12 +250,8 @@ export function DashboardUser() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Membre</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                  {getUserRole() === ROLES.ADMIN && (
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Adhésion</th>
-                  )}
-                  {getUserRole() === ROLES.ADMIN && (
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cotisations</th>
-                  )}
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -317,38 +310,28 @@ export function DashboardUser() {
                           {getTypeLabel(getMemberType(member))}
                         </span>
                       </td>
-                      {getUserRole() === ROLES.ADMIN && (
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {new Date(member.created_at).toLocaleDateString('fr-FR')}
                         </td>
-                      )}
-                      {getUserRole() === ROLES.ADMIN && (
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold">
                             {member.cotisation_stats ? `${member.cotisation_stats.payees}/${member.cotisation_stats.total}` : '0/0'}
                           </span>
                         </td>
-                      )}
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-2">
                           <button className="text-blue-600 hover:text-blue-900" title="Voir les détails" onClick={() => setShowMemberId(member.id)}>
                             <Eye className="w-4 h-4" />
                           </button>
-                          {hasPermission('canEdit') && (
                             <button className="text-green-600 hover:text-green-900" title="Modifier le membre" onClick={() => handleOpenEdit(member)}>
                               <Edit className="w-4 h-4" />
                             </button>
-                          )}
-                          {hasPermission('canManageUsers') && (
                             <button onClick={() => setModalUser(member)} className="p-1 md:p-2 rounded-full hover:bg-green-100 transition-colors" title="Gérer les cotisations">
                               <DollarSign className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
                             </button>
-                          )}
-                          {hasPermission('canDelete') && (
                             <button className="text-red-600 hover:text-red-900" onClick={() => handleDeleteMember(member.id)} title="Supprimer le membre">
                               <Trash2 className="w-4 h-4" />
                             </button>
-                          )}
                         </div>
                       </td>
                     </motion.tr>

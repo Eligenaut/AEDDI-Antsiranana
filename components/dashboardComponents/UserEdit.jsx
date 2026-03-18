@@ -8,46 +8,144 @@ import { X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 
+const SUB_ROLE_LABELS = {
+  PRESIDENT: 'Président',
+  VICE_PRESIDENT: 'Vice-Président',
+  TRESORIER: 'Trésorier',
+  VICE_TRESORIER: 'Vice-Trésorier',
+  COMMISSAIRE_COMPTE: 'Commissaire aux comptes',
+  COMMISSION_CERCLE_ETUDE: "Commission Cercle d'étude",
+  COMMISSION_INFORMATIQUE: 'Commission Informatique',
+  COMMISSION_LOGEMENT: 'Commission Logement',
+  COMMISSION_SOCIAL: 'Commission Social',
+  COMMISSION_FETE: 'Commission Fête',
+  COMMISSION_SPORT: 'Commission Sport',
+  COMMISSION_COMMUNICATION: 'Commission Communication',
+  COMMISSION_ENVIRONNEMENT: 'Commission Environnement',
+};
+
 function isFile(obj) {
   return typeof File !== 'undefined' && obj instanceof File;
 }
 
 const Alert = ({ type, message }) => (
-  <div className={`p-4 border-l-4 ${type === 'success' ? 'bg-green-50 border-green-400 text-green-700' : 'bg-red-50 border-red-400 text-red-700'}`}>
+  <div className={`p-4 border-l-4 rounded ${type === 'success' ? 'bg-green-50 border-green-500 text-green-800 font-medium' : 'bg-red-50 border-red-500 text-red-800 font-medium'}`}>
     {message}
   </div>
 );
 
-export default function UserEdit({ isOpen, onCancel = () => {}, onClose = () => {}, initialData = {}, onSave, showRole = false, userId = null }) {
+// ✅ Composant label réutilisable plus visible
+const Label = ({ children, required }) => (
+  <label className="block text-sm font-semibold text-gray-800 mb-1">
+    {children} {required && <span className="text-red-500">*</span>}
+  </label>
+);
+
+// ✅ Composant input réutilisable plus visible
+const Input = ({ ...props }) => (
+  <input
+    {...props}
+    className="w-full px-3 py-2 border border-gray-400 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+  />
+);
+
+// ✅ Composant select réutilisable plus visible
+const Select = ({ children, ...props }) => (
+  <select
+    {...props}
+    className="w-full px-3 py-2 border border-gray-400 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+  >
+    {children}
+  </select>
+);
+
+export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () => { }, initialData = {}, onSave, showRole = false, userId = null }) {
   const [mounted, setMounted] = useState(false);
   const [isVisible, setIsVisible] = useState(isOpen);
   const [notifyCloseOnExit, setNotifyCloseOnExit] = useState(false);
   const [closing, setClosing] = useState(false);
-  const [formData, setFormData] = useState({
-    role: initialData.role || 'member',
-    sub_role: initialData.sub_role || '',
-    nom: initialData.nom || '',
-    prenom: initialData.prenom || '',
-    email: initialData.email || '',
-    telephone: initialData.telephone || '',
-    etablissement: initialData.etablissement || '',
-    parcours: initialData.parcours || '',
-    niveau: initialData.niveau || '',
-    promotion: initialData.promotion || '',
-    logement: initialData.logement || 'campus',
-    blocCampus: initialData.blocCampus || '',
-    quartier: initialData.quartier || '',
-    image: initialData.image || null
-  });
+  const [loadingData, setLoadingData] = useState(false);
+
+  const defaultForm = {
+    role: 'MEMBER',
+    sub_role: [],
+    nom: '',
+    prenom: '',
+    email: '',
+    telephone: '',
+    etablissement: '',
+    parcours: '',
+    niveau: '',
+    promotion: '',
+    logement: 'campus',
+    blocCampus: '',
+    quartier: '',
+    image: null
+  };
+
+  const [formData, setFormData] = useState(defaultForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [selectedEtablissement, setSelectedEtablissement] = useState(formData.etablissement);
-  const [selectedParcours, setSelectedParcours] = useState(formData.parcours);
+  const [selectedEtablissement, setSelectedEtablissement] = useState('');
+  const [selectedParcours, setSelectedParcours] = useState('');
   const [selectedCampusType, setSelectedCampusType] = useState('');
-  const [imagePreview, setImagePreview] = useState(formData.image);
+  const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!mounted || !isOpen || !userId) return;
+
+    const fetchMemberData = async () => {
+      setLoadingData(true);
+      try {
+        const res = await fetch(`${url}members/${userId}`, {
+          headers: getAuthHeaders()
+        });
+        const data = await res.json();
+        if (data.success && data.data) {
+          const d = data.data;
+          console.log("Données récupérées", d);
+          const subRole = Array.isArray(d.sub_role) ? d.sub_role : [];
+
+          setFormData({
+            role: d.role || 'MEMBER',
+            sub_role: subRole,
+            nom: d.nom || '',
+            prenom: d.prenom || '',
+            email: d.email || '',
+            telephone: d.telephone || '',
+            etablissement: d.etablissement || '',
+            parcours: d.parcours || '',
+            niveau: d.niveau || '',
+            promotion: d.promotion || '',
+            logement: d.logement || 'campus',
+            blocCampus: d.bloc_campus || '',
+            quartier: d.quartier || '',
+            image: null
+          });
+
+          setSelectedEtablissement(d.etablissement || '');
+          setSelectedParcours(d.parcours || '');
+          setImagePreview(d.avatar || null);
+
+          if (d.bloc_campus) {
+            const type = Object.keys(optionsCampus).find(key =>
+              optionsCampus[key].options.includes(d.bloc_campus)
+            );
+            setSelectedCampusType(type || '');
+          }
+        }
+      } catch (err) {
+        setError('Erreur lors du chargement des données');
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    fetchMemberData();
+  }, [isOpen, userId, mounted]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -60,23 +158,18 @@ export default function UserEdit({ isOpen, onCancel = () => {}, onClose = () => 
     }
   }, [isOpen, mounted]);
 
-  // ✅ Protégé par mounted
   useEffect(() => {
     if (!mounted) return;
     document.body.style.overflow = isVisible ? 'hidden' : 'unset';
     return () => { document.body.style.overflow = 'unset'; };
   }, [isVisible, mounted]);
 
-  useEffect(() => {
-    if (formData.blocCampus) {
-      const type = Object.keys(optionsCampus).find(key =>
-        optionsCampus[key].options.includes(formData.blocCampus)
-      );
-      setSelectedCampusType(type || '');
-    }
-  }, [formData.blocCampus]);
-
   const handleChange = e => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+
+  const handleSubRoleChange = e => {
+    const value = e.target.value;
+    setFormData(prev => ({ ...prev, sub_role: value ? [value] : [] }));
+  };
 
   const handleEtablissementChange = e => {
     const value = e.target.value;
@@ -124,24 +217,38 @@ export default function UserEdit({ isOpen, onCancel = () => {}, onClose = () => 
 
     setSaving(true);
     try {
-      const payload = { ...formData };
-      if (payload.role !== 'bureau') delete payload.sub_role;
+      const payload = {
+        nom: formData.nom,
+        prenom: formData.prenom,
+        email: formData.email,
+        telephone: formData.telephone,
+        etablissement: formData.etablissement,
+        parcours: formData.parcours,
+        niveau: formData.niveau,
+        promotion: formData.promotion,
+        logement: formData.logement,
+        blocCampus: formData.logement === 'campus' ? formData.blocCampus : '',
+        quartier: formData.logement === 'ville' ? formData.quartier : '',
+      };
 
-      if (isFile(payload.image)) {
+      if (showRole) {
+        payload.role = formData.role;
+        payload.subRoles = formData.role === 'BUREAU' ? formData.sub_role : [];
+      }
+
+      if (isFile(formData.image)) {
         const toBase64 = file => new Promise((res, rej) => {
           const reader = new FileReader();
           reader.onload = () => res(reader.result);
           reader.onerror = rej;
           reader.readAsDataURL(file);
         });
-        const base64Image = await toBase64(payload.image);
-        payload.image = base64Image;
+        payload.image = await toBase64(formData.image);
         payload.imageName = formData.image.name;
         payload.imageType = formData.image.type;
       }
-
-      const endpoint = userId ? `${url}members/${userId}` : `${url}auth/me`;
-      const res = await fetch(endpoint, {
+      const response = `${url}members/${userId}`;
+      const res = await fetch(response, {
         method: 'PUT',
         headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -161,16 +268,6 @@ export default function UserEdit({ isOpen, onCancel = () => {}, onClose = () => 
     }
   };
 
-  const resetFormState = () => {
-    setFormData({ ...initialData });
-    setError('');
-    setSuccess('');
-    setSelectedEtablissement(initialData.etablissement || '');
-    setSelectedParcours(initialData.parcours || '');
-    setSelectedCampusType('');
-    setImagePreview(initialData.image || null);
-  };
-
   const handleClose = () => {
     if (saving || closing) return;
     setClosing(true);
@@ -184,7 +281,10 @@ export default function UserEdit({ isOpen, onCancel = () => {}, onClose = () => 
     <AnimatePresence
       onExitComplete={() => {
         if (notifyCloseOnExit) {
-          resetFormState();
+          setFormData(defaultForm);
+          setError('');
+          setSuccess('');
+          setImagePreview(null);
           onCancel();
           onClose();
           setNotifyCloseOnExit(false);
@@ -194,78 +294,214 @@ export default function UserEdit({ isOpen, onCancel = () => {}, onClose = () => 
     >
       {isVisible && (
         <>
-          <motion.div className="fixed inset-0 bg-black/30 z-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} onClick={handleClose} />
+          <motion.div className="fixed inset-0 bg-black/40 z-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} onClick={handleClose} />
           <motion.div
-            className="fixed top-0 right-0 h-full w-full sm:w-[600px] bg-white shadow-2xl z-50 overflow-y-auto"
+            className="fixed top-0 right-0 h-full w-full sm:w-[620px] bg-white shadow-2xl z-50 overflow-y-auto"
             initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 260, damping: 25 }}
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold">Modifier le profil</h2>
-              <button onClick={handleClose} className="text-gray-500 hover:text-gray-700"><X className="w-6 h-6" /></button>
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
+              <h2 className="text-xl font-bold text-gray-900">Modifier le profil</h2>
+              <button onClick={handleClose} className="text-gray-500 hover:text-gray-800 p-1 rounded-full hover:bg-gray-200">
+                <X className="w-6 h-6" />
+              </button>
             </div>
 
-            <div className="p-6 space-y-6">
-              {success && <Alert type="success" message={success} />}
-              {error && <Alert type="error" message={error} />}
-              <form onSubmit={e => { e.preventDefault(); handleSave(); }} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {loadingData ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-700 font-medium">Chargement...</span>
+              </div>
+            ) : (
+              <div className="p-6 space-y-6">
+                {success && <Alert type="success" message={success} />}
+                {error && <Alert type="error" message={error} />}
+
+                <form onSubmit={e => { e.preventDefault(); handleSave(); }} className="space-y-5">
+
+                  {/* Section Identité */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Nom *</label>
-                    <input type="text" name="nom" value={formData.nom} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Prénom *</label>
-                    <input type="text" name="prenom" value={formData.prenom} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email *</label>
-                    <input type="email" name="email" value={formData.email} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone *</label>
-                    <input type="tel" name="telephone" value={formData.telephone} onChange={handleChange} required className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400" />
+                    <h3 className="text-base font-bold text-gray-800 mb-3 pb-1 border-b border-gray-200">Identité</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label required>Nom</Label>
+                        <Input type="text" name="nom" value={formData.nom} onChange={handleChange} required />
+                      </div>
+                      <div>
+                        <Label required>Prénom</Label>
+                        <Input type="text" name="prenom" value={formData.prenom} onChange={handleChange} required />
+                      </div>
+                      <div>
+                        <Label required>Email</Label>
+                        <Input type="email" name="email" value={formData.email} onChange={handleChange} required />
+                      </div>
+                      <div>
+                        <Label required>Téléphone</Label>
+                        <Input type="tel" name="telephone" value={formData.telephone} onChange={handleChange} required />
+                      </div>
+                    </div>
                   </div>
 
+                  {/* Section Rôle */}
                   {showRole && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Rôle *</label>
-                        <select name="role" value={formData.role} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400">
-                          <option value="member">Membre</option>
-                          <option value="bureau">Bureau</option>
-                        </select>
-                      </div>
-                      {formData.role === 'bureau' && (
+                    <div>
+                      <h3 className="text-base font-bold text-gray-800 mb-3 pb-1 border-b border-gray-200">Rôle</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-2">Sous-rôle *</label>
-                          <select name="sub_role" value={formData.sub_role || ''} onChange={handleChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400">
-                            <option value="">Sélectionner un sous-rôle</option>
-                            {Object.entries(SUB_ROLE_LABELS).map(([key, label]) => (
-                              <option key={key} value={key}>{label}</option>
-                            ))}
-                          </select>
+                          <Label required>Rôle</Label>
+                          <Select name="role" value={formData.role} onChange={handleChange}>
+                            <option value="MEMBER">Membre</option>
+                            <option value="BUREAU">Bureau</option>
+                          </Select>
                         </div>
-                      )}
-                    </>
+                        {formData.role === 'BUREAU' && (
+                          <div>
+                            <Label required>Sous-rôle</Label>
+                            <Select value={formData.sub_role?.[0] || ''} onChange={handleSubRoleChange}>
+                              <option value="">Sélectionner un sous-rôle</option>
+                              {Object.entries(SUB_ROLE_LABELS).map(([key, label]) => (
+                                <option key={key} value={key}>{label}</option>
+                              ))}
+                            </Select>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   )}
 
+                  {/* Section Académique */}
+                  {/* Section Académique */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Photo de profil</label>
-                    <input type="file" accept="image/*" onChange={handleFileChange} className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-400" />
-                    {imagePreview && <img src={imagePreview} alt="Aperçu" className="mt-2 h-20 w-20 rounded-full object-cover border" />}
-                  </div>
-                </div>
+                    <h3 className="text-base font-bold text-gray-800 mb-3 pb-1 border-b border-gray-200">Académique</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Établissement</Label>
+                        <Select value={selectedEtablissement} onChange={handleEtablissementChange}>
+                          <option value="">Sélectionner</option>
+                          {/* ✅ etablissements est un objet */}
+                          {Object.entries(etablissements).map(([key, val]) => (
+                            <option key={key} value={key}>{val.nom}</option>
+                          ))}
+                        </Select>
+                      </div>
 
-                <div className="flex justify-end gap-4 pt-4 border-t">
-                  <button type="button" onClick={handleClose} className="px-6 py-2 border rounded-lg text-gray-700 hover:bg-gray-50">Annuler</button>
-                  <button type="submit" disabled={saving} className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                    {saving ? 'Mise à jour...' : 'Mettre à jour'}
-                  </button>
-                </div>
-              </form>
-            </div>
+                      {selectedEtablissement && (
+                        <div>
+                          <Label>Parcours</Label>
+                          <Select value={selectedParcours} onChange={handleParcoursChange}>
+                            <option value="">Sélectionner</option>
+                            {/* ✅ parcours est un tableau de strings */}
+                            {etablissements[selectedEtablissement]?.parcours.map(p => (
+                              <option key={p} value={p}>{p}</option>
+                            ))}
+                          </Select>
+                        </div>
+                      )}
+
+                      {selectedParcours && (
+                        <div>
+                          <Label>Niveau</Label>
+                          <Select name="niveau" value={formData.niveau} onChange={handleChange}>
+                            <option value="">Sélectionner</option>
+                            {/* ✅ getNiveauxOptions prend selectedParcours */}
+                            {getNiveauxOptions(selectedParcours).map(n => (
+                              <option key={n} value={n}>{n}</option>
+                            ))}
+                          </Select>
+                        </div>
+                      )}
+
+                      {formData.niveau && (
+                        <div>
+                          <Label>Promotion</Label>
+                          <Select name="promotion" value={formData.promotion} onChange={handleChange}>
+                            <option value="">Sélectionner</option>
+                            {/* ✅ getPromotionsOptions retourne des années */}
+                            {getPromotionsOptions().map(p => (
+                              <option key={p} value={p}>{p}</option>
+                            ))}
+                          </Select>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Section Logement */}
+                  <div>
+                    <h3 className="text-base font-bold text-gray-800 mb-3 pb-1 border-b border-gray-200">Logement</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label>Type de logement</Label>
+                        <Select name="logement" value={formData.logement} onChange={handleChange}>
+                          <option value="campus">Campus</option>
+                          <option value="ville">Ville</option>
+                        </Select>
+                      </div>
+
+                      {formData.logement === 'campus' && (
+                        <>
+                          <div>
+                            <Label>Type de campus</Label>
+                            <Select value={selectedCampusType} onChange={handleCampusTypeChange}>
+                              <option value="">Sélectionner</option>
+                              {/* ✅ optionsCampus est un objet avec nom et options */}
+                              {Object.entries(optionsCampus).map(([key, val]) => (
+                                <option key={key} value={key}>{val.nom}</option>
+                              ))}
+                            </Select>
+                          </div>
+                          {selectedCampusType && (
+                            <div>
+                              <Label required>Bloc campus</Label>
+                              <Select name="blocCampus" value={formData.blocCampus} onChange={handleChange}>
+                                <option value="">Sélectionner</option>
+                                {optionsCampus[selectedCampusType]?.options.map(opt => (
+                                  <option key={opt} value={opt}>{opt}</option>
+                                ))}
+                              </Select>
+                            </div>
+                          )}
+                        </>
+                      )}
+
+                      {formData.logement === 'ville' && (
+                        <div>
+                          <Label required>Quartier</Label>
+                          <Select name="quartier" value={formData.quartier} onChange={handleChange}>
+                            <option value="">Sélectionner un quartier</option>
+                            {/* ✅ quartiers est un tableau de strings */}
+                            {quartiers.map(q => (
+                              <option key={q} value={q}>{q}</option>
+                            ))}
+                          </Select>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Section Photo */}
+                  <div>
+                    <h3 className="text-base font-bold text-gray-800 mb-3 pb-1 border-b border-gray-200">Photo de profil</h3>
+                    <input type="file" accept="image/*" onChange={handleFileChange} className="w-full px-3 py-2 border border-gray-400 rounded-lg text-gray-800 font-medium" />
+                    {imagePreview && (
+                      <img src={imagePreview} alt="Aperçu" className="mt-3 h-24 w-24 rounded-full object-cover border-2 border-gray-300" />
+                    )}
+                  </div>
+
+                  {/* Boutons */}
+                  <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
+                    <button type="button" onClick={handleClose} className="px-6 py-2 border border-gray-400 rounded-lg text-gray-800 font-semibold hover:bg-gray-100">
+                      Annuler
+                    </button>
+                    <button type="submit" disabled={saving} className="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50">
+                      {saving ? 'Mise à jour...' : 'Mettre à jour'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
           </motion.div>
         </>
       )}

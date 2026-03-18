@@ -127,7 +127,7 @@ export function DashboardMain() {
                 <h3 className="text-2xl font-bold text-gray-800">
    
 
-                    (loading ? <LoadingSpinner /> : (dashboardStats ? dashboardStats.cotisations.total_cotisations : '-'))
+                    {loading ? <LoadingSpinner /> : (dashboardStats ? dashboardStats.cotisations.total_cotisations : '-')}
 
                 </h3>
               </div>
@@ -176,7 +176,7 @@ export function DashboardMain() {
                 <h3 className="text-xl font-bold text-gray-800">
 
 
-                    (loading ? <LoadingSpinner /> : (dashboardStats ? formatMontant(dashboardStats.cotisations.montant_restant) : '-'))
+                    {loading ? <LoadingSpinner /> : (dashboardStats ? formatMontant(dashboardStats.cotisations.montant_restant) : '-')}
                   
                 </h3>
             </div>

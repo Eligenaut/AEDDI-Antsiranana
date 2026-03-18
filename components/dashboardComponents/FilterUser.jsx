@@ -21,7 +21,7 @@ export function FilterUser({ onFiltersChange, className = '', currentUser, onExp
   };
 
   const handleExportXLSX = async () => {
-    if (!onExportXLSX || !canExportUsers(currentUser)) {
+    if (!onExportXLSX ) {
       alert('Vous n\'avez pas les permissions pour exporter les données');
       return;
     }
@@ -55,7 +55,6 @@ export function FilterUser({ onFiltersChange, className = '', currentUser, onExp
           <h3 className="text-lg font-semibold text-gray-900">Filtres des membres</h3>
         </div>
         <div className="flex items-center space-x-2">
-          {canExportUsers(currentUser) && onExportXLSX && (
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -67,7 +66,6 @@ export function FilterUser({ onFiltersChange, className = '', currentUser, onExp
               <Download className="w-4 h-4" />
               <span>{exporting ? 'Export...' : 'XLSX'}</span>
             </motion.button>
-          )}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

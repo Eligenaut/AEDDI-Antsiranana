@@ -24,6 +24,7 @@ export function LoginProvider({ children }) {
         body: JSON.stringify({ email, password }),
       });
       const data = await response.json();
+      console.log('Login response:', data);
       if (data.success) {
         localStorage.setItem('auth_token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));

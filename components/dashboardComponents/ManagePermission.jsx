@@ -6,7 +6,8 @@ import { Header } from "./Header.jsx";
 import { ProgressBar } from "./ProgressBar.jsx";
 import { PermissionCard } from "./PermissionCard.jsx";
 import { EmptyState } from "./EmptyState.jsx";
-import { permissionCategories, allPermissionIds } from "./permissions.js";
+import { permissionCategories, allPermissionIds } from "./Permissions.js";
+import {url} from '../context/url.js';
 
 export function ManagePermission({ onSave, onBack } = {}) {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -49,9 +50,10 @@ export function ManagePermission({ onSave, onBack } = {}) {
       subRoles: selectedSubRoles,
       permissions: selected,
     };
+    console.log('Payload à envoyer:', payload);
 
     try {
-      const response = await fetch('/api/permissions/add', {
+      const response = await fetch(`${url}permissions/add`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
