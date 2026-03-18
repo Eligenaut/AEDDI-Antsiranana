@@ -7,76 +7,114 @@ import { ProgressBar } from "./ProgressBar.jsx";
 import { PermissionCard } from "./PermissionCard.jsx";
 import { EmptyState } from "./EmptyState.jsx";
 import { permissionCategories, allPermissionIds } from "./Permissions.js";
-import {url} from '../context/url.js';
+import { url } from "../context/url.js";
 
 export function ManagePermission({ onSave, onBack } = {}) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
-  const [selectedSubRoles, setSelectedSubRoles] = useState([]);
+  const [selectedSubRole, setSelectedSubRole] = useState(null); // ✅ un seul subRole
   const [selected, setSelected] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [loadingPerms, setLoadingPerms] = useState(false);
   const [error, setError] = useState(null);
+
+  const fetchCurrentPermissions = async (role, subRole) => {
+    setLoadingPerms(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({ role });
+      if (subRole) params.append("subRole", subRole);
+
+      const response = await fetch(`${url}permissions/get?${params}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok)
+        throw new Error("Impossible de charger les permissions");
+
+      const data = await response.json();
+      setSelected(data.data?.permissions ?? []);
+    } catch (err) {
+      setError(err.message);
+      setSelected([]);
+    } finally {
+      setLoadingPerms(false);
+    }
+  };
 
   const handleRoleSelect = (roleData) => {
     setSelectedRole(roleData.role);
-    setSelectedSubRoles(roleData.subRoles);
-    setSelected([]);
+    setSelectedSubRole(roleData.subRole);
+    fetchCurrentPermissions(roleData.role, roleData.subRole);
   };
 
   const toggle = (id) =>
     setSelected((prev) =>
-      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id],
     );
 
   const toggleCategory = (perms) => {
     const allIn = perms.every((p) => selected.includes(p.id));
     if (allIn) {
-      setSelected((prev) => prev.filter((p) => !perms.find((cp) => cp.id === p)));
+      setSelected((prev) =>
+        prev.filter((p) => !perms.find((cp) => cp.id === p)),
+      );
     } else {
-      const toAdd = perms.filter((p) => !selected.includes(p.id)).map((p) => p.id);
+      const toAdd = perms
+        .filter((p) => !selected.includes(p.id))
+        .map((p) => p.id);
       setSelected((prev) => [...prev, ...toAdd]);
     }
   };
+  const handleReset = async () => {
+    if (!selectedRole) return;
 
-  const selectAll = () => setSelected(allPermissionIds);
-  const clearAll = () => setSelected([]);
+    try {
+      const response = await fetch(`${url}permissions/reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: selectedRole,
+          subRole: selectedSubRole,
+        }),
+      });
 
+      if (!response.ok) throw new Error("Erreur lors de la réinitialisation");
+
+      alert("Permissions réinitialisées avec succès !");
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  // ✅ Un seul appel : role + subRole
   const handleSave = async () => {
     setSaving(true);
     setError(null);
 
     const payload = {
       role: selectedRole,
-      subRoles: selectedSubRoles,
+      subRole: selectedSubRole, // ✅ un seul subRole
       permissions: selected,
     };
-    console.log('Payload à envoyer:', payload);
 
     try {
       const response = await fetch(`${url}permissions/add`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
-      if (!response.ok) {
-        throw new Error('Erreur lors de la sauvegarde des permissions');
-      }
+      if (!response.ok)
+        throw new Error("Erreur lors de la sauvegarde des permissions");
 
       const data = await response.json();
-      
-      // Callback optionnel
       onSave?.(data);
-      
-      // Afficher un message de succès (vous pouvez utiliser un toast)
-      alert('Permissions sauvegardées avec succès !');
-      
+      alert("Permissions sauvegardées avec succès !");
     } catch (err) {
       setError(err.message);
-      console.error('Erreur:', err);
-      alert('Erreur lors de la sauvegarde : ' + err.message);
+      alert("Erreur lors de la sauvegarde : " + err.message);
     } finally {
       setSaving(false);
     }
@@ -94,20 +132,17 @@ export function ManagePermission({ onSave, onBack } = {}) {
         color: "#0f0f0f",
       }}
     >
-      {/* Header */}
       <Header
         onBack={onBack}
         selectedRole={selectedRole}
-        selectedSubRoles={selectedSubRoles}
+        selectedSubRole={selectedSubRole}
         onOpenDrawer={() => setDrawerOpen(true)}
-        onClearAll={clearAll}
+        onReset={handleReset} 
         onSave={handleSave}
         saving={saving}
       />
 
-      {/* Content */}
       <div style={{ padding: "28px 40px" }}>
-        {/* Message d'erreur */}
         {error && (
           <div
             style={{
@@ -125,16 +160,24 @@ export function ManagePermission({ onSave, onBack } = {}) {
 
         {!selectedRole ? (
           <EmptyState onOpenDrawer={() => setDrawerOpen(true)} />
+        ) : loadingPerms ? (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "60px 0",
+              color: "#888",
+              fontSize: 16,
+            }}
+          >
+            ⏳ Chargement des permissions en cours...
+          </div>
         ) : (
           <>
-            {/* Progress bar */}
             <ProgressBar
               totalSelected={totalSelected}
               totalPerms={totalPerms}
-              onSelectAll={selectAll}
+              onReset={handleReset}
             />
-
-            {/* Permission cards */}
             <div
               style={{
                 display: "grid",
@@ -156,7 +199,6 @@ export function ManagePermission({ onSave, onBack } = {}) {
         )}
       </div>
 
-      {/* Drawer */}
       <RoleDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}

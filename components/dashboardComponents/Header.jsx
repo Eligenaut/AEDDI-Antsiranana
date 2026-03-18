@@ -2,21 +2,24 @@
 
 import { ROLES, SUB_ROLE_LABELS } from "./roles";
 
-export function Header({ 
-  onBack, 
-  selectedRole, 
-  selectedSubRoles, 
-  onOpenDrawer, 
-  onClearAll, 
-  onSave, 
-  saving 
+export function Header({
+  onBack,
+  selectedRole,
+  selectedSubRole,
+  onOpenDrawer,
+  onReset,
+  onSave,
+  saving,
 }) {
   const getRoleLabel = () => {
     if (!selectedRole) return null;
-    const roleLabels = { [ROLES.BUREAU]: "Membre du Bureau", [ROLES.MEMBER]: "Membre" };
+    const roleLabels = {
+      [ROLES.BUREAU]: "Membre du Bureau",
+      [ROLES.MEMBER]: "Membre",
+    };
     let label = roleLabels[selectedRole] || selectedRole;
-    if (selectedSubRoles.length > 0) {
-      label += ` — ${selectedSubRoles.map((sr) => SUB_ROLE_LABELS[sr]).join(", ")}`;
+    if (selectedSubRole) {
+      label += ` — ${SUB_ROLE_LABELS[selectedSubRole] ?? selectedSubRole}`;
     }
     return label;
   };
@@ -57,7 +60,15 @@ export function Header({
           </button>
         )}
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0f0f0f", margin: 0, letterSpacing: "-0.03em" }}>
+          <h1
+            style={{
+              fontSize: 22,
+              fontWeight: 700,
+              color: "#0f0f0f",
+              margin: 0,
+              letterSpacing: "-0.03em",
+            }}
+          >
             Gérer les Permissions
           </h1>
           <p style={{ margin: "3px 0 0", fontSize: 12, color: "#9ca3af" }}>
@@ -98,11 +109,33 @@ export function Header({
             >
               ✓
             </div>
-            <span style={{ fontSize: 12, color: "#4f46e5", fontWeight: 600, maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <span
+              style={{
+                fontSize: 12,
+                color: "#4f46e5",
+                fontWeight: 600,
+                maxWidth: 220,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
               {getRoleLabel()}
             </span>
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ color: "#6366f1" }}>
-              <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 12 12"
+              fill="none"
+              style={{ color: "#6366f1" }}
+            >
+              <path
+                d="M2 4l4 4 4-4"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
             </svg>
           </div>
         ) : (
@@ -124,7 +157,12 @@ export function Header({
             }}
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <path
+                d="M7 2v10M2 7h10"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
             </svg>
             Choisir un rôle
           </button>
@@ -133,7 +171,7 @@ export function Header({
         {selectedRole && (
           <>
             <button
-              onClick={onClearAll}
+              onClick={onReset}
               style={{
                 padding: "9px 14px",
                 borderRadius: 8,

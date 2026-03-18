@@ -7,7 +7,7 @@ export function RoleDrawer({ open, onClose, onSelect }) {
   const [mounted, setMounted] = useState(false);
   const [visible, setVisible] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
-  const [selectedSubRoles, setSelectedSubRoles] = useState([]);
+  const [selectedSubRole, setSelectedSubRole] = useState(null); // ✅ un seul subRole
 
   useEffect(() => {
     if (open) {
@@ -18,26 +18,26 @@ export function RoleDrawer({ open, onClose, onSelect }) {
       setTimeout(() => {
         setMounted(false);
         setSelectedRole(null);
-        setSelectedSubRoles([]);
+        setSelectedSubRole(null); // ✅
       }, 380);
     }
   }, [open]);
 
   if (!mounted) return null;
 
-  const handleToggleSubRole = (sr) =>
-    setSelectedSubRoles((p) =>
-      p.includes(sr) ? p.filter((r) => r !== sr) : [...p, sr]
-    );
+  // ✅ sélection exclusive (radio)
+  const handleSelectSubRole = (sr) =>
+    setSelectedSubRole((prev) => (prev === sr ? null : sr));
 
+  // ✅ validation avec string
   const isValid =
     selectedRole &&
     (selectedRole === ROLES.MEMBER ||
-      (selectedRole === ROLES.BUREAU && selectedSubRoles.length > 0));
+      (selectedRole === ROLES.BUREAU && selectedSubRole !== null));
 
   const handleConfirm = () => {
     if (!isValid) return;
-    onSelect({ role: selectedRole, subRoles: selectedSubRoles });
+    onSelect({ role: selectedRole, subRole: selectedSubRole }); // ✅ singulier
     onClose();
   };
 
@@ -110,7 +110,7 @@ export function RoleDrawer({ open, onClose, onSelect }) {
                     Assigner un rôle
                   </h2>
                   <p style={{ margin: 0, fontSize: 12, color: "#9ca3af" }}>
-                    Choisissez le rôle et les fonctions
+                    Choisissez le rôle et la fonction
                   </p>
                 </div>
               </div>
@@ -139,7 +139,7 @@ export function RoleDrawer({ open, onClose, onSelect }) {
 
           {/* Step indicator */}
           <div style={{ display: "flex", gap: 6, marginTop: 20 }}>
-            {["Rôle principal", "Fonctions"].map((label, i) => {
+            {["Rôle principal", "Fonction"].map((label, i) => {
               const done = i === 0 && selectedRole;
               const active = i === 0 || (i === 1 && selectedRole === ROLES.BUREAU);
               return (
@@ -198,7 +198,7 @@ export function RoleDrawer({ open, onClose, onSelect }) {
                     key={r.key}
                     onClick={() => {
                       setSelectedRole(r.key);
-                      if (r.key === ROLES.MEMBER) setSelectedSubRoles([]);
+                      if (r.key === ROLES.MEMBER) setSelectedSubRole(null); // ✅
                     }}
                     style={{
                       display: "flex",
@@ -275,28 +275,16 @@ export function RoleDrawer({ open, onClose, onSelect }) {
             </div>
           </div>
 
-          {/* Sub-roles (Bureau only) */}
+          {/* Sub-role (Bureau only) */}
           {selectedRole === ROLES.BUREAU && (
-            <div
-              style={{
-                opacity: 1,
-                animation: "fadeSlideIn 0.3s ease forwards",
-              }}
-            >
+            <div style={{ opacity: 1, animation: "fadeSlideIn 0.3s ease forwards" }}>
               <p style={{ margin: "0 0 12px", fontSize: 11, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em" }}>
-                Fonctions <span style={{ color: "#ef4444", fontWeight: 700 }}>*</span>
+                Fonction <span style={{ color: "#ef4444", fontWeight: 700 }}>*</span>
               </p>
 
               {subRoleCategories.map((cat) => (
                 <div key={cat.label} style={{ marginBottom: 18 }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      marginBottom: 8,
-                    }}
-                  >
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <span
                       style={{
                         display: "inline-block",
@@ -312,19 +300,13 @@ export function RoleDrawer({ open, onClose, onSelect }) {
                     </span>
                   </div>
 
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr 1fr",
-                      gap: 7,
-                    }}
-                  >
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 7 }}>
                     {cat.roles.map((sr) => {
-                      const isSel = selectedSubRoles.includes(sr);
+                      const isSel = selectedSubRole === sr; // ✅ comparaison string
                       return (
                         <div
                           key={sr}
-                          onClick={() => handleToggleSubRole(sr)}
+                          onClick={() => handleSelectSubRole(sr)} // ✅ radio
                           style={{
                             display: "flex",
                             alignItems: "center",
@@ -337,11 +319,12 @@ export function RoleDrawer({ open, onClose, onSelect }) {
                             transition: "all 0.15s ease",
                           }}
                         >
+                          {/* ✅ radio rond */}
                           <div
                             style={{
                               width: 15,
                               height: 15,
-                              borderRadius: 4,
+                              borderRadius: "50%",
                               border: `1.5px solid ${isSel ? cat.color : "#d1d5db"}`,
                               background: isSel ? cat.color : "transparent",
                               display: "flex",
@@ -352,9 +335,7 @@ export function RoleDrawer({ open, onClose, onSelect }) {
                             }}
                           >
                             {isSel && (
-                              <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
-                                <path d="M1.5 4l2 2L7 2" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
+                              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#fff" }} />
                             )}
                           </div>
                           <span
@@ -392,10 +373,10 @@ export function RoleDrawer({ open, onClose, onSelect }) {
               </p>
               <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#6366f1", lineHeight: 1.4 }}>
                 {selectedRole === ROLES.BUREAU ? "Membre du Bureau" : "Membre"}
-                {selectedSubRoles.length > 0 && (
+                {selectedSubRole && ( // ✅ singulier
                   <span style={{ fontWeight: 400, color: "#64748b" }}>
                     {" — "}
-                    {selectedSubRoles.map((sr) => SUB_ROLE_LABELS[sr]).join(", ")}
+                    {SUB_ROLE_LABELS[selectedSubRole]}
                   </span>
                 )}
               </p>
