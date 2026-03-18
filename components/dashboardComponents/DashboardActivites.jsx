@@ -56,6 +56,23 @@ export function DashboardActivites() {
   const totalActivities = activities.length;
   const activitiesEnCours = activities.filter(a => a.statut === 'en_cours').length;
   const activitiesTerminees = activities.filter(a => a.statut === 'terminee').length;
+
+  const fetchActiviteById = async (id) => {
+    try {
+      const response = await axios.get(`${url}activites/${id}`, {
+        headers: getAuthHeaders()
+      });
+      if (response.data.success) {
+        setActiviteToEdit(response.data.data);
+        setShowAddModal(true);
+      } else {
+        Notiflix.Notify.failure('Erreur lors du chargement de l\'activité');
+      }
+    } catch (error) {
+      Notiflix.Notify.failure('Erreur lors du chargement de l\'activité');
+    }
+  };
+
   const handleDeleteActivite = async () => {
     if (!activiteToDelete) return;
     try {
@@ -77,6 +94,7 @@ export function DashboardActivites() {
     }
   };
 
+
   return (
     <main className="flex-1 overflow-y-auto p-2 sm:p-6 pb-20 lg:pb-6">
       <motion.div
@@ -89,17 +107,15 @@ export function DashboardActivites() {
           <div>
             <h1 className="text-lg font-semibold text-gray-900 mb-1 sm:text-3xl sm:font-bold sm:mb-2">Gestion des Activités 📅</h1>
           </div>
-          {hasPermission('canCreate') && (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowAddModal(true)}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-2 py-1.5 text-xs rounded-lg flex items-center space-x-2 transition-colors sm:px-3 sm:py-2 sm:text-sm"
-            >
-              <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span>Nouvelle activité</span>
-            </motion.button>
-          )}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowAddModal(true)}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-2 py-1.5 text-xs rounded-lg flex items-center space-x-2 transition-colors sm:px-3 sm:py-2 sm:text-sm"
+          >
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span>Nouvelle activité</span>
+          </motion.button>
         </div>
       </motion.div>
       <motion.div
@@ -210,81 +226,71 @@ export function DashboardActivites() {
                 </tr>
               ) : (
                 activities.map((activity) => (
-                <motion.tr
-                  key={activity.id}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="hover:bg-gray-50 transition-colors"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">{activity.nom}</div>                  
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900 max-w-xs truncate">{activity.description}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatDate(activity.date_debut)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {formatDate(activity.date_fin)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-block px-3 py-1 rounded-[5px] font-semibold ${activity.statut === 'en_cours' ? 'text-green-500' : 'text-red-500'}`}>
-                      {activity.statut === 'en_cours' ? 'En cours' : 'Terminée'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center space-x-2">
-                      <button className="text-blue-600 hover:text-blue-900" title="Voir les détails" onClick={() => setShowActiviteId(activity.id)}>
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      {hasPermission('canEdit') && (
-                        <button className="text-green-600 hover:text-green-900" title="Modifier" onClick={() => {
-                          const statut = (activity.statut === 'en_cours' || activity.statut === 'terminee') ? activity.statut : 'en_cours';
-                          setActiviteToEdit({ ...activity, statut });
-                          setShowAddModal(true);
-                        }}>
+                  <motion.tr
+                    key={activity.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{activity.nom}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900 max-w-xs truncate">{activity.description}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatDate(activity.date_debut)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {formatDate(activity.date_fin)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-block px-3 py-1 rounded-[5px] font-semibold ${activity.statut === 'en_cours' ? 'text-green-500' : 'text-red-500'}`}>
+                        {activity.statut === 'en_cours' ? 'En cours' : 'Terminée'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <div className="flex items-center space-x-2">
+                        <button className="text-blue-600 hover:text-blue-900" title="Voir les détails" onClick={() => setShowActiviteId(activity.id)}>
+                          <Eye className="w-4 h-4" />
+                        </button>
+                        <button
+                          className="text-green-600 hover:text-green-900"
+                          title="Modifier"
+                          onClick={() => fetchActiviteById(activity.id)}
+                        >
                           <Edit className="w-4 h-4" />
                         </button>
-                      )}
-                      
-                      {hasPermission('canDelete') && (
-                        <button className="text-red-600 hover:text-red-900" title="Supprimer" onClick={() => {
-                          const statut = (activity.statut === 'en_cours' || activity.statut === 'terminee') ? activity.statut : 'en_cours';
-                          setActiviteToDelete({ ...activity, statut });
-                          setShowDeleteModal(true);
-                        }}>
+
+                        <button
+                          className="text-red-600 hover:text-red-900"
+                          title="Supprimer"
+                          onClick={() => {
+                            setActiviteToDelete(activity);
+                            setShowDeleteModal(true);
+                          }}
+                        >
                           <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </motion.tr>
+                        </button>                  F
+                      </div>
+                    </td>
+                  </motion.tr>
                 ))
               )}
             </tbody>
           </table>
         </div>
       </motion.div>
-      {hasPermission('canCreate') && (
-        <AddActivite
-          isOpen={showAddModal}
-          onClose={() => { setShowAddModal(false); setActiviteToEdit(null); }}
-          onSubmit={() => {
-            setShowAddModal(false);
-            setActiviteToEdit(null);
-            fetchActivities();
-          }}
-          initialValues={activiteToEdit ? {
-            id: activiteToEdit.id,
-            nom: activiteToEdit.nom,
-            description: activiteToEdit.description,
-            date_debut: activiteToEdit.date_debut,
-            date_fin: activiteToEdit.date_fin,
-            statut: (activiteToEdit.statut === 'en_cours' || activiteToEdit.statut === 'terminee') ? activiteToEdit.statut : 'en_cours',
-          } : null}
-        />
-      )}
+      <AddActivite
+        isOpen={showAddModal}
+        onClose={() => { setShowAddModal(false); setActiviteToEdit(null); }}
+        onSubmit={() => {
+          setShowAddModal(false);
+          setActiviteToEdit(null);
+          fetchActivities();
+        }}
+        initialValues={activiteToEdit || null}
+      />
       <ShowActivite isOpen={!!showActiviteId} onClose={() => setShowActiviteId(null)} activiteId={showActiviteId} />
       <ModalConfirmation
         isOpen={showDeleteModal}

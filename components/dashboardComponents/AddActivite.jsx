@@ -9,10 +9,10 @@ import { getAuthHeaders } from '../context/headers.jsx';
 import Notiflix from 'notiflix';
 
 const CATEGORIES = [
-  { value: 'Sport',     emoji: '⚽', label: 'Sport' },
-  { value: 'Culture',   emoji: '🎭', label: 'Culture' },
+  { value: 'Sport', emoji: '⚽', label: 'Sport' },
+  { value: 'Culture', emoji: '🎭', label: 'Culture' },
   { value: 'Formation', emoji: '🎓', label: 'Formation' },
-  { value: 'Autre',     emoji: '📌', label: 'Autre' },
+  { value: 'Autre', emoji: '📌', label: 'Autre' },
 ];
 
 export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
@@ -26,8 +26,8 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
     lieu: '',
     categorie: 'Autre',
   });
-  const [imageFile, setImageFile] = useState(null);       // fichier sélectionné
-  const [imagePreview, setImagePreview] = useState('');   // URL d'aperçu local ou existante
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
@@ -37,13 +37,13 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
   useEffect(() => {
     if (initialValues) {
       setFormData({
-        nom:         initialValues.nom         || '',
+        nom: initialValues.nom || '',
         description: initialValues.description || '',
-        dateDebut:   initialValues.date_debut  || '',
-        dateFin:     initialValues.date_fin    || '',
-        statut:      initialValues.statut      || 'en_cours',
-        lieu:        initialValues.lieu        || '',
-        categorie:   initialValues.categorie   || 'Autre',
+        dateDebut: initialValues.date_debut || '',
+        dateFin: initialValues.date_fin || '',
+        statut: initialValues.statut || 'en_cours',
+        lieu: initialValues.lieu || '',
+        categorie: initialValues.categorie || 'Autre',
       });
       setImagePreview(initialValues.image || '');
       setImageFile(null);
@@ -51,6 +51,18 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
       resetForm();
     }
   }, [initialValues, isOpen]);
+
+  // Réinitialiser le statut si en_attente n'est plus valide
+  useEffect(() => {
+    if (formData.statut === 'en_attente') {
+      const dateDebut = new Date(formData.dateDebut);
+      const aujourdhui = new Date();
+      aujourdhui.setHours(0, 0, 0, 0);
+      if (!formData.dateDebut || dateDebut <= aujourdhui) {
+        setFormData(prev => ({ ...prev, statut: 'en_cours' }));
+      }
+    }
+  }, [formData.dateDebut]);
 
   const resetForm = () => {
     setFormData({ nom: '', description: '', dateDebut: '', dateFin: '', statut: 'en_cours', lieu: '', categorie: 'Autre' });
@@ -64,7 +76,6 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
   };
 
-  // Sélection d'image depuis la galerie
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -81,11 +92,11 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.nom.trim())         newErrors.nom         = 'Le nom est requis';
+    if (!formData.nom.trim()) newErrors.nom = 'Le nom est requis';
     if (!formData.description.trim()) newErrors.description = 'La description est requise';
-    if (!formData.dateDebut)          newErrors.dateDebut   = 'Date de début requise';
-    if (!formData.dateFin)            newErrors.dateFin     = 'Date de fin requise';
-    if (!formData.lieu.trim())        newErrors.lieu        = 'Le lieu est requis';
+    if (!formData.dateDebut) newErrors.dateDebut = 'Date de début requise';
+    if (!formData.dateFin) newErrors.dateFin = 'Date de fin requise';
+    if (!formData.lieu.trim()) newErrors.lieu = 'Le lieu est requis';
     if (formData.dateDebut && formData.dateFin && new Date(formData.dateDebut) > new Date(formData.dateFin))
       newErrors.dateFin = 'La date de fin doit être après la date de début';
     setErrors(newErrors);
@@ -98,36 +109,47 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
 
     setIsSubmitting(true);
     try {
-      // FormData pour envoyer le fichier image en multipart
       const data = new FormData();
-      data.append('nom',         formData.nom.trim());
+      data.append('nom', formData.nom.trim());
       data.append('description', formData.description.trim());
-      data.append('date_debut',  formData.dateDebut);
-      data.append('date_fin',    formData.dateFin);
-      data.append('statut',      formData.statut);
-      data.append('lieu',        formData.lieu.trim());
-      data.append('categorie',   formData.categorie);
+      data.append('date_debut', formData.dateDebut);
+      data.append('date_fin', formData.dateFin);
+      data.append('statut', formData.statut);
+      data.append('lieu', formData.lieu.trim());
+      data.append('categorie', formData.categorie);
       if (imageFile) {
         data.append('image', imageFile);
       }
 
-      // Ne pas forcer Content-Type : axios le définit automatiquement avec le boundary
+      // Si edit, simuler PUT via POST + _method
+      if (initialValues?.id) {
+        data.append('_method', 'PUT');
+      }
+
       const headers = getAuthHeaders();
       delete headers['Content-Type'];
 
-      const response = initialValues?.id
-        ? await axios.put(`${url}activites/${initialValues.id}`, data, { headers })
-        : await axios.post(`${url}activites`, data, { headers });
+      const endpoint = initialValues?.id
+        ? `${url}activites/${initialValues.id}`
+        : `${url}activites`;
 
-      if (response.data.success) {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: data,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
         Notiflix.Notify.success(`Activité ${initialValues ? 'modifiée' : 'créée'} avec succès !`);
-        onSubmit(response.data.data || {});
+        onSubmit(result.data || {});
         handleClose();
       } else {
-        Notiflix.Notify.failure('Erreur lors de la création/modification');
+        Notiflix.Notify.failure(result.message || 'Erreur lors de la création/modification');
       }
     } catch (err) {
-      Notiflix.Notify.failure(err.response?.data?.message || 'Erreur lors de la création/modification');
+      Notiflix.Notify.failure('Erreur lors de la création/modification');
     } finally {
       setIsSubmitting(false);
     }
@@ -191,7 +213,6 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
                       alt="Aperçu"
                       className="w-full h-full object-cover"
                     />
-                    {/* Overlay au hover */}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
                       <button
                         type="button"
@@ -206,7 +227,7 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
                         className="flex items-center gap-1.5 bg-red-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-red-600 transition"
                       >
                         <Trash2 className="w-3.5 h-3.5" /> Supprimer
-      </button>
+                      </button>
                     </div>
                   </div>
                 ) : (
@@ -221,7 +242,6 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
                   </button>
                 )}
 
-                {/* Input fichier caché */}
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -333,6 +353,10 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
                   >
                     <option value="en_cours">🟢 En cours</option>
                     <option value="terminee">⚫ Terminée</option>
+                    {formData.dateDebut && new Date(formData.dateDebut) > new Date() && (
+                      <option value="en_attente">🟡 En attente</option>
+                    )}
+                    <option value="annulee">🔴 Annulée</option>
                   </select>
                 </div>
               </div>
