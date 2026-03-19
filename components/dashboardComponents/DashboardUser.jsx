@@ -75,28 +75,15 @@ export function DashboardUser() {
     }
   };
 
-  // ✅ localStorage protégé dans useEffect (s'exécute uniquement côté client)
   useEffect(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
     if (token) {
       fetchMembers();
-      // fetchCurrentUser();
     } else {
       setError('Vous devez être connecté pour accéder à cette page');
       setLoading(false);
     }
   }, []);
-
-  // const fetchCurrentUser = async () => {
-  //   try {
-  //     const response = await axios.get(`${url}auth/me`, { headers: getAuthHeaders() });
-  //     if (response.data.success && response.data.user) {
-  //       setCurrentUser(response.data.user);
-  //     }
-  //   } catch (err) {
-  //     console.error('Erreur lors de la récupération de l\'utilisateur:', err);
-  //   }
-  // };
 
   const handleExportXLSX = async () => {
     if (!canExportUsers(currentUser)) {

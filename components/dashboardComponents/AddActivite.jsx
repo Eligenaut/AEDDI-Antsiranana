@@ -1,33 +1,42 @@
-'use client';
-import { useEffect, useRef, useState } from 'react';
-import { X, Loader2, Save, MapPin, ImageIcon, Calendar, Trash2, Upload } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { createPortal } from 'react-dom';
-import axios from 'axios';
-import { url } from '../context/url.js';
-import { getAuthHeaders } from '../context/headers.jsx';
-import Notiflix from 'notiflix';
+"use client";
+import { useEffect, useRef, useState } from "react";
+import {
+  X,
+  Loader2,
+  Save,
+  MapPin,
+  ImageIcon,
+  Calendar,
+  Trash2,
+  Upload,
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
+import axios from "axios";
+import { url } from "../context/url.js";
+import { getAuthHeaders } from "../context/headers.jsx";
+import Notiflix from "notiflix";
 
 const CATEGORIES = [
-  { value: 'Sport', emoji: '⚽', label: 'Sport' },
-  { value: 'Culture', emoji: '🎭', label: 'Culture' },
-  { value: 'Formation', emoji: '🎓', label: 'Formation' },
-  { value: 'Autre', emoji: '📌', label: 'Autre' },
+  { value: "Sport", emoji: "⚽", label: "Sport" },
+  { value: "Culture", emoji: "🎭", label: "Culture" },
+  { value: "Formation", emoji: "🎓", label: "Formation" },
+  { value: "Autre", emoji: "📌", label: "Autre" },
 ];
 
 export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
-    nom: '',
-    description: '',
-    dateDebut: '',
-    dateFin: '',
-    statut: 'en_cours',
-    lieu: '',
-    categorie: 'Autre',
+    nom: "",
+    description: "",
+    dateDebut: "",
+    dateFin: "",
+    statut: "en_cours",
+    lieu: "",
+    categorie: "Autre",
   });
   const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState('');
+  const [imagePreview, setImagePreview] = useState("");
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef(null);
@@ -37,15 +46,15 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
   useEffect(() => {
     if (initialValues) {
       setFormData({
-        nom: initialValues.nom || '',
-        description: initialValues.description || '',
-        dateDebut: initialValues.date_debut || '',
-        dateFin: initialValues.date_fin || '',
-        statut: initialValues.statut || 'en_cours',
-        lieu: initialValues.lieu || '',
-        categorie: initialValues.categorie || 'Autre',
+        nom: initialValues.nom || "",
+        description: initialValues.description || "",
+        dateDebut: initialValues.date_debut || "",
+        dateFin: initialValues.date_fin || "",
+        statut: initialValues.statut || "en_cours",
+        lieu: initialValues.lieu || "",
+        categorie: initialValues.categorie || "Autre",
       });
-      setImagePreview(initialValues.image || '');
+      setImagePreview(initialValues.image || "");
       setImageFile(null);
     } else {
       resetForm();
@@ -54,26 +63,34 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
 
   // Réinitialiser le statut si en_attente n'est plus valide
   useEffect(() => {
-    if (formData.statut === 'en_attente') {
+    if (formData.statut === "en_attente") {
       const dateDebut = new Date(formData.dateDebut);
       const aujourdhui = new Date();
       aujourdhui.setHours(0, 0, 0, 0);
       if (!formData.dateDebut || dateDebut <= aujourdhui) {
-        setFormData(prev => ({ ...prev, statut: 'en_cours' }));
+        setFormData((prev) => ({ ...prev, statut: "en_cours" }));
       }
     }
   }, [formData.dateDebut]);
 
   const resetForm = () => {
-    setFormData({ nom: '', description: '', dateDebut: '', dateFin: '', statut: 'en_cours', lieu: '', categorie: 'Autre' });
+    setFormData({
+      nom: "",
+      description: "",
+      dateDebut: "",
+      dateFin: "",
+      statut: "en_cours",
+      lieu: "",
+      categorie: "Autre",
+    });
     setImageFile(null);
-    setImagePreview('');
+    setImagePreview("");
     setErrors({});
   };
 
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
   const handleImageChange = (e) => {
@@ -81,24 +98,29 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
     if (!file) return;
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
-    if (errors.image) setErrors(prev => ({ ...prev, image: '' }));
+    if (errors.image) setErrors((prev) => ({ ...prev, image: "" }));
   };
 
   const handleRemoveImage = () => {
     setImageFile(null);
-    setImagePreview('');
-    if (fileInputRef.current) fileInputRef.current.value = '';
+    setImagePreview("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.nom.trim()) newErrors.nom = 'Le nom est requis';
-    if (!formData.description.trim()) newErrors.description = 'La description est requise';
-    if (!formData.dateDebut) newErrors.dateDebut = 'Date de début requise';
-    if (!formData.dateFin) newErrors.dateFin = 'Date de fin requise';
-    if (!formData.lieu.trim()) newErrors.lieu = 'Le lieu est requis';
-    if (formData.dateDebut && formData.dateFin && new Date(formData.dateDebut) > new Date(formData.dateFin))
-      newErrors.dateFin = 'La date de fin doit être après la date de début';
+    if (!formData.nom.trim()) newErrors.nom = "Le nom est requis";
+    if (!formData.description.trim())
+      newErrors.description = "La description est requise";
+    if (!formData.dateDebut) newErrors.dateDebut = "Date de début requise";
+    if (!formData.dateFin) newErrors.dateFin = "Date de fin requise";
+    if (!formData.lieu.trim()) newErrors.lieu = "Le lieu est requis";
+    if (
+      formData.dateDebut &&
+      formData.dateFin &&
+      new Date(formData.dateDebut) > new Date(formData.dateFin)
+    )
+      newErrors.dateFin = "La date de fin doit être après la date de début";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -110,46 +132,51 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
     setIsSubmitting(true);
     try {
       const data = new FormData();
-      data.append('nom', formData.nom.trim());
-      data.append('description', formData.description.trim());
-      data.append('date_debut', formData.dateDebut);
-      data.append('date_fin', formData.dateFin);
-      data.append('statut', formData.statut);
-      data.append('lieu', formData.lieu.trim());
-      data.append('categorie', formData.categorie);
+      data.append("nom", formData.nom.trim());
+      data.append("description", formData.description.trim());
+      data.append("date_debut", formData.dateDebut);
+      data.append("date_fin", formData.dateFin);
+      data.append("statut", formData.statut);
+      data.append("lieu", formData.lieu.trim());
+      data.append("categorie", formData.categorie);
       if (imageFile) {
-        data.append('image', imageFile);
-      }
-
-      // Si edit, simuler PUT via POST + _method
-      if (initialValues?.id) {
-        data.append('_method', 'PUT');
+        data.append("image", imageFile);
       }
 
       const headers = getAuthHeaders();
-      delete headers['Content-Type'];
+      delete headers["Content-Type"]; // ✅ laisser axios gérer multipart
 
-      const endpoint = initialValues?.id
-        ? `${url}activites/${initialValues.id}`
-        : `${url}activites`;
+      let response;
 
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers,
-        body: data,
-      });
+      if (initialValues?.id) {
+        // ✅ PUT direct avec axios
+        data.append("_method", "PUT");
+        response = await axios.post(
+          `${url}activites/${initialValues.id}`,
+          data,
+          { headers },
+        );
+      } else {
+        response = await axios.post(`${url}activites`, data, { headers });
+      }
 
-      const result = await response.json();
-
-      if (result.success) {
-        Notiflix.Notify.success(`Activité ${initialValues ? 'modifiée' : 'créée'} avec succès !`);
-        onSubmit(result.data || {});
+      if (response.data.success) {
+        Notiflix.Notify.success(
+          `Activité ${initialValues ? "modifiée" : "créée"} avec succès !`,
+        );
+        onSubmit(response.data.data || {});
         handleClose();
       } else {
-        Notiflix.Notify.failure(result.message || 'Erreur lors de la création/modification');
+        Notiflix.Notify.failure(
+          response.data.message || "Erreur lors de la création/modification",
+        );
       }
     } catch (err) {
-      Notiflix.Notify.failure('Erreur lors de la création/modification');
+      console.log("Erreur détails:", err.response?.data?.errors);
+      Notiflix.Notify.failure(
+        err.response?.data?.message ||
+          "Erreur lors de la création/modification",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -171,7 +198,7 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
           {/* BACKDROP */}
           <motion.div
             className="fixed inset-0 z-[9999]"
-            style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
+            style={{ backgroundColor: "rgba(0,0,0,0.3)" }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -181,10 +208,10 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
           {/* PANEL */}
           <motion.div
             className="fixed top-0 right-0 h-full w-full sm:w-[520px] bg-white shadow-2xl z-[10000] flex flex-col overflow-y-auto"
-            initial={{ x: '100%' }}
+            initial={{ x: "100%" }}
             animate={{ x: 0 }}
-            exit={{ x: '100%' }}
-            transition={{ type: 'spring', stiffness: 260, damping: 25 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", stiffness: 260, damping: 25 }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* HEADER */}
@@ -192,14 +219,16 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
               <h2 className="text-xl font-bold">
                 {initialValues ? "Modifier l'activité" : "Nouvelle activité"}
               </h2>
-              <button onClick={handleClose} className="hover:bg-white/20 p-2 rounded-lg transition">
+              <button
+                onClick={handleClose}
+                className="hover:bg-white/20 p-2 rounded-lg transition"
+              >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* FORM */}
             <form onSubmit={handleSubmit} className="p-6 space-y-5 flex-1">
-
               {/* ── Image upload ── */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
@@ -237,7 +266,9 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
                     className="w-full h-36 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-purple-400 hover:text-purple-500 hover:bg-purple-50 transition-all"
                   >
                     <Upload className="w-7 h-7" />
-                    <span className="text-sm font-medium">Choisir depuis la galerie</span>
+                    <span className="text-sm font-medium">
+                      Choisir depuis la galerie
+                    </span>
                     <span className="text-xs">JPG, PNG, WEBP</span>
                   </button>
                 )}
@@ -254,30 +285,42 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
 
               {/* ── Nom ── */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Nom *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Nom *
+                </label>
                 <input
                   type="text"
                   value={formData.nom}
-                  onChange={(e) => handleInputChange('nom', e.target.value)}
+                  onChange={(e) => handleInputChange("nom", e.target.value)}
                   placeholder="Ex : Tournoi Inter-Associations"
-                  className={`w-full px-3 py-2 text-black border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm ${errors.nom ? 'border-red-300' : 'border-gray-300'}`}
+                  className={`w-full px-3 py-2 text-black border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm ${errors.nom ? "border-red-300" : "border-gray-300"}`}
                   disabled={isSubmitting}
                 />
-                {errors.nom && <p className="text-red-500 text-xs mt-1">{errors.nom}</p>}
+                {errors.nom && (
+                  <p className="text-red-500 text-xs mt-1">{errors.nom}</p>
+                )}
               </div>
 
               {/* ── Description ── */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Description *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Description *
+                </label>
                 <textarea
                   value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
                   rows={3}
                   placeholder="Décrivez l'activité..."
-                  className={`w-full px-3 py-2 border text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm resize-none ${errors.description ? 'border-red-300' : 'border-gray-300'}`}
+                  className={`w-full px-3 py-2 border text-black rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm resize-none ${errors.description ? "border-red-300" : "border-gray-300"}`}
                   disabled={isSubmitting}
                 />
-                {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description}</p>}
+                {errors.description && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.description}
+                  </p>
+                )}
               </div>
 
               {/* ── Dates ── */}
@@ -289,11 +332,17 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
                   <input
                     type="date"
                     value={formData.dateDebut}
-                    onChange={(e) => handleInputChange('dateDebut', e.target.value)}
-                    className={`w-full px-3 py-2 text-black border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm ${errors.dateDebut ? 'border-red-300' : 'border-gray-300'}`}
+                    onChange={(e) =>
+                      handleInputChange("dateDebut", e.target.value)
+                    }
+                    className={`w-full px-3 py-2 text-black border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm ${errors.dateDebut ? "border-red-300" : "border-gray-300"}`}
                     disabled={isSubmitting}
                   />
-                  {errors.dateDebut && <p className="text-red-500 text-xs mt-1">{errors.dateDebut}</p>}
+                  {errors.dateDebut && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.dateDebut}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
@@ -302,11 +351,17 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
                   <input
                     type="date"
                     value={formData.dateFin}
-                    onChange={(e) => handleInputChange('dateFin', e.target.value)}
-                    className={`w-full px-3 py-2 text-black border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm ${errors.dateFin ? 'border-red-300' : 'border-gray-300'}`}
+                    onChange={(e) =>
+                      handleInputChange("dateFin", e.target.value)
+                    }
+                    className={`w-full px-3 py-2 text-black border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm ${errors.dateFin ? "border-red-300" : "border-gray-300"}`}
                     disabled={isSubmitting}
                   />
-                  {errors.dateFin && <p className="text-red-500 text-xs mt-1">{errors.dateFin}</p>}
+                  {errors.dateFin && (
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.dateFin}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -318,25 +373,31 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
                 <input
                   type="text"
                   value={formData.lieu}
-                  onChange={(e) => handleInputChange('lieu', e.target.value)}
+                  onChange={(e) => handleInputChange("lieu", e.target.value)}
                   placeholder="Ex : Stade Municipal de Diego-Suarez"
-                  className={`w-full px-3 py-2 text-black border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm ${errors.lieu ? 'border-red-300' : 'border-gray-300'}`}
+                  className={`w-full px-3 py-2 text-black border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm ${errors.lieu ? "border-red-300" : "border-gray-300"}`}
                   disabled={isSubmitting}
                 />
-                {errors.lieu && <p className="text-red-500 text-xs mt-1">{errors.lieu}</p>}
+                {errors.lieu && (
+                  <p className="text-red-500 text-xs mt-1">{errors.lieu}</p>
+                )}
               </div>
 
               {/* ── Catégorie + Statut ── */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Catégorie</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Catégorie
+                  </label>
                   <select
                     value={formData.categorie}
-                    onChange={(e) => handleInputChange('categorie', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("categorie", e.target.value)
+                    }
                     className="w-full border border-gray-300 rounded-lg text-black px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     disabled={isSubmitting}
                   >
-                    {CATEGORIES.map(cat => (
+                    {CATEGORIES.map((cat) => (
                       <option key={cat.value} value={cat.value}>
                         {cat.emoji} {cat.label}
                       </option>
@@ -344,18 +405,23 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Statut</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Statut
+                  </label>
                   <select
                     value={formData.statut}
-                    onChange={(e) => handleInputChange('statut', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("statut", e.target.value)
+                    }
                     className="w-full border border-gray-300 rounded-lg text-black px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     disabled={isSubmitting}
                   >
                     <option value="en_cours">🟢 En cours</option>
                     <option value="terminee">⚫ Terminée</option>
-                    {formData.dateDebut && new Date(formData.dateDebut) > new Date() && (
-                      <option value="en_attente">🟡 En attente</option>
-                    )}
+                    {formData.dateDebut &&
+                      new Date(formData.dateDebut) > new Date() && (
+                        <option value="en_attente">🟡 En attente</option>
+                      )}
                     <option value="annulee">🔴 Annulée</option>
                   </select>
                 </div>
@@ -379,22 +445,25 @@ export function AddActivite({ isOpen, onClose, onSubmit, initialValues }) {
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>{initialValues ? 'Mise à jour...' : 'Création...'}</span>
+                      <span>
+                        {initialValues ? "Mise à jour..." : "Création..."}
+                      </span>
                     </>
                   ) : (
                     <>
                       <Save className="w-4 h-4" />
-                      <span>{initialValues ? "Mettre à jour" : "Créer l'activité"}</span>
+                      <span>
+                        {initialValues ? "Mettre à jour" : "Créer l'activité"}
+                      </span>
                     </>
                   )}
                 </button>
               </div>
-
             </form>
           </motion.div>
         </>
       )}
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }

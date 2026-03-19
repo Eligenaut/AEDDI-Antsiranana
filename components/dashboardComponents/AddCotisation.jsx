@@ -123,6 +123,7 @@ export function AddCotisation({ isOpen, onClose, onSubmit, initialValues }) {
         Notiflix.Notify.failure('Erreur lors de la création/modification');
       }
     } catch (err) {
+      console.log('Erreur détails:', err.response?.data);
       Notiflix.Notify.failure(err.response?.data?.message || 'Erreur lors de la création/modification');
     } finally {
       setIsSubmitting(false);

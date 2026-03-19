@@ -1,27 +1,38 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { X, Loader2, Calendar, CheckCircle, AlertCircle } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { X, Loader2, MapPin, ImageIcon, Calendar, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { url } from '../context/url.js';
 import { getAuthHeaders } from '../context/headers.jsx';
 
+const CATEGORIES = [
+  { value: 'Sport',     emoji: '⚽', label: 'Sport' },
+  { value: 'Culture',   emoji: '🎭', label: 'Culture' },
+  { value: 'Formation', emoji: '🎓', label: 'Formation' },
+  { value: 'Autre',     emoji: '📌', label: 'Autre' },
+];
+
+const STATUT_OPTIONS = [
+  { value: 'en_cours',   label: '🟢 En cours' },
+  { value: 'terminee',   label: '⚫ Terminée' },
+  { value: 'en_attente', label: '🟡 En attente' },
+  { value: 'annulee',    label: '🔴 Annulée' },
+];
+
 export function ShowActivite({ isOpen, onClose, activiteId }) {
-  const [mounted, setMounted] = useState(false); // ✅ ajouté
+  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activite, setActivite] = useState(null);
 
-  useEffect(() => {
-    setMounted(true); // ✅ ajouté
-  }, []);
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (isOpen && activiteId) {
       setLoading(true);
       setError(null);
-
       axios
         .get(`${url}activites/${activiteId}`, { headers: getAuthHeaders() })
         .then((res) => {
@@ -33,109 +44,159 @@ export function ShowActivite({ isOpen, onClose, activiteId }) {
     }
   }, [isOpen, activiteId]);
 
-  // ✅ Bloque le rendu côté serveur
   if (!mounted) return null;
+
+  const statutLabel = STATUT_OPTIONS.find(s => s.value === activite?.statut)?.label ?? '';
+  const categorieLabel = CATEGORIES.find(c => c.value === activite?.categorie);
 
   return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* BACKDROP */}
           <motion.div
-            className="fixed inset-0 bg-black/30 z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[9999]"
+            style={{ backgroundColor: 'rgba(0,0,0,0.3)' }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onClose}
           />
 
-          {/* Sidebar */}
+          {/* PANEL */}
           <motion.div
-            className="fixed top-0 right-0 h-full w-full sm:w-[600px] bg-white shadow-2xl z-50 flex flex-col overflow-y-auto"
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
+            className="fixed top-0 right-0 h-full w-full sm:w-[520px] bg-white shadow-2xl z-[10000] flex flex-col overflow-y-auto"
+            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 260, damping: 25 }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* HEADER */}
-            <div className="bg-gradient-to-r from-purple-500 to-purple-600 px-6 py-4 text-white flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <Calendar className="w-6 h-6" />
-                <h2 className="text-xl font-bold">Détail de l'activité</h2>
-              </div>
+            <div className="bg-gradient-to-r from-purple-500 to-pink-500 px-6 py-4 text-white flex items-center justify-between shrink-0">
+              <h2 className="text-xl font-bold">Détail de l'activité</h2>
               <button onClick={onClose} className="hover:bg-white/20 p-2 rounded-lg transition">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* CONTENT */}
-            <div className="p-6 flex-1">
+            <div className="p-6 space-y-5 flex-1">
               {loading ? (
-                <div className="flex justify-center py-12">
+                <div className="flex flex-col items-center justify-center h-48 gap-3">
                   <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
+                  <p className="text-sm text-gray-400 font-medium">Chargement...</p>
                 </div>
               ) : error ? (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-                  <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
-                  <p className="text-red-700 font-medium">{error}</p>
+                <div className="bg-red-50 border border-red-200 rounded-xl p-5 flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                  <p className="text-red-700 text-sm font-medium">{error}</p>
                 </div>
               ) : activite ? (
-                <div className="space-y-6">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">{activite.nom}</h3>
-                    <p className="text-gray-600 leading-relaxed">{activite.description}</p>
-                  </div>
-
-                  <div className="bg-purple-50 rounded-lg p-4 border-l-4 border-purple-500">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <CheckCircle className="w-5 h-5 text-purple-600" />
-                      <span className="text-sm font-medium text-purple-800">Statut</span>
-                    </div>
-                    <span
-                      className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
-                        activite.statut === 'en_cours'
-                          ? 'bg-green-100 text-green-800'
-                          : activite.statut === 'terminee'
-                          ? 'bg-blue-100 text-blue-800'
-                          : activite.statut === 'annulee'
-                          ? 'bg-red-100 text-red-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}
-                    >
-                      {activite.statut === 'en_cours'
-                        ? 'En cours'
-                        : activite.statut === 'terminee'
-                        ? 'Terminée'
-                        : activite.statut === 'annulee'
-                        ? 'Annulée'
-                        : 'Planifiée'}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Calendar className="w-5 h-5 text-gray-600" />
-                        <span className="text-sm font-medium text-gray-700">Date de début</span>
+                <>
+                  {/* ── Image ── */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                      <ImageIcon className="w-3.5 h-3.5" /> Image
+                    </label>
+                    {activite.image ? (
+                      <div className="h-44 rounded-xl overflow-hidden border border-gray-200">
+                        <img src={activite.image} alt={activite.nom} className="w-full h-full object-cover" />
                       </div>
-                      <p className="text-gray-900 font-medium">
+                    ) : (
+                      <div className="h-36 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center gap-2 text-gray-300">
+                        <ImageIcon className="w-7 h-7" />
+                        <span className="text-sm">Aucune image</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ── Nom ── */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Nom</label>
+                    <div className="w-full px-3 py-2 text-black border border-gray-200 rounded-lg text-sm bg-gray-50">
+                      {activite.nom}
+                    </div>
+                  </div>
+
+                  {/* ── Description ── */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+                    <div className="w-full px-3 py-2 border text-black rounded-lg text-sm bg-gray-50 border-gray-200 min-h-[80px] leading-relaxed whitespace-pre-wrap">
+                      {activite.description}
+                    </div>
+                  </div>
+
+                  {/* ── Dates ── */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5" /> Date début
+                      </label>
+                      <div className="w-full px-3 py-2 text-black border border-gray-200 rounded-lg text-sm bg-gray-50">
                         {new Date(activite.date_debut).toLocaleDateString('fr-FR')}
-                      </p>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-4">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Calendar className="w-5 h-5 text-gray-600" />
-                        <span className="text-sm font-medium text-gray-700">Date de fin</span>
                       </div>
-                      <p className="text-gray-900 font-medium">
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5" /> Date fin
+                      </label>
+                      <div className="w-full px-3 py-2 text-black border border-gray-200 rounded-lg text-sm bg-gray-50">
                         {new Date(activite.date_fin).toLocaleDateString('fr-FR')}
-                      </p>
+                      </div>
                     </div>
                   </div>
-                </div>
+
+                  {/* ── Lieu ── */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5" /> Lieu
+                    </label>
+                    <div className="w-full px-3 py-2 text-black border border-gray-200 rounded-lg text-sm bg-gray-50">
+                      {activite.lieu}
+                    </div>
+                  </div>
+
+                  {/* ── Image lieu ── */}
+                  {activite.image_lieu && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
+                        <ImageIcon className="w-3.5 h-3.5" /> Photo du lieu
+                      </label>
+                      <div className="h-36 rounded-xl overflow-hidden border border-gray-200">
+                        <img src={activite.image_lieu} alt="lieu" className="w-full h-full object-cover" />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── Catégorie + Statut ── */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Catégorie</label>
+                      <div className="w-full px-3 py-2 text-black border border-gray-200 rounded-lg text-sm bg-gray-50">
+                        {categorieLabel ? `${categorieLabel.emoji} ${categorieLabel.label}` : activite.categorie}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">Statut</label>
+                      <div className="w-full px-3 py-2 text-black border border-gray-200 rounded-lg text-sm bg-gray-50">
+                        {statutLabel}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ── Galerie ── */}
+                  {activite.galerie?.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+                        <ImageIcon className="w-3.5 h-3.5" /> Galerie
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {activite.galerie.map((img, i) => (
+                          <div key={i} className="aspect-square rounded-xl overflow-hidden border border-gray-200">
+                            <img src={img} alt={`galerie-${i}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-200" />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : null}
             </div>
           </motion.div>
