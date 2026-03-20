@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handles_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.aeddi.app",
+    "sha256_cert_fingerprints": [
+      "EE:0A:1B:22:2A:AC:C7:44:3A:E2:24:1B:CC:C3:9D:B1:55:55:7A:F5:C1:74:80:9D:29:4B:8D:B8:65:45:7E:9F"
+    ]
+  }
+}]
