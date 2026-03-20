@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "660311085352",
+    "project_id": "aeddi-c09a7",
+    "storage_bucket": "aeddi-c09a7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:660311085352:android:288f02b728d932cc9cc01d",
+        "android_client_info": {
+          "package_name": "com.aeddi.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDchXajXFpL1jKdH_lTYZSrMgIfH7zLWQc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
