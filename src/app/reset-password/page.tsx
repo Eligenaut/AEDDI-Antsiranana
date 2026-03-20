@@ -2,11 +2,11 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { LoginProvider } from '../../../components/loginComponents/LoginContexte';
 import { ResetPassword } from '../../../components/loginComponents/ResetPassword.jsx';
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -23,16 +23,11 @@ export default function ResetPasswordPage() {
     }
   }, [searchParams]);
 
-  const handleBack = () => {
-    router.push('/');
-  };
-
   const handlePasswordReset = (authToken: string) => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('auth_token', authToken);
       localStorage.setItem('user_email', email);
     }
-    
     setTimeout(() => {
       router.push('/dashboard');
     }, 2000);
@@ -52,5 +47,13 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </LoginProvider>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div>Chargement...</div>}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

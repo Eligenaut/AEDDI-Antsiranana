@@ -2,11 +2,11 @@
 
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { LoginProvider } from '../../../components/loginComponents/LoginContexte';
 import { RegisterPassword } from '../../../components/loginComponents/RegisterPassword';
 
-export default function CreatePasswordPage() {
+function CreatePasswordContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -32,7 +32,6 @@ export default function CreatePasswordPage() {
       localStorage.setItem('auth_token', authToken);
       localStorage.setItem('user_email', email);
     }
-    
     setTimeout(() => {
       router.push('/dashboard');
     }, 2000);
@@ -52,5 +51,13 @@ export default function CreatePasswordPage() {
         </div>
       </div>
     </LoginProvider>
+  );
+}
+
+export default function CreatePasswordPage() {
+  return (
+    <Suspense fallback={<div>Chargement...</div>}>
+      <CreatePasswordContent />
+    </Suspense>
   );
 }
