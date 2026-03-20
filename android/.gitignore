@@ -8,7 +8,7 @@
 
 # Files for the ART/Dalvik VM
 *.dex
-
+build.gradle
 # Java class files
 *.class
 
