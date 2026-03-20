@@ -12,7 +12,13 @@
 
 # testing
 /coverage
+keystore/
+*.jks
+*.keystore
 
+# APK
+android/app/release/
+*.apk
 # next.js
 /.next/
 /out/

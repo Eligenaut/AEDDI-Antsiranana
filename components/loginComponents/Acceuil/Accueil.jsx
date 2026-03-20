@@ -6,6 +6,8 @@ import { useState, useEffect, useRef } from "react";
 import Avantages from "./Avantages";
 import Evenements from "./Evenements";
 
+const APK_URL = "https://drive.google.com/uc?export=download&id=1iuRq5DmmIFP2QnhiwYiQn9CacK1b4UtC";
+
 // ─── Données slider ───────────────────────────────────────────────────────────
 const sliderImages = [
   { id: 1, src: "/images/slider/image1.jpg", alt: "AEDDI 1", title: "Bienvenue sur AEDDI", subtitle: "Association des Étudiants Dynamiques de Diego" },
@@ -29,11 +31,18 @@ const navLinks = [
   { href: "#contact", label: "Contact" },
 ];
 
+// ─── Icône téléchargement ─────────────────────────────────────────────────────
+function DownloadIcon({ size = 13 }) {
+  return (
+    <svg width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d={`M${size/2} 1v${size*0.62}M${size*0.23} ${size*0.5}l${size*0.27} ${size*0.27} ${size*0.27}-${size*0.27}M1 ${size*0.81}v${size*0.08}a${size*0.08} ${size*0.08} 0 00${size*0.08} ${size*0.08}h${size*0.84}a${size*0.08} ${size*0.08} 0 00${size*0.08}-${size*0.08}v-${size*0.08}`}/>
+    </svg>
+  );
+}
+
 // ─── Navbar ───────────────────────────────────────────────────────────────────
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
-
-  // Fermer au clic sur un lien
   const handleLink = () => setMenuOpen(false);
 
   return (
@@ -69,7 +78,7 @@ function Navbar() {
             />
           </button>
 
-          {/* Logo — centré mobile, gauche desktop */}
+          {/* Logo */}
           <div className="absolute left-1/2 -translate-x-1/2 md:static md:translate-x-0 flex items-center gap-2.5">
             <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-500 rounded-xl flex items-center justify-center shadow">
               <span className="text-white text-sm font-black">A</span>
@@ -86,21 +95,32 @@ function Navbar() {
             ))}
           </div>
 
-          {/* Connexion */}
-          <a
-            href="/login"
-            className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 rounded-lg shadow transition-all duration-200 active:scale-95 whitespace-nowrap"
-          >
-            Connexion
-          </a>
+          {/* Boutons droite desktop */}
+          <div className="flex items-center gap-2">
+            {/* Bouton téléchargement — desktop uniquement */}
+            <a
+              href={APK_URL}
+              className="hidden md:flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 border border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50 px-3 py-2 rounded-lg transition-all duration-200"
+            >
+              <DownloadIcon size={13} />
+              Télécharger l'app
+            </a>
+
+            {/* Connexion */}
+            <a
+              href="/login"
+              className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white text-xs sm:text-sm font-semibold px-3 sm:px-4 py-2 rounded-lg shadow transition-all duration-200 active:scale-95 whitespace-nowrap"
+            >
+              Connexion
+            </a>
+          </div>
         </div>
       </motion.nav>
 
-      {/* ── Menu mobile — s'ouvre depuis le haut ── */}
+      {/* ── Menu mobile ── */}
       <AnimatePresence>
         {menuOpen && (
           <>
-            {/* Overlay */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -109,8 +129,6 @@ function Navbar() {
               onClick={() => setMenuOpen(false)}
               className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"
             />
-
-            {/* Panel qui descend depuis le haut */}
             <motion.div
               initial={{ y: "-100%", opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -134,14 +152,24 @@ function Navbar() {
                   </motion.a>
                 ))}
 
-                {/* CTA dans le menu */}
-                <div className="px-6 py-4">
+                {/* CTA dans le menu mobile */}
+                <div className="px-6 py-4 flex flex-col gap-3">
                   <a
                     href="/devenir-membre"
                     onClick={handleLink}
                     className="block w-full text-center bg-gradient-to-r from-purple-600 to-pink-500 text-white font-bold py-3 rounded-xl shadow text-sm"
                   >
                     Devenir membre
+                  </a>
+
+                  {/* Bouton téléchargement mobile */}
+                  <a
+                    href={APK_URL}
+                    onClick={handleLink}
+                    className="flex items-center justify-center gap-2 w-full text-center bg-indigo-50 border border-indigo-200 text-indigo-700 font-bold py-3 rounded-xl text-sm hover:bg-indigo-100 transition-colors"
+                  >
+                    <DownloadIcon size={14} />
+                    📱 L'app est disponible — Télécharger
                   </a>
                 </div>
               </nav>
@@ -214,7 +242,6 @@ function HeroSlider() {
           }}
           className="absolute inset-0"
         >
-          {/* Image — sans skeleton visible */}
           <div className="absolute inset-0 bg-gray-900">
             <Image
               src={sliderImages[current].src}
@@ -226,8 +253,6 @@ function HeroSlider() {
               onLoad={() => setLoaded((p) => ({ ...p, [current]: true }))}
             />
           </div>
-
-          {/* Overlays cinématiques */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-transparent to-transparent" />
         </motion.div>
@@ -266,8 +291,6 @@ function HeroSlider() {
 
         {/* Stats + navigation */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-
-          {/* Stats */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -326,7 +349,7 @@ function HeroSlider() {
         </div>
       </div>
 
-      {/* ── CTA droite (desktop seulement) ── */}
+      {/* ── CTA droite (desktop) ── */}
       <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
@@ -345,7 +368,32 @@ function HeroSlider() {
         >
           En savoir plus
         </a>
+
+        {/* Bouton téléchargement APK */}
+        <a
+          href={APK_URL}
+          className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/25 border border-white/25 text-white text-xs font-semibold px-5 py-3 rounded-xl backdrop-blur-sm transition-all duration-200 whitespace-nowrap"
+        >
+          <svg width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6.5 1v7.5M3.5 6l3 3 3-3M1 10.5v.5a1 1 0 001 1h9a1 1 0 001-1v-.5"/>
+          </svg>
+          Télécharger l'app
+        </a>
       </motion.div>
+
+      {/* ── Bannière téléchargement mobile (bas du slider) ── */}
+      <motion.a
+        href={APK_URL}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1, duration: 0.5 }}
+        className="sm:hidden absolute top-4 right-4 z-20 flex items-center gap-1.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm border border-white/25 text-white text-[10px] font-bold px-3 py-1.5 rounded-full transition-all"
+      >
+        <svg width="11" height="11" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M5.5 1v6.5M3 5.5l2.5 2.5 2.5-2.5M1 9v.5a.5.5 0 00.5.5h8a.5.5 0 00.5-.5V9"/>
+        </svg>
+        Télécharger l'app
+      </motion.a>
 
     </section>
   );
@@ -358,8 +406,6 @@ export default function Accueil() {
       <Navbar />
       <HeroSlider />
       <Avantages />
-
-      {/* ── Section Événements ── */}
       <Evenements />
     </div>
   );
