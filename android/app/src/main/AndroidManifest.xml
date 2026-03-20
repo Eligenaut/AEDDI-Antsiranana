@@ -14,29 +14,29 @@
             android:theme="@style/AppTheme.NoActionBar"
             android:launchMode="singleTask"
             android:exported="true">
+
+            <!-- Launcher -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <intent-filter android:autoVerify="true">
+
+            <!-- Deep link aeddi://reset-password -->
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="https"
-                    android:host="aeddi-antsiranana.vercel.app"
-                    android:pathPrefix="/reset-password" />
+                <data android:scheme="aeddi" android:host="reset-password" />
             </intent-filter>
 
-            <intent-filter android:autoVerify="true">
+            <!-- Deep link aeddi://create-password -->
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data
-                    android:scheme="https"
-                    android:host="aeddi-antsiranana.vercel.app"
-                    android:pathPrefix="/create-password" />
+                <data android:scheme="aeddi" android:host="create-password" />
             </intent-filter>
+
         </activity>
 
         <provider
@@ -48,8 +48,6 @@
                 android:resource="@xml/file_paths" />
         </provider>
     </application>
-
-    <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />
 </manifest>
