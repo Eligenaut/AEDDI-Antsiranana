@@ -140,6 +140,7 @@ export default function Evenements() {
       .then(data => {
         if (data.success) {
           setActivites(data.data);
+          console.log('Activités chargées:', data.data);
         } else {
           setError("Impossible de charger les activités.");
         }
