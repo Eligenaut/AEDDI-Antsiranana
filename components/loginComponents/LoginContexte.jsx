@@ -10,6 +10,27 @@ export function useLogin() {
   return useContext(LoginContext);
 }
 
+// ─── Helper envoi FCM token ───────────────────────────────
+const sendFcmToken = async (authToken) => {
+  try {
+    const fcmToken = localStorage.getItem('fcm_token');
+    if (!fcmToken) return;
+
+    await fetch(`${url}fcm-token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ fcm_token: fcmToken }),
+    });
+
+    console.log('FCM token envoyé au backend');
+  } catch (error) {
+    console.error('Erreur envoi FCM token:', error);
+  }
+};
+
 export function LoginProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -29,6 +50,10 @@ export function LoginProvider({ children }) {
         localStorage.setItem('auth_token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
         setUser(data.user);
+
+        // ─── Envoie le FCM token après connexion ───────────
+        await sendFcmToken(data.token);
+
         Notify.success('Connexion réussie !');
         router.push('/dashboard');
         return { success: true };
@@ -51,6 +76,7 @@ export function LoginProvider({ children }) {
   const deconnecter = () => {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
+    localStorage.removeItem('fcm_token');
     setUser(null);
     Notify.success('Déconnexion réussie !');
     router.push('/');
