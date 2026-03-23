@@ -3,9 +3,7 @@ import { url } from "../context/url.js";
 import { baseHeaders } from "../context/headers.jsx";
 import { Notify } from "notiflix/build/notiflix-notify-aio";
 import { useRouter } from "next/navigation";
-import { Capacitor } from '@capacitor/core';
-import { GoogleAuth } from 'capacitor-google-auth';
-
+import { signInWithGoogle } from './googleAuth.js';
 const LoginContext = createContext();
 
 export function useLogin() {
@@ -68,57 +66,45 @@ export function LoginProvider({ children }) {
   };
 
   const connecterGoogle = async () => {
-  if (Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'ios') {
     try {
       setLoading(true);
 
-      // ─── Affiche le sélecteur de compte Google natif ──
-      await GoogleAuth.initialize({
-        clientId: 'VOTRE_WEB_CLIENT_ID.apps.googleusercontent.com',
-        scopes: ['profile', 'email'],
-        grantOfflineAccess: true,
-      });
+      const googleUser = await signInWithGoogle();
 
-      const googleUser = await GoogleAuth.signIn();
-      console.log('Google user:', googleUser);
+      // Web → redirigé, pas de suite ici
+      if (!googleUser) return;
 
-      // ─── Envoie au backend ────────────────────────────
+      // Mobile → envoie au backend
       const response = await fetch(`${url}auth/google/mobile`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id_token:     googleUser.authentication.idToken,
-          email:        googleUser.email,
-          name:         googleUser.displayName,
-          avatar:       googleUser.imageUrl,
+          id_token: googleUser.authentication.idToken,
+          email: googleUser.email,
+          name: googleUser.displayName,
+          avatar: googleUser.imageUrl,
         }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        localStorage.setItem('auth_token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem("auth_token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
         setUser(data.user);
         await sendFcmToken(data.token);
-        Notify.success('Connexion Google réussie !');
-        router.push('/dashboard');
+        Notify.success("Connexion Google réussie !");
+        router.push("/dashboard");
       } else {
-        Notify.failure(data.message || 'Erreur connexion Google');
+        Notify.failure(data.message || "Erreur connexion Google");
       }
-
     } catch (error) {
-      console.error('Erreur Google Auth:', error);
-      Notify.failure('Erreur lors de la connexion Google');
+      console.error("Erreur Google Auth:", error);
+      Notify.failure("Erreur lors de la connexion Google");
     } finally {
       setLoading(false);
     }
-
-  } else {
-    // ─── Web ──────────────────────────────────────────
-    window.location.href = 'https://aeddi-backend-production.up.railway.app/auth/google';
-  }
-};
+  };
 
   // ─── Appelé depuis la page /auth/google/callback ──────
   const connecterGoogleCallback = async (token, userData) => {
