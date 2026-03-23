@@ -3,8 +3,9 @@ import { url } from "../context/url.js";
 import { baseHeaders } from "../context/headers.jsx";
 import { Notify } from "notiflix/build/notiflix-notify-aio";
 import { useRouter } from "next/navigation";
-import { Capacitor } from "@capacitor/core";
-import { Browser } from "@capacitor/browser";
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
+import { App } from '@capacitor/app';
 
 const LoginContext = createContext();
 
