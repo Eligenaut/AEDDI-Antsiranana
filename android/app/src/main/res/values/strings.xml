@@ -4,4 +4,5 @@
     <string name="title_activity_main">AEDDI</string>
     <string name="package_name">com.aeddi.app</string>
     <string name="custom_url_scheme">com.aeddi.app</string>
+    <string name="server_client_id">221609391832-8h09fts75kp9milp5p5scjg00r0297fg.apps.googleusercontent.com</string>
 </resources>

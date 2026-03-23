@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { App } from '@capacitor/app';
+import { GoogleAuth } from 'capacitor-google-auth';
 
 const LoginContext = createContext();
 
@@ -69,40 +70,57 @@ export function LoginProvider({ children }) {
   };
 
   const connecterGoogle = async () => {
-    if (Capacitor.isNativePlatform()) {
-      // Écoute le deep link de retour
-      App.addListener("appUrlOpen", async (event) => {
-        const urlObj = new URL(event.url);
+  if (Capacitor.getPlatform() === 'android' || Capacitor.getPlatform() === 'ios') {
+    try {
+      setLoading(true);
 
-        if (urlObj.pathname.includes("/auth/google/success")) {
-          const token = urlObj.searchParams.get("token");
-          const userParam = urlObj.searchParams.get("user");
-
-          await Browser.close();
-
-          if (token && userParam) {
-            const userData = JSON.parse(decodeURIComponent(userParam));
-            localStorage.setItem("auth_token", token);
-            localStorage.setItem("user", JSON.stringify(userData));
-            setUser(userData);
-            await sendFcmToken(token);
-            Notify.success("Connexion Google réussie !");
-            router.push("/dashboard");
-          }
-        }
+      // ─── Affiche le sélecteur de compte Google natif ──
+      await GoogleAuth.initialize({
+        clientId: 'VOTRE_WEB_CLIENT_ID.apps.googleusercontent.com',
+        scopes: ['profile', 'email'],
+        grantOfflineAccess: true,
       });
 
-      // Ouvre le navigateur in-app
-      await Browser.open({
-        url: "https://aeddi-backend-production.up.railway.app/auth/google",
-        windowName: "_self",
+      const googleUser = await GoogleAuth.signIn();
+      console.log('Google user:', googleUser);
+
+      // ─── Envoie au backend ────────────────────────────
+      const response = await fetch(`${url}auth/google/mobile`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id_token:     googleUser.authentication.idToken,
+          email:        googleUser.email,
+          name:         googleUser.displayName,
+          avatar:       googleUser.imageUrl,
+        }),
       });
-    } else {
-      // Web
-      window.location.href =
-        "https://aeddi-backend-production.up.railway.app/auth/google";
+
+      const data = await response.json();
+
+      if (data.success) {
+        localStorage.setItem('auth_token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        setUser(data.user);
+        await sendFcmToken(data.token);
+        Notify.success('Connexion Google réussie !');
+        router.push('/dashboard');
+      } else {
+        Notify.failure(data.message || 'Erreur connexion Google');
+      }
+
+    } catch (error) {
+      console.error('Erreur Google Auth:', error);
+      Notify.failure('Erreur lors de la connexion Google');
+    } finally {
+      setLoading(false);
     }
-  };
+
+  } else {
+    // ─── Web ──────────────────────────────────────────
+    window.location.href = 'https://aeddi-backend-production.up.railway.app/auth/google';
+  }
+};
 
   // ─── Appelé depuis la page /auth/google/callback ──────
   const connecterGoogleCallback = async (token, userData) => {

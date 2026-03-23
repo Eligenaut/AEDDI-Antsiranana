@@ -9,8 +9,10 @@ const config: CapacitorConfig = {
     cleartext: false
   },
   plugins: {
-    Browser: {
-      presentationStyle: 'fullscreen',
+    GoogleAuth: {
+      scopes: ['profile', 'email'],
+      serverClientId: '221609391832-8h09fts75kp9milp5p5scjg00r0297fg.apps.googleusercontent.com',
+      forceCodeForRefreshToken: true,
     },
   },
 };
