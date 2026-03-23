@@ -7,7 +7,12 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://aeddi-antsiranana.vercel.app',
     cleartext: false
-  }
+  },
+  plugins: {
+    Browser: {
+      presentationStyle: 'fullscreen',
+    },
+  },
 };
 
 export default config;
