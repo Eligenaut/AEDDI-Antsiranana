@@ -3,8 +3,8 @@ import { url } from "../context/url.js";
 import { baseHeaders } from "../context/headers.jsx";
 import { Notify } from "notiflix/build/notiflix-notify-aio";
 import { useRouter } from "next/navigation";
-import { Capacitor } from '@capacitor/core';
-import { Browser } from '@capacitor/browser';
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 
 const LoginContext = createContext();
 
@@ -69,19 +69,13 @@ export function LoginProvider({ children }) {
 
   const connecterGoogle = async () => {
     if (Capacitor.isNativePlatform()) {
-      // ─── Mobile : In-App Browser ──────────────────────────
-      await Browser.open({
-        url: "https://aeddi-backend-production.up.railway.app/auth/google",
-        windowName: "_self",
-      });
-
-      // Écoute le retour via App URL (deep link)
+      // Écoute le deep link de retour
       App.addListener("appUrlOpen", async (event) => {
-        const url = new URL(event.url);
+        const urlObj = new URL(event.url);
 
-        if (url.pathname === "/auth/google/success") {
-          const token = url.searchParams.get("token");
-          const userParam = url.searchParams.get("user");
+        if (urlObj.pathname.includes("/auth/google/success")) {
+          const token = urlObj.searchParams.get("token");
+          const userParam = urlObj.searchParams.get("user");
 
           await Browser.close();
 
@@ -96,8 +90,14 @@ export function LoginProvider({ children }) {
           }
         }
       });
+
+      // Ouvre le navigateur in-app
+      await Browser.open({
+        url: "https://aeddi-backend-production.up.railway.app/auth/google",
+        windowName: "_self",
+      });
     } else {
-      // ─── Web : redirect classique ─────────────────────────
+      // Web
       window.location.href =
         "https://aeddi-backend-production.up.railway.app/auth/google";
     }
