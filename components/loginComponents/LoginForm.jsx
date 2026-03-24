@@ -3,9 +3,6 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { url } from '../context/url.js';
-import { baseHeaders } from '../context/headers.jsx';
-import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import { useLogin } from './LoginContexte';
 
 export function LoginForm({ onSwitchToRegister }) {
@@ -14,7 +11,7 @@ export function LoginForm({ onSwitchToRegister }) {
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
-  const { connecter, connecterGoogle, loading } = useLogin();
+  const { connecter, connecterGoogle, loading, loadingGoogle } = useLogin(); // ✅ ajout loadingGoogle
   const router = useRouter();
 
   const handleSubmit = async (e) => {
@@ -70,7 +67,8 @@ export function LoginForm({ onSwitchToRegister }) {
         <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-800 dark:text-white tracking-tight px-2">
           Connexion à AEDDI-DIEGO
         </h1>
-        {/* Bouton Google */}
+
+        {/* ✅ Bouton Google avec loadingGoogle */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -79,20 +77,26 @@ export function LoginForm({ onSwitchToRegister }) {
         >
           <button
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold py-3 rounded-[6px] shadow transition-all duration-150 active:scale-95"
+            disabled={loadingGoogle}
+            className="w-full flex items-center justify-center gap-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold py-3 rounded-[6px] shadow transition-all duration-150 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <svg width="20" height="20" viewBox="0 0 48 48" className="mr-2">
-              <g>
-                <path fill="#4285F4" d="M24 9.5c3.54 0 6.7 1.22 9.19 3.22l6.85-6.85C35.91 2.36 30.28 0 24 0 14.82 0 6.73 5.8 2.69 14.09l7.98 6.2C12.36 13.09 17.74 9.5 24 9.5z" />
-                <path fill="#34A853" d="M46.1 24.55c0-1.64-.15-3.22-.42-4.74H24v9.01h12.42c-.54 2.9-2.18 5.36-4.65 7.01l7.19 5.6C43.99 37.09 46.1 31.27 46.1 24.55z" />
-                <path fill="#FBBC05" d="M10.67 28.29c-1.01-2.9-1.01-6.01 0-8.91l-7.98-6.2C.99 17.09 0 20.45 0 24c0 3.55.99 6.91 2.69 9.82l7.98-6.2z" />
-                <path fill="#EA4335" d="M24 48c6.28 0 11.91-2.09 15.91-5.73l-7.19-5.6c-2.01 1.35-4.59 2.13-8.72 2.13-6.26 0-11.64-3.59-13.33-8.82l-7.98 6.2C6.73 42.2 14.82 48 24 48z" />
-                <path fill="none" d="M0 0h48v48H0z" />
-              </g>
-            </svg>
-            Se connecter avec Google
+            {loadingGoogle ? (
+              <span className="animate-spin inline-block w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full" />
+            ) : (
+              <svg width="20" height="20" viewBox="0 0 48 48" className="mr-2">
+                <g>
+                  <path fill="#4285F4" d="M24 9.5c3.54 0 6.7 1.22 9.19 3.22l6.85-6.85C35.91 2.36 30.28 0 24 0 14.82 0 6.73 5.8 2.69 14.09l7.98 6.2C12.36 13.09 17.74 9.5 24 9.5z" />
+                  <path fill="#34A853" d="M46.1 24.55c0-1.64-.15-3.22-.42-4.74H24v9.01h12.42c-.54 2.9-2.18 5.36-4.65 7.01l7.19 5.6C43.99 37.09 46.1 31.27 46.1 24.55z" />
+                  <path fill="#FBBC05" d="M10.67 28.29c-1.01-2.9-1.01-6.01 0-8.91l-7.98-6.2C.99 17.09 0 20.45 0 24c0 3.55.99 6.91 2.69 9.82l7.98-6.2z" />
+                  <path fill="#EA4335" d="M24 48c6.28 0 11.91-2.09 15.91-5.73l-7.19-5.6c-2.01 1.35-4.59 2.13-8.72 2.13-6.26 0-11.64-3.59-13.33-8.82l-7.98 6.2C6.73 42.2 14.82 48 24 48z" />
+                  <path fill="none" d="M0 0h48v48H0z" />
+                </g>
+              </svg>
+            )}
+            {loadingGoogle ? 'Connexion Google...' : 'Se connecter avec Google'}
           </button>
         </motion.div>
+
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -106,6 +110,7 @@ export function LoginForm({ onSwitchToRegister }) {
             <span className="px-4 bg-white/80 dark:bg-gray-800/90 text-gray-500 dark:text-gray-400">ou</span>
           </div>
         </motion.div>
+
         <form className="space-y-4 w-full px-0" onSubmit={handleSubmit} autoComplete="on">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -134,6 +139,7 @@ export function LoginForm({ onSwitchToRegister }) {
               </span>
             </div>
           </motion.div>
+
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -180,18 +186,20 @@ export function LoginForm({ onSwitchToRegister }) {
               </button>
             </div>
           </motion.div>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
           >
+            {/* ✅ Bouton Se connecter — utilise uniquement loading */}
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold py-3 rounded-[6px] shadow-lg transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
               disabled={loading}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold py-3 rounded-[6px] shadow-lg transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading && (
-                <span className="animate-spin inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full"></span>
+                <span className="animate-spin inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
               )}
               {loading ? 'Connexion...' : 'Se connecter'}
             </button>
@@ -212,13 +220,7 @@ export function LoginForm({ onSwitchToRegister }) {
             Mot de passe oublié ?
           </button>
         </motion.div>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400 px-2"
-        >
-        </motion.div>
+
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

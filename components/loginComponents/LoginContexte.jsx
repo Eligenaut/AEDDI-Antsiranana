@@ -31,6 +31,7 @@ const sendFcmToken = async (authToken) => {
 export function LoginProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [loadingGoogle, setLoadingGoogle] = useState(false);
   const router = useRouter();
 
   const connecter = async ({ email, password }) => {
@@ -52,13 +53,13 @@ export function LoginProvider({ children }) {
         return { success: true };
       } else {
         Notify.failure(
-          "Erreur de connexion: " + (data.message || "Identifiants incorrects"),
+          "Erreur de connexion: " + (data.message || "Identifiants incorrects")
         );
         return { success: false, error: data.message };
       }
     } catch (error) {
       Notify.failure(
-        "Erreur de connexion. Vérifiez que le serveur backend est démarré.",
+        "Erreur de connexion. Vérifiez que le serveur backend est démarré."
       );
       return { success: false, error };
     } finally {
@@ -68,7 +69,7 @@ export function LoginProvider({ children }) {
 
   const connecterGoogle = async () => {
     try {
-      setLoading(true);
+      setLoadingGoogle(true);
 
       const googleUser = await signInWithGoogle();
 
@@ -102,7 +103,7 @@ export function LoginProvider({ children }) {
       console.error("Erreur Google Auth:", error);
       Notify.failure("Erreur lors de la connexion Google");
     } finally {
-      setLoading(false);
+      setLoadingGoogle(false);
     }
   };
 
@@ -136,6 +137,7 @@ export function LoginProvider({ children }) {
       value={{
         user,
         loading,
+        loadingGoogle,
         connecter,
         connecterGoogle,
         connecterGoogleCallback,
