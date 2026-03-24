@@ -3,7 +3,8 @@ import { url } from "../context/url.js";
 import { baseHeaders } from "../context/headers.jsx";
 import { Notify } from "notiflix/build/notiflix-notify-aio";
 import { useRouter } from "next/navigation";
-import { signInWithGoogle } from './googleAuth.js';
+import { signInWithGoogle } from "../../src/utils/googleAuth";
+
 const LoginContext = createContext();
 
 export function useLogin() {
@@ -71,15 +72,14 @@ export function LoginProvider({ children }) {
 
       const googleUser = await signInWithGoogle();
 
-      // Web → redirigé, pas de suite ici
+      // Web → redirigé vers backend, rien à faire ici
       if (!googleUser) return;
 
-      // Mobile → envoie au backend
       const response = await fetch(`${url}auth/google/mobile`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id_token: googleUser.authentication.idToken,
+          id_token: googleUser.idToken,
           email: googleUser.email,
           name: googleUser.displayName,
           avatar: googleUser.imageUrl,

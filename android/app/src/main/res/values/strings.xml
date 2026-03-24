@@ -3,6 +3,10 @@
     <string name="app_name">AEDDI</string>
     <string name="title_activity_main">AEDDI</string>
     <string name="package_name">com.aeddi.app</string>
-    <string name="custom_url_scheme">com.aeddi.app</string>
-    <string name="server_client_id">221609391832-8h09fts75kp9milp5p5scjg00r0297fg.apps.googleusercontent.com</string>
+
+    <!-- Reverse du Android client_id (client_type: 1) -->
+    <string name="custom_url_scheme">com.googleusercontent.apps.660311085352-2aciqompnpsn0tl60sq8gtathcenuou4</string>
+
+    <!-- Web client_id (client_type: 3) -->
+    <string name="server_client_id">660311085352-1q3gppf252al2gd2olesfl0lmvn876k4.apps.googleusercontent.com</string>
 </resources>

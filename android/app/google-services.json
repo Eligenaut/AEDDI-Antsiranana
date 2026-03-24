@@ -12,7 +12,20 @@
           "package_name": "com.aeddi.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "660311085352-2aciqompnpsn0tl60sq8gtathcenuou4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aeddi.app",
+            "certificate_hash": "70e47b2ede6e7d69242eef6911057ace6721dc68"
+          }
+        },
+        {
+          "client_id": "660311085352-1q3gppf252al2gd2olesfl0lmvn876k4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDchXajXFpL1jKdH_lTYZSrMgIfH7zLWQc"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "660311085352-1q3gppf252al2gd2olesfl0lmvn876k4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
