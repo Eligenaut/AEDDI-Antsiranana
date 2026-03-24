@@ -53,13 +53,13 @@ export function LoginProvider({ children }) {
         return { success: true };
       } else {
         Notify.failure(
-          "Erreur de connexion: " + (data.message || "Identifiants incorrects")
+          "Erreur de connexion: " + (data.message || "Identifiants incorrects"),
         );
         return { success: false, error: data.message };
       }
     } catch (error) {
       Notify.failure(
-        "Erreur de connexion. Vérifiez que le serveur backend est démarré."
+        "Erreur de connexion. Vérifiez que le serveur backend est démarré.",
       );
       return { success: false, error };
     } finally {
@@ -72,8 +72,6 @@ export function LoginProvider({ children }) {
       setLoadingGoogle(true);
 
       const googleUser = await signInWithGoogle();
-
-      // Web → redirigé vers backend, rien à faire ici
       if (!googleUser) return;
 
       const response = await fetch(`${url}auth/google/mobile`, {
@@ -97,11 +95,11 @@ export function LoginProvider({ children }) {
         Notify.success("Connexion Google réussie !");
         router.push("/dashboard");
       } else {
-        Notify.failure(data.message || "Erreur connexion Google");
+        Notify.failure("Backend: " + (data.message || "Erreur inconnue"));
       }
     } catch (error) {
-      console.error("Erreur Google Auth:", error);
-      Notify.failure("Erreur lors de la connexion Google");
+      // ✅ Affiche l'erreur exacte sur l'écran
+      Notify.failure("ERREUR: " + (error.message || JSON.stringify(error)));
     } finally {
       setLoadingGoogle(false);
     }
