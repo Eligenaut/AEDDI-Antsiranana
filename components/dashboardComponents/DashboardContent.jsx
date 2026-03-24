@@ -12,7 +12,6 @@ import { DashboardActivites } from './DashboardActivites';
 import UserDetail from './UserDetail';
 import ManagePermission from './ManagePermission';
 
-// ✅ Plus d'import NProgress ici — chargé dynamiquement dans useEffect
 
 const sectionToPath = {
   'accueil': '/dashboard',
@@ -37,9 +36,8 @@ export function DashboardContent() {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const np = useRef(null); // ✅ NProgress stocké dans un ref
+  const np = useRef(null);
 
-  // ✅ Charger NProgress uniquement côté client
   useEffect(() => {
     import('nprogress').then((mod) => {
       np.current = mod.default;
