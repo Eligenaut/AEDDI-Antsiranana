@@ -1,34 +1,33 @@
-'use client';
+"use client";
 
-import { motion } from 'framer-motion';
-import { useState, useEffect, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { DashboardSidebar } from './DashboardSidebar';
-import { DashboardHeader } from './DashboardHeader';
-import { DashboardMain } from './DashboardMain';
-import { DashboardUser } from './DashboardUser';
-import { DashboardCotisations } from './DashboardCotisations';
-import { DashboardActivites } from './DashboardActivites';
-import UserDetail from './UserDetail';
-import ManagePermission from './ManagePermission';
-
+import { motion } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { DashboardSidebar } from "./DashboardSidebar";
+import { DashboardHeader } from "./DashboardHeader";
+import { DashboardMain } from "./DashboardMain";
+import { DashboardUser } from "./DashboardUser";
+import { DashboardCotisations } from "./DashboardCotisations";
+import { DashboardActivites } from "./DashboardActivites";
+import UserDetail from "./UserDetail";
+import ManagePermission from "./ManagePermission";
 
 const sectionToPath = {
-  'accueil': '/dashboard',
-  'membres': '/dashboard/membres',
-  'cotisations': '/dashboard/cotisations',
-  'activites': '/dashboard/activites',
-  'moncompte': '/dashboard/parametres/moncompte',
-  'permissions': '/dashboard/parametres/permissions',
+  accueil: "/dashboard",
+  membres: "/dashboard/membres",
+  cotisations: "/dashboard/cotisations",
+  activites: "/dashboard/activites",
+  moncompte: "/dashboard/parametres/moncompte",
+  permissions: "/dashboard/parametres/permissions",
 };
 
 const pathToSection = {
-  '/dashboard': 'accueil',
-  '/dashboard/membres': 'membres',
-  '/dashboard/cotisations': 'cotisations',
-  '/dashboard/activites': 'activites',
-  '/dashboard/parametres/moncompte': 'moncompte',
-  '/dashboard/parametres/permissions': 'permissions',
+  "/dashboard": "accueil",
+  "/dashboard/membres": "membres",
+  "/dashboard/cotisations": "cotisations",
+  "/dashboard/activites": "activites",
+  "/dashboard/parametres/moncompte": "moncompte",
+  "/dashboard/parametres/permissions": "permissions",
 };
 
 export function DashboardContent() {
@@ -39,22 +38,21 @@ export function DashboardContent() {
   const np = useRef(null);
 
   useEffect(() => {
-    import('nprogress').then((mod) => {
+    import("nprogress").then((mod) => {
       np.current = mod.default;
       np.current.configure({
         showSpinner: false,
         trickleSpeed: 100,
         minimum: 0.2,
-        easing: 'ease',
+        easing: "ease",
         speed: 500,
       });
     });
   }, []);
 
-  const getSectionFromPath = (path) => pathToSection[path] || 'accueil';
+  const getSectionFromPath = (path) => pathToSection[path] || "accueil";
   const currentSection = getSectionFromPath(pathname);
 
-  // ✅ window uniquement dans useEffect
   useEffect(() => {
     const checkIsMobile = () => {
       setIsMobile(window.innerWidth < 1024);
@@ -64,11 +62,10 @@ export function DashboardContent() {
     };
 
     checkIsMobile();
-    window.addEventListener('resize', checkIsMobile);
-    return () => window.removeEventListener('resize', checkIsMobile);
+    window.addEventListener("resize", checkIsMobile);
+    return () => window.removeEventListener("resize", checkIsMobile);
   }, []);
 
-  // ✅ NProgress via ref — jamais appelé au prerendering
   useEffect(() => {
     if (!pathname || !np.current) return;
 
@@ -95,7 +92,7 @@ export function DashboardContent() {
   };
 
   const handleSectionChange = (section) => {
-    const path = sectionToPath[section] || '/dashboard';
+    const path = sectionToPath[section] || "/dashboard";
 
     if (pathname !== path) {
       np.current?.start();
@@ -119,23 +116,23 @@ export function DashboardContent() {
 
   const renderCurrentSection = () => {
     switch (currentSection) {
-      case 'accueil':
+      case "accueil":
         return <DashboardMain />;
-      case 'membres':
+      case "membres":
         return <DashboardUser />;
-      case 'cotisations':
+      case "cotisations":
         return <DashboardCotisations />;
-      case 'activites':
+      case "activites":
         return <DashboardActivites />;
-      case 'moncompte':
+      case "moncompte":
         return <UserDetail />;
-      case 'permissions':
+      case "permissions":
         return (
           <ManagePermission
             onSave={(permissions) => {
-              console.log('Permissions sauvegardées:', permissions);
+              console.log("Permissions sauvegardées:", permissions);
             }}
-            onBack={() => handleSectionChange('accueil')}
+            onBack={() => handleSectionChange("accueil")}
           />
         );
       default:
@@ -159,7 +156,9 @@ export function DashboardContent() {
           onSectionChange={handleSectionChange}
         />
 
-        {renderCurrentSection()}
+        <div className="flex-1 overflow-y-auto pb-16 lg:pb-0 lg:pt-0">
+          {renderCurrentSection()}
+        </div>
       </div>
     </div>
   );

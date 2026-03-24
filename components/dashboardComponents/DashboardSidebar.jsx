@@ -12,6 +12,7 @@ import {
   MessageCircle,
   Bell,
   LogOut,
+  X,
   Settings,
   ChevronRight,
   ChevronLeft,
@@ -169,34 +170,12 @@ export function DashboardSidebar({
       )}
       <div
         className={`
-          fixed lg:static inset-y-0 left-0 z-50 bg-white shadow-xl border-r border-gray-200
-          flex flex-col transition-all duration-300 ease-in-out
-          ${sidebarWidth}
-          ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
-        `}
+    fixed lg:static top-[140px] lg:top-0 bottom-16 lg:bottom-0 left-0 z-50 bg-white shadow-xl border-r border-gray-200
+    flex flex-col transition-all duration-300 ease-in-out
+    ${sidebarWidth}
+    ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+  `}
       >
-        <div className="flex items-center justify-center h-34 md:h-21 px-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-pink-50 overflow-hidden">
-          <div
-            className={`flex items-center transition-all duration-300 ${
-              sidebarExpanded ? "space-x-4" : "justify-center"
-            }`}
-          >
-            <img
-              src="/images/aeddi.png"
-              alt="AEDDI"
-              className="h-30 sm:h-24 md:h-16 w-auto rounded-md shadow bg-white flex-shrink-0"
-            />
-            <h1
-              className={`text-2xl sm:text-3xl md:text-2xl font-bold text-gray-900 transition-all duration-300 whitespace-nowrap ${
-                sidebarExpanded
-                  ? "opacity-100 max-w-full"
-                  : "opacity-0 max-w-0 overflow-hidden"
-              }`}
-            >
-              AEDDI
-            </h1>
-          </div>
-        </div>
         {isDesktop && (
           <button
             onClick={toggleExpand}
@@ -213,17 +192,28 @@ export function DashboardSidebar({
           </button>
         )}
 
-        <nav className="mt-6 px-4 flex-1 overflow-y-auto">
+        <nav className="mt-0 lg:mt-6 px-4 flex-1 overflow-y-auto lg:pb-0">
           <div className="mb-6">
-            <h3
-              className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-3 transition-all duration-300 ${
+            <div
+              className={`flex items-center justify-between mb-2 px-3 transition-all duration-300 ${
                 sidebarExpanded
                   ? "opacity-100"
-                  : "opacity-0 h-0 mb-0 overflow-hidden"
+                  : "opacity-0 h-0 overflow-hidden"
               }`}
             >
-              Navigation
-            </h3>
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Navigation
+              </h3>
+              {!isDesktop && (
+                <button
+                  onClick={onToggle}
+                  className="p-1.5 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+                  aria-label="Fermer le menu"
+                >
+                  <X className="w-4 h-4 text-gray-600" />
+                </button>
+              )}
+            </div>
             <ul className="space-y-1">
               {menuItems.map((item) => (
                 <li key={item.id}>
