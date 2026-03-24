@@ -1,15 +1,18 @@
 import { Capacitor } from '@capacitor/core';
 
 export const signInWithGoogle = async () => {
-  const platform = Capacitor.getPlatform();
+  // isNativePlatform() est plus fiable que getPlatform() === 'web'
+  // quand server.url est configuré
+  const isNative = Capacitor.isNativePlatform();
 
-  if (platform === 'web') {
+  if (!isNative) {
+    // Web → redirige vers backend OAuth
     window.location.href =
       'https://aeddi-backend-production.up.railway.app/auth/google';
     return null;
   }
 
-  // Android / iOS — import dynamique pour éviter erreur build Next.js
+  // Android / iOS
   const { FirebaseAuthentication } = await import(
     '@capacitor-firebase/authentication'
   );
