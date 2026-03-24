@@ -1,35 +1,47 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { getAuthHeaders } from '../context/headers';
-import { url } from '../context/url';
-import { etablissements, optionsCampus, quartiers, getNiveauxOptions, getPromotionsOptions } from '../loginComponents/DataRegister';
-import { X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { createPortal } from 'react-dom';
+import { useState, useEffect } from "react";
+import { getAuthHeaders } from "../context/headers";
+import { url } from "../context/url";
+import {
+  etablissements,
+  optionsCampus,
+  quartiers,
+  getNiveauxOptions,
+  getPromotionsOptions,
+} from "../loginComponents/DataRegister";
+import { X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { createPortal } from "react-dom";
 
 const SUB_ROLE_LABELS = {
-  PRESIDENT: 'Président',
-  VICE_PRESIDENT: 'Vice-Président',
-  TRESORIER: 'Trésorier',
-  VICE_TRESORIER: 'Vice-Trésorier',
-  COMMISSAIRE_COMPTE: 'Commissaire aux comptes',
+  PRESIDENT: "Président",
+  VICE_PRESIDENT: "Vice-Président",
+  TRESORIER: "Trésorier",
+  VICE_TRESORIER: "Vice-Trésorier",
+  COMMISSAIRE_COMPTE: "Commissaire aux comptes",
   COMMISSION_CERCLE_ETUDE: "Commission Cercle d'étude",
-  COMMISSION_INFORMATIQUE: 'Commission Informatique',
-  COMMISSION_LOGEMENT: 'Commission Logement',
-  COMMISSION_SOCIAL: 'Commission Social',
-  COMMISSION_FETE: 'Commission Fête',
-  COMMISSION_SPORT: 'Commission Sport',
-  COMMISSION_COMMUNICATION: 'Commission Communication',
-  COMMISSION_ENVIRONNEMENT: 'Commission Environnement',
+  COMMISSION_INFORMATIQUE: "Commission Informatique",
+  COMMISSION_LOGEMENT: "Commission Logement",
+  COMMISSION_SOCIAL: "Commission Social",
+  COMMISSION_FETE: "Commission Fête",
+  COMMISSION_SPORT: "Commission Sport",
+  COMMISSION_COMMUNICATION: "Commission Communication",
+  COMMISSION_ENVIRONNEMENT: "Commission Environnement",
 };
 
 function isFile(obj) {
-  return typeof File !== 'undefined' && obj instanceof File;
+  return typeof File !== "undefined" && obj instanceof File;
 }
 
 const Alert = ({ type, message }) => (
-  <div className={`p-4 border-l-4 rounded ${type === 'success' ? 'bg-green-50 border-green-500 text-green-800 font-medium' : 'bg-red-50 border-red-500 text-red-800 font-medium'}`}>
+  <div
+    className={`p-4 border-l-4 rounded ${
+      type === "success"
+        ? "bg-green-50 border-green-500 text-green-800 font-medium"
+        : "bg-red-50 border-red-500 text-red-800 font-medium"
+    }`}
+  >
     {message}
   </div>
 );
@@ -59,7 +71,15 @@ const Select = ({ children, ...props }) => (
   </select>
 );
 
-export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () => { }, initialData = {}, onSave, showRole = false, userId = null }) {
+export default function UserEdit({
+  isOpen,
+  onCancel = () => {},
+  onClose = () => {},
+  initialData = {},
+  onSave,
+  showRole = false,
+  userId = null,
+}) {
   const [mounted, setMounted] = useState(false);
   const [isVisible, setIsVisible] = useState(isOpen);
   const [notifyCloseOnExit, setNotifyCloseOnExit] = useState(false);
@@ -67,29 +87,29 @@ export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () =>
   const [loadingData, setLoadingData] = useState(false);
 
   const defaultForm = {
-    role: 'MEMBER',
+    role: "MEMBER",
     sub_role: [],
-    nom: '',
-    prenom: '',
-    email: '',
-    telephone: '',
-    etablissement: '',
-    parcours: '',
-    niveau: '',
-    promotion: '',
-    logement: 'campus',
-    blocCampus: '',
-    quartier: '',
-    image: null
+    nom: "",
+    prenom: "",
+    email: "",
+    telephone: "",
+    etablissement: "",
+    parcours: "",
+    niveau: "",
+    promotion: "",
+    logement: "campus",
+    blocCampus: "",
+    quartier: "",
+    image: null,
   };
 
   const [formData, setFormData] = useState(defaultForm);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [selectedEtablissement, setSelectedEtablissement] = useState('');
-  const [selectedParcours, setSelectedParcours] = useState('');
-  const [selectedCampusType, setSelectedCampusType] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [selectedEtablissement, setSelectedEtablissement] = useState("");
+  const [selectedParcours, setSelectedParcours] = useState("");
+  const [selectedCampusType, setSelectedCampusType] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => setMounted(true), []);
@@ -101,7 +121,7 @@ export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () =>
       setLoadingData(true);
       try {
         const res = await fetch(`${url}members/${userId}`, {
-          headers: getAuthHeaders()
+          headers: getAuthHeaders(),
         });
         const data = await res.json();
         if (data.success && data.data) {
@@ -110,35 +130,35 @@ export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () =>
           const subRole = Array.isArray(d.sub_role) ? d.sub_role : [];
 
           setFormData({
-            role: d.role || 'MEMBER',
+            role: d.role || "MEMBER",
             sub_role: subRole,
-            nom: d.nom || '',
-            prenom: d.prenom || '',
-            email: d.email || '',
-            telephone: d.telephone || '',
-            etablissement: d.etablissement || '',
-            parcours: d.parcours || '',
-            niveau: d.niveau || '',
-            promotion: d.promotion || '',
-            logement: d.logement || 'campus',
-            blocCampus: d.bloc_campus || '',
-            quartier: d.quartier || '',
-            image: null
+            nom: d.nom || "",
+            prenom: d.prenom || "",
+            email: d.email || "",
+            telephone: d.telephone || "",
+            etablissement: d.etablissement || "",
+            parcours: d.parcours || "",
+            niveau: d.niveau || "",
+            promotion: d.promotion || "",
+            logement: d.logement || "campus",
+            blocCampus: d.bloc_campus || "",
+            quartier: d.quartier || "",
+            image: null,
           });
 
-          setSelectedEtablissement(d.etablissement || '');
-          setSelectedParcours(d.parcours || '');
+          setSelectedEtablissement(d.etablissement || "");
+          setSelectedParcours(d.parcours || "");
           setImagePreview(d.avatar || null);
 
           if (d.bloc_campus) {
-            const type = Object.keys(optionsCampus).find(key =>
-              optionsCampus[key].options.includes(d.bloc_campus)
+            const type = Object.keys(optionsCampus).find((key) =>
+              optionsCampus[key].options.includes(d.bloc_campus),
             );
-            setSelectedCampusType(type || '');
+            setSelectedCampusType(type || "");
           }
         }
       } catch (err) {
-        setError('Erreur lors du chargement des données');
+        setError("Erreur lors du chargement des données");
       } finally {
         setLoadingData(false);
       }
@@ -160,39 +180,53 @@ export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () =>
 
   useEffect(() => {
     if (!mounted) return;
-    document.body.style.overflow = isVisible ? 'hidden' : 'unset';
-    return () => { document.body.style.overflow = 'unset'; };
+    document.body.style.overflow = isVisible ? "hidden" : "unset";
+    return () => {
+      document.body.style.overflow = "unset";
+    };
   }, [isVisible, mounted]);
 
-  const handleChange = e => setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleChange = (e) =>
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
-  const handleSubRoleChange = e => {
+  const handleSubRoleChange = (e) => {
     const value = e.target.value;
-    setFormData(prev => ({ ...prev, sub_role: value ? [value] : [] }));
+    setFormData((prev) => ({ ...prev, sub_role: value ? [value] : [] }));
   };
 
-  const handleEtablissementChange = e => {
+  const handleEtablissementChange = (e) => {
     const value = e.target.value;
     setSelectedEtablissement(value);
-    setSelectedParcours('');
-    setFormData(prev => ({ ...prev, etablissement: value, parcours: '', niveau: '', promotion: '' }));
+    setSelectedParcours("");
+    setFormData((prev) => ({
+      ...prev,
+      etablissement: value,
+      parcours: "",
+      niveau: "",
+      promotion: "",
+    }));
   };
 
-  const handleParcoursChange = e => {
+  const handleParcoursChange = (e) => {
     const value = e.target.value;
     setSelectedParcours(value);
-    setFormData(prev => ({ ...prev, parcours: value, niveau: '', promotion: '' }));
+    setFormData((prev) => ({
+      ...prev,
+      parcours: value,
+      niveau: "",
+      promotion: "",
+    }));
   };
 
-  const handleCampusTypeChange = e => {
+  const handleCampusTypeChange = (e) => {
     const value = e.target.value;
     setSelectedCampusType(value);
-    setFormData(prev => ({ ...prev, blocCampus: '' }));
+    setFormData((prev) => ({ ...prev, blocCampus: "" }));
   };
 
-  const handleFileChange = e => {
+  const handleFileChange = (e) => {
     const file = e.target.files?.[0] || null;
-    setFormData(prev => ({ ...prev, image: file }));
+    setFormData((prev) => ({ ...prev, image: file }));
     if (file) {
       const reader = new FileReader();
       reader.onload = () => setImagePreview(reader.result);
@@ -203,15 +237,19 @@ export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () =>
   };
 
   const handleSave = async () => {
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
 
-    if (formData.logement === 'campus' && !formData.blocCampus) {
-      setError('Le champ "bloc campus" est requis lorsque le logement est campus.');
+    if (formData.logement === "campus" && !formData.blocCampus) {
+      setError(
+        'Le champ "bloc campus" est requis lorsque le logement est campus.',
+      );
       return;
     }
-    if (formData.logement === 'ville' && !formData.quartier) {
-      setError('Le champ "quartier" est requis lorsque le logement est en ville.');
+    if (formData.logement === "ville" && !formData.quartier) {
+      setError(
+        'Le champ "quartier" est requis lorsque le logement est en ville.',
+      );
       return;
     }
 
@@ -227,42 +265,46 @@ export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () =>
         niveau: formData.niveau,
         promotion: formData.promotion,
         logement: formData.logement,
-        blocCampus: formData.logement === 'campus' ? formData.blocCampus : '',
-        quartier: formData.logement === 'ville' ? formData.quartier : '',
+        blocCampus: formData.logement === "campus" ? formData.blocCampus : "",
+        quartier: formData.logement === "ville" ? formData.quartier : "",
       };
 
       if (showRole) {
         payload.role = formData.role;
-        payload.subRoles = formData.role === 'BUREAU' ? formData.sub_role : [];
+        payload.subRoles = formData.role === "BUREAU" ? formData.sub_role : [];
       }
 
       if (isFile(formData.image)) {
-        const toBase64 = file => new Promise((res, rej) => {
-          const reader = new FileReader();
-          reader.onload = () => res(reader.result);
-          reader.onerror = rej;
-          reader.readAsDataURL(file);
-        });
+        const toBase64 = (file) =>
+          new Promise((res, rej) => {
+            const reader = new FileReader();
+            reader.onload = () => res(reader.result);
+            reader.onerror = rej;
+            reader.readAsDataURL(file);
+          });
         payload.image = await toBase64(formData.image);
         payload.imageName = formData.image.name;
         payload.imageType = formData.image.type;
       }
       const response = `${url}members/${userId}`;
       const res = await fetch(response, {
-        method: 'PUT',
-        headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(payload)
+        method: "PUT",
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || data.error || 'Erreur lors de la mise à jour');
+      if (!res.ok)
+        throw new Error(
+          data.message || data.error || "Erreur lors de la mise à jour",
+        );
 
-      setSuccess('Profil mis à jour avec succès');
+      setSuccess("Profil mis à jour avec succès");
       if (onSave) onSave(data.data || payload);
-      setTimeout(() => setSuccess(''), 3000);
+      setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
-      setError(err.message || 'Erreur de mise à jour');
+      setError(err.message || "Erreur de mise à jour");
     } finally {
       setSaving(false);
     }
@@ -282,8 +324,8 @@ export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () =>
       onExitComplete={() => {
         if (notifyCloseOnExit) {
           setFormData(defaultForm);
-          setError('');
-          setSuccess('');
+          setError("");
+          setSuccess("");
           setImagePreview(null);
           onCancel();
           onClose();
@@ -294,17 +336,31 @@ export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () =>
     >
       {isVisible && (
         <>
-          <motion.div className="fixed inset-0 bg-black/40 z-50" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} onClick={handleClose} />
+          <motion.div
+            className="fixed inset-0 bg-black/40 z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={handleClose}
+          />
           <motion.div
             className="fixed top-0 right-0 h-full w-full sm:w-[620px] bg-white shadow-2xl z-50 overflow-y-auto"
-            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-            transition={{ type: 'spring', stiffness: 260, damping: 25 }}
-            onClick={e => e.stopPropagation()}
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", stiffness: 260, damping: 25 }}
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50">
-              <h2 className="text-xl font-bold text-gray-900">Modifier le profil</h2>
-              <button onClick={handleClose} className="text-gray-500 hover:text-gray-800 p-1 rounded-full hover:bg-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">
+                Modifier le profil
+              </h2>
+              <button
+                onClick={handleClose}
+                className="text-gray-500 hover:text-gray-800 p-1 rounded-full hover:bg-gray-200"
+              >
                 <X className="w-6 h-6" />
               </button>
             </div>
@@ -312,34 +368,67 @@ export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () =>
             {loadingData ? (
               <div className="flex items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-700 font-medium">Chargement...</span>
+                <span className="ml-3 text-gray-700 font-medium">
+                  Chargement...
+                </span>
               </div>
             ) : (
               <div className="p-6 space-y-6">
                 {success && <Alert type="success" message={success} />}
                 {error && <Alert type="error" message={error} />}
 
-                <form onSubmit={e => { e.preventDefault(); handleSave(); }} className="space-y-5">
-
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSave();
+                  }}
+                  className="space-y-5"
+                >
                   {/* Section Identité */}
                   <div>
-                    <h3 className="text-base font-bold text-gray-800 mb-3 pb-1 border-b border-gray-200">Identité</h3>
+                    <h3 className="text-base font-bold text-gray-800 mb-3 pb-1 border-b border-gray-200">
+                      Identité
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label required>Nom</Label>
-                        <Input type="text" name="nom" value={formData.nom} onChange={handleChange} required />
+                        <Input
+                          type="text"
+                          name="nom"
+                          value={formData.nom}
+                          onChange={handleChange}
+                          required
+                        />
                       </div>
                       <div>
                         <Label required>Prénom</Label>
-                        <Input type="text" name="prenom" value={formData.prenom} onChange={handleChange} required />
+                        <Input
+                          type="text"
+                          name="prenom"
+                          value={formData.prenom}
+                          onChange={handleChange}
+                          required
+                        />
                       </div>
                       <div>
                         <Label required>Email</Label>
-                        <Input type="email" name="email" value={formData.email} onChange={handleChange} required />
+                        <Input
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleChange}
+                          required
+                        />
                       </div>
                       <div>
                         <Label required>Téléphone</Label>
-                        <Input type="tel" name="telephone" value={formData.telephone} onChange={handleChange} required />
+                        <Input
+                          type="tel"
+                          name="telephone"
+                          value={formData.telephone}
+                          onChange={handleChange}
+                          required
+                        />
                       </div>
                     </div>
                   </div>
@@ -347,23 +436,39 @@ export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () =>
                   {/* Section Rôle */}
                   {showRole && (
                     <div>
-                      <h3 className="text-base font-bold text-gray-800 mb-3 pb-1 border-b border-gray-200">Rôle</h3>
+                      <h3 className="text-base font-bold text-gray-800 mb-3 pb-1 border-b border-gray-200">
+                        Rôle
+                      </h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <Label required>Rôle</Label>
-                          <Select name="role" value={formData.role} onChange={handleChange}>
-                            <option value="MEMBER">Membre</option>
+                          <Select
+                            name="role"
+                            value={formData.role}
+                            onChange={handleChange}
+                          >
+                            <option value="NOVICE">Novice</option>
+                            <option value="MEMBER">Ancien</option>
                             <option value="BUREAU">Bureau</option>
                           </Select>
                         </div>
-                        {formData.role === 'BUREAU' && (
+                        {formData.role === "BUREAU" && (
                           <div>
                             <Label required>Sous-rôle</Label>
-                            <Select value={formData.sub_role?.[0] || ''} onChange={handleSubRoleChange}>
-                              <option value="">Sélectionner un sous-rôle</option>
-                              {Object.entries(SUB_ROLE_LABELS).map(([key, label]) => (
-                                <option key={key} value={key}>{label}</option>
-                              ))}
+                            <Select
+                              value={formData.sub_role?.[0] || ""}
+                              onChange={handleSubRoleChange}
+                            >
+                              <option value="">
+                                Sélectionner un sous-rôle
+                              </option>
+                              {Object.entries(SUB_ROLE_LABELS).map(
+                                ([key, label]) => (
+                                  <option key={key} value={key}>
+                                    {label}
+                                  </option>
+                                ),
+                              )}
                             </Select>
                           </div>
                         )}
@@ -374,15 +479,22 @@ export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () =>
                   {/* Section Académique */}
                   {/* Section Académique */}
                   <div>
-                    <h3 className="text-base font-bold text-gray-800 mb-3 pb-1 border-b border-gray-200">Académique</h3>
+                    <h3 className="text-base font-bold text-gray-800 mb-3 pb-1 border-b border-gray-200">
+                      Académique
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label>Établissement</Label>
-                        <Select value={selectedEtablissement} onChange={handleEtablissementChange}>
+                        <Select
+                          value={selectedEtablissement}
+                          onChange={handleEtablissementChange}
+                        >
                           <option value="">Sélectionner</option>
                           {/* ✅ etablissements est un objet */}
                           {Object.entries(etablissements).map(([key, val]) => (
-                            <option key={key} value={key}>{val.nom}</option>
+                            <option key={key} value={key}>
+                              {val.nom}
+                            </option>
                           ))}
                         </Select>
                       </div>
@@ -390,11 +502,18 @@ export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () =>
                       {selectedEtablissement && (
                         <div>
                           <Label>Parcours</Label>
-                          <Select value={selectedParcours} onChange={handleParcoursChange}>
+                          <Select
+                            value={selectedParcours}
+                            onChange={handleParcoursChange}
+                          >
                             <option value="">Sélectionner</option>
                             {/* ✅ parcours est un tableau de strings */}
-                            {etablissements[selectedEtablissement]?.parcours.map(p => (
-                              <option key={p} value={p}>{p}</option>
+                            {etablissements[
+                              selectedEtablissement
+                            ]?.parcours.map((p) => (
+                              <option key={p} value={p}>
+                                {p}
+                              </option>
                             ))}
                           </Select>
                         </div>
@@ -403,11 +522,17 @@ export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () =>
                       {selectedParcours && (
                         <div>
                           <Label>Niveau</Label>
-                          <Select name="niveau" value={formData.niveau} onChange={handleChange}>
+                          <Select
+                            name="niveau"
+                            value={formData.niveau}
+                            onChange={handleChange}
+                          >
                             <option value="">Sélectionner</option>
                             {/* ✅ getNiveauxOptions prend selectedParcours */}
-                            {getNiveauxOptions(selectedParcours).map(n => (
-                              <option key={n} value={n}>{n}</option>
+                            {getNiveauxOptions(selectedParcours).map((n) => (
+                              <option key={n} value={n}>
+                                {n}
+                              </option>
                             ))}
                           </Select>
                         </div>
@@ -416,11 +541,17 @@ export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () =>
                       {formData.niveau && (
                         <div>
                           <Label>Promotion</Label>
-                          <Select name="promotion" value={formData.promotion} onChange={handleChange}>
+                          <Select
+                            name="promotion"
+                            value={formData.promotion}
+                            onChange={handleChange}
+                          >
                             <option value="">Sélectionner</option>
                             {/* ✅ getPromotionsOptions retourne des années */}
-                            {getPromotionsOptions().map(p => (
-                              <option key={p} value={p}>{p}</option>
+                            {getPromotionsOptions().map((p) => (
+                              <option key={p} value={p}>
+                                {p}
+                              </option>
                             ))}
                           </Select>
                         </div>
@@ -430,50 +561,77 @@ export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () =>
 
                   {/* Section Logement */}
                   <div>
-                    <h3 className="text-base font-bold text-gray-800 mb-3 pb-1 border-b border-gray-200">Logement</h3>
+                    <h3 className="text-base font-bold text-gray-800 mb-3 pb-1 border-b border-gray-200">
+                      Logement
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <Label>Type de logement</Label>
-                        <Select name="logement" value={formData.logement} onChange={handleChange}>
+                        <Select
+                          name="logement"
+                          value={formData.logement}
+                          onChange={handleChange}
+                        >
                           <option value="campus">Campus</option>
                           <option value="ville">Ville</option>
                         </Select>
                       </div>
 
-                      {formData.logement === 'campus' && (
+                      {formData.logement === "campus" && (
                         <>
                           <div>
                             <Label>Type de campus</Label>
-                            <Select value={selectedCampusType} onChange={handleCampusTypeChange}>
+                            <Select
+                              value={selectedCampusType}
+                              onChange={handleCampusTypeChange}
+                            >
                               <option value="">Sélectionner</option>
                               {/* ✅ optionsCampus est un objet avec nom et options */}
-                              {Object.entries(optionsCampus).map(([key, val]) => (
-                                <option key={key} value={key}>{val.nom}</option>
-                              ))}
+                              {Object.entries(optionsCampus).map(
+                                ([key, val]) => (
+                                  <option key={key} value={key}>
+                                    {val.nom}
+                                  </option>
+                                ),
+                              )}
                             </Select>
                           </div>
                           {selectedCampusType && (
                             <div>
                               <Label required>Bloc campus</Label>
-                              <Select name="blocCampus" value={formData.blocCampus} onChange={handleChange}>
+                              <Select
+                                name="blocCampus"
+                                value={formData.blocCampus}
+                                onChange={handleChange}
+                              >
                                 <option value="">Sélectionner</option>
-                                {optionsCampus[selectedCampusType]?.options.map(opt => (
-                                  <option key={opt} value={opt}>{opt}</option>
-                                ))}
+                                {optionsCampus[selectedCampusType]?.options.map(
+                                  (opt) => (
+                                    <option key={opt} value={opt}>
+                                      {opt}
+                                    </option>
+                                  ),
+                                )}
                               </Select>
                             </div>
                           )}
                         </>
                       )}
 
-                      {formData.logement === 'ville' && (
+                      {formData.logement === "ville" && (
                         <div>
                           <Label required>Quartier</Label>
-                          <Select name="quartier" value={formData.quartier} onChange={handleChange}>
+                          <Select
+                            name="quartier"
+                            value={formData.quartier}
+                            onChange={handleChange}
+                          >
                             <option value="">Sélectionner un quartier</option>
                             {/* ✅ quartiers est un tableau de strings */}
-                            {quartiers.map(q => (
-                              <option key={q} value={q}>{q}</option>
+                            {quartiers.map((q) => (
+                              <option key={q} value={q}>
+                                {q}
+                              </option>
                             ))}
                           </Select>
                         </div>
@@ -483,20 +641,39 @@ export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () =>
 
                   {/* Section Photo */}
                   <div>
-                    <h3 className="text-base font-bold text-gray-800 mb-3 pb-1 border-b border-gray-200">Photo de profil</h3>
-                    <input type="file" accept="image/*" onChange={handleFileChange} className="w-full px-3 py-2 border border-gray-400 rounded-lg text-gray-800 font-medium" />
+                    <h3 className="text-base font-bold text-gray-800 mb-3 pb-1 border-b border-gray-200">
+                      Photo de profil
+                    </h3>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="w-full px-3 py-2 border border-gray-400 rounded-lg text-gray-800 font-medium"
+                    />
                     {imagePreview && (
-                      <img src={imagePreview} alt="Aperçu" className="mt-3 h-24 w-24 rounded-full object-cover border-2 border-gray-300" />
+                      <img
+                        src={imagePreview}
+                        alt="Aperçu"
+                        className="mt-3 h-24 w-24 rounded-full object-cover border-2 border-gray-300"
+                      />
                     )}
                   </div>
 
                   {/* Boutons */}
                   <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
-                    <button type="button" onClick={handleClose} className="px-6 py-2 border border-gray-400 rounded-lg text-gray-800 font-semibold hover:bg-gray-100">
+                    <button
+                      type="button"
+                      onClick={handleClose}
+                      className="px-6 py-2 border border-gray-400 rounded-lg text-gray-800 font-semibold hover:bg-gray-100"
+                    >
                       Annuler
                     </button>
-                    <button type="submit" disabled={saving} className="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50">
-                      {saving ? 'Mise à jour...' : 'Mettre à jour'}
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                    >
+                      {saving ? "Mise à jour..." : "Mettre à jour"}
                     </button>
                   </div>
                 </form>
@@ -506,6 +683,6 @@ export default function UserEdit({ isOpen, onCancel = () => { }, onClose = () =>
         </>
       )}
     </AnimatePresence>,
-    document.body
+    document.body,
   );
 }
