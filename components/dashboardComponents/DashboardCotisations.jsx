@@ -39,6 +39,7 @@ export function DashboardCotisations() {
         headers: getAuthHeaders(),
       });
       if (response.data.success) {
+        console.log("Cotisation", response.data.data)
         setCotisations(response.data.data);
       } else {
         setError("Erreur lors du chargement des cotisations");

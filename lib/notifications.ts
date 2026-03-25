@@ -1,5 +1,5 @@
 import { PushNotifications } from '@capacitor/push-notifications';
-import { Capacitor } from '@capacitor/core';
+// import { Capacitor } from '@capacitor/core';
 
 export const initNotifications = async () => {
   // Vérifie si on est sur Android/iOS
