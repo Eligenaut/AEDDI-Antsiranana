@@ -50,9 +50,12 @@ export function DashboardCotisations() {
       setLoading(false);
     }
   };
-
+  const [isAdmin, setIsAdmin] = useState(false);
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
+    const role = localStorage.getItem("user_role");
+    setIsAdmin(role === "ADMIN");
+
     if (token) {
       fetchCotisations();
     } else {
@@ -284,72 +287,107 @@ export function DashboardCotisations() {
                   </td>
                 </tr>
               ) : (
-                cotisations.map((cotisation) => (
-                  <motion.tr
-                    key={cotisation.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {cotisation.nom}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 max-w-xs truncate">
-                        {cotisation.description}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-gray-900">
-                        {formatMontant(cotisation.montant)}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(cotisation.date_debut)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {formatDate(cotisation.date_fin)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold text-sm">
-                        {cotisation.membres_payes}/{cotisation.total_membres}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center space-x-2">
-                        <button
-                          className="text-blue-600 hover:text-blue-900"
-                          title="Voir les détails"
-                          onClick={() => setShowCotisationId(cotisation.id)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          className="text-green-600 hover:text-green-900"
-                          title="Modifier"
-                          onClick={() => {
-                            setCotisationToEdit(cotisation);
-                            setShowAddModal(true);
-                          }}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          className="text-red-600 hover:text-red-900"
-                          title="Supprimer"
-                          onClick={() => {
-                            setCotisationToDelete(cotisation);
-                            setShowDeleteModal(true);
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))
+                cotisations.map((item) => {
+                  // Normaliser selon le rôle
+                  const cot = isAdmin ? item : item.cotisation;
+
+                  return (
+                    <motion.tr
+                      key={cot.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      {/* Nom */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">
+                          {cot.nom}
+                        </div>
+                      </td>
+
+                      {/* Description */}
+                      <td className="px-6 py-4">
+                        <div className="text-sm text-gray-900 max-w-xs truncate">
+                          {cot.description ?? "-"}
+                        </div>
+                      </td>
+
+                      {/* Montant */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-bold text-gray-900">
+                          {isAdmin
+                            ? formatMontant(cot.montant_novice ?? cot.montant_ancien)
+                            : formatMontant(item.montant_restant)
+                          }
+                        </div>
+                      </td>
+
+                      {/* Date début */}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatDate(cot.date_debut)}
+                      </td>
+
+                      {/* Date fin */}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatDate(cot.date_fin)}
+                      </td>
+
+                      {/* Paiements / Statut */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {isAdmin ? (
+                          <span className="inline-block bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-semibold text-sm">
+                            {cot.membres_payes}/{cot.total_membres}
+                          </span>
+                        ) : (
+                          <span className={`inline-block px-3 py-1 rounded-full font-semibold text-sm
+            ${item.statut === "paye" ? "bg-green-100 text-green-800" :
+                              item.statut === "reste" ? "bg-yellow-100 text-yellow-800" :
+                                "bg-red-100 text-red-800"}`}>
+                            {item.statut === "paye" ? "Payé" :
+                              item.statut === "reste" ? "Reste" : "Non payé"}
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        {isAdmin ? (
+                          <div className="flex items-center space-x-2">
+                            <button
+                              className="text-blue-600 hover:text-blue-900"
+                              title="Voir les détails"
+                              onClick={() => setShowCotisationId(cot.id)}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            <button
+                              className="text-green-600 hover:text-green-900"
+                              title="Modifier"
+                              onClick={() => {
+                                setCotisationToEdit(cot);
+                                setShowAddModal(true);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              className="text-red-600 hover:text-red-900"
+                              title="Supprimer"
+                              onClick={() => {
+                                setCotisationToDelete(cot);
+                                setShowDeleteModal(true);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-sm">—</span>
+                        )}
+                      </td>
+                    </motion.tr>
+                  );
+                })
               )}
             </tbody>
           </table>
