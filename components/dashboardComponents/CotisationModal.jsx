@@ -105,7 +105,7 @@ export function CotisationModal({ isOpen, onClose, user, onUpdate }) {
     setError(null);
     try {
       await axios.delete(`${url}cotisations/${cotisation.cotisation.id}/member/${activeUser?.id}`, { headers: getAuthHeaders() });
-      await fetchCotisations(activeUser.id); // ✅ recharger après suppression
+      await fetchCotisations(activeUser.id);
       if (onUpdate) onUpdate();
     } catch (e) {
       setError('Erreur lors de la suppression');

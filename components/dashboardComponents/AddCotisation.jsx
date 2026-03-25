@@ -14,7 +14,8 @@ export function AddCotisation({ isOpen, onClose, onSubmit, initialValues }) {
   const [formData, setFormData] = useState({
     nom: '',
     description: '',
-    montant: '',
+    montant_ancien: '',
+    montant_novice: '',
     date_debut: '',
     date_fin: '',
     statut: 'en_cours',
@@ -52,12 +53,13 @@ export function AddCotisation({ isOpen, onClose, onSubmit, initialValues }) {
       if (response.data.success) {
         const c = response.data.data;
         setFormData({
-          nom:         c.nom         || '',
+          nom: c.nom || '',
           description: c.description || '',
-          montant:     c.montant?.toString() || '',
-          date_debut:  c.date_debut  || '',
-          date_fin:    c.date_fin    || '',
-          statut:      c.statut      || 'en_cours',
+          montant_ancien: c.montant_ancien?.toString() || '',
+          montant_novice: c.montant_novice?.toString() || '',
+          date_debut: c.date_debut || '',
+          date_fin: c.date_fin || '',
+          statut: c.statut || 'en_cours',
         });
       }
     } catch (err) {
@@ -79,12 +81,14 @@ export function AddCotisation({ isOpen, onClose, onSubmit, initialValues }) {
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.nom.trim())         newErrors.nom         = 'Le nom est requis';
+    if (!formData.nom.trim()) newErrors.nom = 'Le nom est requis';
     if (!formData.description.trim()) newErrors.description = 'La description est requise';
-    if (!formData.montant || parseFloat(formData.montant) <= 0)
-      newErrors.montant = 'Le montant doit être supérieur à 0';
+    if (!formData.montant_ancien || parseFloat(formData.montant_ancien) <= 0)
+      newErrors.montant_ancien = 'Le montant pour ancien doit être supérieur à 0';
+    if (!formData.montant_novice || parseFloat(formData.montant_novice) <= 0)
+      newErrors.montant_novice = 'Le montant pour novice doit être supérieur à 0';
     if (!formData.date_debut) newErrors.date_debut = 'La date de début est requise';
-    if (!formData.date_fin)   newErrors.date_fin   = 'La date de fin est requise';
+    if (!formData.date_fin) newErrors.date_fin = 'La date de fin est requise';
     if (formData.date_debut && formData.date_fin && new Date(formData.date_debut) >= new Date(formData.date_fin))
       newErrors.date_fin = 'La date de fin doit être postérieure à la date de début';
     setErrors(newErrors);
@@ -98,12 +102,13 @@ export function AddCotisation({ isOpen, onClose, onSubmit, initialValues }) {
     setIsSubmitting(true);
     try {
       const payload = {
-        nom:         formData.nom.trim(),
+        nom: formData.nom.trim(),
         description: formData.description.trim(),
-        montant:     parseFloat(formData.montant),
-        date_debut:  formData.date_debut,
-        date_fin:    formData.date_fin,
-        statut:      formData.statut,
+        montant_ancien: parseFloat(formData.montant_ancien),
+        montant_novice: parseFloat(formData.montant_novice),
+        date_debut: formData.date_debut,
+        date_fin: formData.date_fin,
+        statut: formData.statut,
       };
 
       const headers = getAuthHeaders();
@@ -212,21 +217,33 @@ export function AddCotisation({ isOpen, onClose, onSubmit, initialValues }) {
 
                 {/* ── Montant ── */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Montant (AR) *</label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={formData.montant}
-                      onChange={e => handleInputChange('montant', e.target.value)}
-                      min="0.01"
-                      step="any"
-                      placeholder="Ex: 50000"
-                      className={`w-full pl-10 pr-3 py-2 text-black border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm ${errors.montant ? 'border-red-300' : 'border-gray-300'}`}
-                      disabled={isSubmitting}
-                    />
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                  </div>
-                  {errors.montant && <p className="text-red-500 text-xs mt-1">{errors.montant}</p>}
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Montant Ancien (AR) *</label>
+                  <input
+                    type="number"
+                    value={formData.montant_ancien}
+                    onChange={e => handleInputChange('montant_ancien', e.target.value)}
+                    min="0.01"
+                    step="any"
+                    placeholder="Ex: 15000"
+                    className={`w-full px-3 py-2 text-black border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm ${errors.montant_ancien ? 'border-red-300' : 'border-gray-300'}`}
+                    disabled={isSubmitting}
+                  />
+                  {errors.montant_ancien && <p className="text-red-500 text-xs mt-1">{errors.montant_ancien}</p>}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Montant Novice (AR) *</label>
+                  <input
+                    type="number"
+                    value={formData.montant_novice}
+                    onChange={e => handleInputChange('montant_novice', e.target.value)}
+                    min="0.01"
+                    step="any"
+                    placeholder="Ex: 20000"
+                    className={`w-full px-3 py-2 text-black border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm ${errors.montant_novice ? 'border-red-300' : 'border-gray-300'}`}
+                    disabled={isSubmitting}
+                  />
+                  {errors.montant_novice && <p className="text-red-500 text-xs mt-1">{errors.montant_novice}</p>}
                 </div>
 
                 {/* ── Dates ── */}
