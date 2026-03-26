@@ -108,16 +108,22 @@ export function DashboardCotisations() {
   const totalCotisations = cotisations.length;
 
   const montantTotal = isAdmin
-    ? cotisations.reduce((sum, c) => sum + parseFloat(c.montant_total || 0), 0)
-    : cotisations.reduce((sum, c) => sum + parseFloat(c.montant_restant || 0), 0);
+    ? cotisations.reduce((sum, c) => sum + parseFloat(c?.montant_total || 0), 0)
+    : cotisations.reduce((sum, c) => sum + parseFloat(c?.montant_restant || 0), 0);
 
   const totalPayees = isAdmin
-    ? cotisations.reduce((sum, c) => sum + (c.membres_payes || 0), 0)
-    : cotisations.filter(c => c.statut === "paye").length;
+    ? cotisations.reduce((sum, c) => sum + (c?.membres_payes || 0), 0)
+    : cotisations.filter((c) => c?.statut === "paye").length;
 
   const totalNonPayees = isAdmin
-    ? cotisations.reduce((sum, c) => sum + (c.membres_non_payes || 0), 0)
-    : cotisations.filter(c => c.statut !== "paye").length;
+    ? cotisations.reduce((sum, c) => sum + (c?.membres_non_payes || 0), 0)
+    : cotisations.filter((c) => c?.statut !== "paye").length;
+
+  // ─── Données filtrées et sécurisées pour le tableau ───────
+  const cotisationsSafe = cotisations.filter((item) => {
+    const cot = isAdmin ? item : item?.cotisation;
+    return cot != null && cot.nom != null;
+  });
 
   return (
     <main className="flex-1 overflow-y-auto p-2 sm:p-6 pb-20 lg:pb-6">
@@ -252,7 +258,7 @@ export function DashboardCotisations() {
                     </div>
                   </td>
                 </tr>
-              ) : cotisations.length === 0 ? (
+              ) : cotisationsSafe.length === 0 ? (
                 <tr>
                   <td colSpan={isAdmin ? 7 : 6} className="px-6 py-12 text-center text-gray-500">
                     <div className="flex flex-col items-center space-y-4">
@@ -266,7 +272,7 @@ export function DashboardCotisations() {
                   </td>
                 </tr>
               ) : (
-                cotisations.map((item) => {
+                cotisationsSafe.map((item) => {
                   const cot = isAdmin ? item : item.cotisation;
                   return (
                     <motion.tr
