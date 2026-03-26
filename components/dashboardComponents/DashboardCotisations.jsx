@@ -33,9 +33,12 @@ export function DashboardCotisations() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // ─── isAdmin initialisé immédiatement depuis localStorage ─
-  const [isAdmin] = useState(
-    () => localStorage.getItem("user_role") === "ADMIN",
-  );
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const role = localStorage.getItem("user_role");
+    setIsAdmin(role === "ADMIN");
+  }, []);
 
   const fetchCotisations = async () => {
     try {
