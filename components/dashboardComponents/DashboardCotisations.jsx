@@ -25,12 +25,17 @@ export function DashboardCotisations() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [cotisationToEdit, setCotisationToEdit] = useState(null);
   const [cotisations, setCotisations] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showCotisationId, setShowCotisationId] = useState(null);
   const [cotisationToDelete, setCotisationToDelete] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+
+  // ─── isAdmin initialisé immédiatement depuis localStorage ─
+  const [isAdmin] = useState(
+    () => localStorage.getItem("user_role") === "ADMIN",
+  );
 
   const fetchCotisations = async () => {
     try {
@@ -40,6 +45,7 @@ export function DashboardCotisations() {
       });
       if (response.data.success) {
         setCotisations(response.data.data);
+        setStats(response.data.stats);
       } else {
         setError("Erreur lors du chargement des cotisations");
       }
@@ -52,9 +58,6 @@ export function DashboardCotisations() {
 
   useEffect(() => {
     const token = localStorage.getItem("auth_token");
-    const role = localStorage.getItem("user_role");
-    setIsAdmin(role === "ADMIN");
-
     if (token) {
       fetchCotisations();
     } else {
@@ -69,7 +72,7 @@ export function DashboardCotisations() {
       currency: "MGA",
       minimumFractionDigits: 0,
     })
-      .format(montant)
+      .format(montant ?? 0)
       .replace("MGA", "AR");
   };
 
@@ -88,7 +91,7 @@ export function DashboardCotisations() {
     try {
       const response = await axios.delete(
         `${url}cotisations/${cotisationToDelete.id}`,
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders() },
       );
       if (response.data.success) {
         await fetchCotisations();
@@ -104,26 +107,81 @@ export function DashboardCotisations() {
     }
   };
 
-  // ─── Statistiques adaptées selon le rôle ─────────────────
-  const totalCotisations = cotisations.length;
+  // ─── Structure unifiée admin ET membre → toujours item.cotisation ─
+  const cotisationsSafe = cotisations.filter(
+    (item) => item?.cotisation != null && item.cotisation.nom != null,
+  );
 
-  const montantTotal = isAdmin
-    ? cotisations.reduce((sum, c) => sum + parseFloat(c?.montant_total || 0), 0)
-    : cotisations.reduce((sum, c) => sum + parseFloat(c?.montant_restant || 0), 0);
-
-  const totalPayees = isAdmin
-    ? cotisations.reduce((sum, c) => sum + (c?.membres_payes || 0), 0)
-    : cotisations.filter((c) => c?.statut === "paye").length;
-
-  const totalNonPayees = isAdmin
-    ? cotisations.reduce((sum, c) => sum + (c?.membres_non_payes || 0), 0)
-    : cotisations.filter((c) => c?.statut !== "paye").length;
-
-  // ─── Données filtrées et sécurisées pour le tableau ───────
-  const cotisationsSafe = cotisations.filter((item) => {
-    const cot = isAdmin ? item : item?.cotisation;
-    return cot != null && cot.nom != null;
-  });
+  // ─── Cards stats depuis le backend ────────────────────────
+  const statsCards = isAdmin
+    ? [
+        {
+          label: "Total Cotisations",
+          value: stats?.total_cotisations ?? 0,
+          icon: <DollarSign className="w-6 h-6 text-blue-600" />,
+          bg: "bg-white",
+          iconBg: "bg-blue-100",
+          isMontant: false,
+        },
+        {
+          label: "Membres payés",
+          value: stats?.total_membres_payes ?? 0,
+          icon: <CheckCircle className="w-6 h-6 text-green-600" />,
+          bg: "bg-green-100",
+          iconBg: "bg-green-200",
+          isMontant: false,
+        },
+        {
+          label: "Montant collecté",
+          value: stats?.montant_total_collecte ?? 0,
+          icon: <TrendingUp className="w-6 h-6 text-yellow-600" />,
+          bg: "bg-yellow-100",
+          iconBg: "bg-yellow-200",
+          isMontant: true,
+        },
+        {
+          label: "Membres non payés",
+          value: stats?.total_membres_non_payes ?? 0,
+          icon: <X className="w-6 h-6 text-red-600" />,
+          bg: "bg-red-100",
+          iconBg: "bg-red-200",
+          isMontant: false,
+        },
+      ]
+    : [
+        {
+          label: "Total Cotisations",
+          value: stats?.total_cotisations ?? 0,
+          icon: <DollarSign className="w-6 h-6 text-blue-600" />,
+          bg: "bg-white",
+          iconBg: "bg-blue-100",
+          isMontant: false,
+        },
+        {
+          label: "Cotisations payées",
+          value: stats?.total_payees ?? 0,
+          icon: <CheckCircle className="w-6 h-6 text-green-600" />,
+          bg: "bg-green-100",
+          iconBg: "bg-green-200",
+          isMontant: false,
+        },
+        {
+          label: "Montant restant",
+          value: stats?.montant_restant_total ?? 0,
+          icon: <TrendingUp className="w-6 h-6 text-yellow-600" />,
+          bg: "bg-yellow-100",
+          iconBg: "bg-yellow-200",
+          isMontant: true,
+        },
+        {
+          label: "Non payées",
+          value: stats?.total_non_payees ?? 0,
+          icon: <X className="w-6 h-6 text-red-600" />,
+          bg: "bg-red-100",
+          iconBg: "bg-red-200",
+          isMontant: false,
+        },
+      ];
 
   return (
     <main className="flex-1 overflow-y-auto p-2 sm:p-6 pb-20 lg:pb-6">
@@ -159,57 +217,26 @@ export function DashboardCotisations() {
         transition={{ delay: 0.2 }}
         className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
       >
-        <div className="bg-white p-3 sm:p-6 rounded-lg shadow-md border border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="bg-blue-100 p-2 rounded-lg">
-              <DollarSign className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Total Cotisations</p>
-              <p className="text-2xl font-bold text-gray-900">{totalCotisations}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-green-100 p-3 sm:p-6 rounded-lg shadow-md border border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="bg-green-200 p-2 rounded-lg">
-              <CheckCircle className="w-6 h-6 text-green-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">
-                {isAdmin ? "Membres payés" : "Cotisations payées"}
-              </p>
-              <p className="text-2xl font-bold text-gray-900">{totalPayees}</p>
+        {statsCards.map((card, i) => (
+          <div
+            key={i}
+            className={`${card.bg} p-3 sm:p-6 rounded-lg shadow-md border border-gray-200`}
+          >
+            <div className="flex items-center space-x-3">
+              <div className={`${card.iconBg} p-2 rounded-lg`}>{card.icon}</div>
+              <div>
+                <p className="text-sm text-gray-500">{card.label}</p>
+                <p
+                  className={`font-bold text-gray-900 ${
+                    card.isMontant ? "text-lg" : "text-2xl"
+                  }`}
+                >
+                  {card.isMontant ? formatMontant(card.value) : card.value}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className="bg-yellow-100 p-3 sm:p-6 rounded-lg shadow-md border border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="bg-yellow-200 p-2 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-yellow-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Montant total</p>
-              <p className="text-lg font-bold text-gray-900">
-                {formatMontant(montantTotal)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-red-100 p-3 sm:p-6 rounded-lg shadow-md border border-gray-200">
-          <div className="flex items-center space-x-3">
-            <div className="bg-red-200 p-2 rounded-lg">
-              <X className="w-6 h-6 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Non payés</p>
-              <p className="text-2xl font-bold text-gray-900">{totalNonPayees}</p>
-            </div>
-          </div>
-        </div>
+        ))}
       </motion.div>
 
       {/* ERREUR */}
@@ -237,21 +264,38 @@ export function DashboardCotisations() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date début</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date fin</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Paiements</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Nom
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Description
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Montant
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date début
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date fin
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Paiements
+                </th>
                 {isAdmin && (
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
                 )}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {loading ? (
                 <tr>
-                  <td colSpan={isAdmin ? 7 : 6} className="px-6 py-8 text-center text-gray-500">
+                  <td
+                    colSpan={isAdmin ? 7 : 6}
+                    className="px-6 py-8 text-center text-gray-500"
+                  >
                     <div className="flex items-center justify-center space-x-2">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
                       <span>Chargement des cotisations...</span>
@@ -260,7 +304,10 @@ export function DashboardCotisations() {
                 </tr>
               ) : cotisationsSafe.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 7 : 6} className="px-6 py-12 text-center text-gray-500">
+                  <td
+                    colSpan={isAdmin ? 7 : 6}
+                    className="px-6 py-12 text-center text-gray-500"
+                  >
                     <div className="flex flex-col items-center space-y-4">
                       <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center">
                         <DollarSign className="w-10 h-10 text-gray-400" />
@@ -273,7 +320,8 @@ export function DashboardCotisations() {
                 </tr>
               ) : (
                 cotisationsSafe.map((item) => {
-                  const cot = isAdmin ? item : item.cotisation;
+                  // ✅ Structure unifiée — toujours item.cotisation
+                  const cot = item.cotisation;
                   return (
                     <motion.tr
                       key={cot.id}
@@ -283,7 +331,9 @@ export function DashboardCotisations() {
                     >
                       {/* Nom */}
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{cot.nom}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {cot.nom}
+                        </div>
                       </td>
 
                       {/* Description */}
@@ -298,15 +348,29 @@ export function DashboardCotisations() {
                         {isAdmin ? (
                           <div className="flex flex-col">
                             <span className="text-xs text-gray-500">
-                              Novice: <span className="font-bold text-gray-900">{formatMontant(cot.montant_novice)}</span>
+                              Novice:{" "}
+                              <span className="font-bold text-gray-900">
+                                {formatMontant(cot.montant_novice)}
+                              </span>
                             </span>
                             <span className="text-xs text-gray-500">
-                              Ancien: <span className="font-bold text-gray-900">{formatMontant(cot.montant_ancien)}</span>
+                              Ancien:{" "}
+                              <span className="font-bold text-gray-900">
+                                {formatMontant(cot.montant_ancien)}
+                              </span>
                             </span>
                           </div>
                         ) : (
-                          <div className="text-sm font-bold text-gray-900">
-                            {formatMontant(item.montant_restant)}
+                          <div className="flex flex-col">
+                            <span className="text-sm font-bold text-gray-900">
+                              {formatMontant(cot.montant)}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              Restant:{" "}
+                              <span className="font-semibold text-red-600">
+                                {formatMontant(item.montant_restant)}
+                              </span>
+                            </span>
                           </div>
                         )}
                       </td>
@@ -329,17 +393,33 @@ export function DashboardCotisations() {
                               ✅ {cot.membres_payes}/{cot.total_membres} payés
                             </span>
                             <span className="inline-block bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-semibold text-xs">
-                              ❌ {cot.membres_non_payes}/{cot.total_membres} non payés
+                              ❌ {cot.membres_non_payes}/{cot.total_membres} non
+                              payés
                             </span>
                           </div>
                         ) : (
-                          <span className={`inline-block px-3 py-1 rounded-full font-semibold text-sm
-                            ${item.statut === "paye" ? "bg-green-100 text-green-800" :
-                              item.statut === "reste" ? "bg-yellow-100 text-yellow-800" :
-                                "bg-red-100 text-red-800"}`}>
-                            {item.statut === "paye" ? "Payé" :
-                              item.statut === "reste" ? "Reste" : "Non payé"}
-                          </span>
+                          <div className="flex flex-col space-y-1">
+                            <span
+                              className={`inline-block px-3 py-1 rounded-full font-semibold text-sm
+                              ${
+                                item.statut === "paye"
+                                  ? "bg-green-100 text-green-800"
+                                  : item.statut === "reste"
+                                  ? "bg-yellow-100 text-yellow-800"
+                                  : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {item.statut === "paye"
+                                ? "✅ Payé"
+                                : item.statut === "reste"
+                                ? "⏳ Reste"
+                                : "❌ Non payé"}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {cot.membres_payes}/{cot.total_membres} membres
+                              payés
+                            </span>
+                          </div>
                         )}
                       </td>
 
