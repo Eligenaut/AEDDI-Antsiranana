@@ -32,10 +32,12 @@ export function DashboardCotisations() {
   const [cotisationToDelete, setCotisationToDelete] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const [isAdmin] = useState(() => {
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user") || "{}");
-    return user?.role === "ADMIN";
-  });
+    setIsAdmin(user?.role === "ADMIN");
+  }, []);
   const fetchCotisations = async () => {
     try {
       setLoading(true);
