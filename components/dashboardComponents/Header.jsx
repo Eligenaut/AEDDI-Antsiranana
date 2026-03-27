@@ -16,6 +16,7 @@ export function Header({
     const roleLabels = {
       [ROLES.BUREAU]: "Membre du Bureau",
       [ROLES.MEMBER]: "Membre",
+      [ROLES.NOVICE]: "Novice",
     };
     let label = roleLabels[selectedRole] || selectedRole;
     if (selectedSubRole) {

@@ -1,7 +1,8 @@
 // ─── Rôles ─────────────────────────────────────────────────────────────────
 export const ROLES = {
   BUREAU: "BUREAU",
-  MEMBER: "MEMBER"
+  MEMBER: "MEMBER",
+  NOVICE: "NOVICE",
 };
 
 // ─── Sous-rôles ────────────────────────────────────────────────────────────
@@ -49,7 +50,7 @@ export const subRoleCategories = [
       SUB_ROLES.VICE_PRESIDENT,
       SUB_ROLES.TRESORIER,
       SUB_ROLES.VICE_TRESORIER,
-      SUB_ROLES.COMMISSAIRE_COMPTE
+      SUB_ROLES.COMMISSAIRE_COMPTE,
     ],
   },
   {
@@ -76,13 +77,34 @@ export const roleIcons = {
       <circle cx="14" cy="8" r="4" stroke="currentColor" strokeWidth="1.8" />
       <circle cx="6" cy="20" r="3" stroke="currentColor" strokeWidth="1.8" />
       <circle cx="22" cy="20" r="3" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M14 12v4M10 20h8M6 17v-1a4 4 0 014-4h8a4 4 0 014 4v1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path
+        d="M14 12v4M10 20h8M6 17v-1a4 4 0 014-4h8a4 4 0 014 4v1"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
     </svg>
   ),
   [ROLES.MEMBER]: (
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
       <circle cx="14" cy="10" r="5" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M5 24c0-4.97 4.03-9 9-9s9 4.03 9 9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path
+        d="M5 24c0-4.97 4.03-9 9-9s9 4.03 9 9"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
+    </svg>
+  ),
+  [ROLES.NOVICE]: (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+      <circle cx="14" cy="10" r="5" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M5 24c0-4.97 4.03-9 9-9s9 4.03 9 9"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+      />
     </svg>
   ),
 };
@@ -106,5 +128,14 @@ export const roleConfigs = [
     accent: "#ecfeff",
     accentBorder: "#a5f3fc",
     accentText: "#0e7490",
+  },
+  {
+    key: ROLES.NOVICE,
+    label: "Novice",
+    desc: "Nouveau membre sans rôle spécifique",
+    gradient: "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)",
+    accent: "#fffbeb",
+    accentBorder: "#fde68a",
+    accentText: "#b45309",
   },
 ];

@@ -32,14 +32,10 @@ export function DashboardCotisations() {
   const [cotisationToDelete, setCotisationToDelete] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  // ─── isAdmin initialisé immédiatement depuis localStorage ─
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    const role = localStorage.getItem("user_role");
-    setIsAdmin(role === "ADMIN");
-  }, []);
-
+  const [isAdmin] = useState(() => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    return user?.role === "ADMIN";
+  });
   const fetchCotisations = async () => {
     try {
       setLoading(true);
@@ -47,6 +43,7 @@ export function DashboardCotisations() {
         headers: getAuthHeaders(),
       });
       if (response.data.success) {
+        console.log(response.data);
         setCotisations(response.data.data);
         setStats(response.data.stats);
       } else {
@@ -277,13 +274,13 @@ export function DashboardCotisations() {
                   Montant
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Paiements
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Date début
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Date fin
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Paiements
                 </th>
                 {isAdmin && (
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -378,33 +375,51 @@ export function DashboardCotisations() {
                         )}
                       </td>
 
-                      {/* Date début */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatDate(cot.date_debut)}
-                      </td>
-
-                      {/* Date fin */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatDate(cot.date_fin)}
-                      </td>
-
                       {/* Paiements / Statut */}
                       <td className="px-6 py-4 whitespace-nowrap">
                         {isAdmin ? (
                           <div className="flex flex-col space-y-1">
-                            <span className="inline-block bg-green-100 text-green-800 px-2 py-0.5 rounded-full font-semibold text-xs">
-                              ✅ {cot.membres_payes}/{cot.total_membres} payés
-                            </span>
-                            <span className="inline-block bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-semibold text-xs">
-                              ❌ {cot.membres_non_payes}/{cot.total_membres} non
-                              payés
-                            </span>
+                            {cot.all_paid ? (
+                              <span className="inline-block bg-green-200 text-green-900 px-2 py-0.5 rounded-full font-semibold text-xs">
+                                🎉 Tous payés
+                              </span>
+                            ) : (
+                              <>
+                                {/* Novices */}
+                                {cot.total_novices > 0 && (
+                                  <span
+                                    className={`inline-block px-2 py-0.5 rounded-full font-semibold text-xs ${
+                                      cot.novices_all_paid
+                                        ? "bg-green-200 text-green-900"
+                                        : "bg-yellow-100 text-yellow-800"
+                                    }`}
+                                  >
+                                    🎓 Novices : {cot.novices_payes}/
+                                    {cot.total_novices}
+                                    {cot.novices_all_paid ? " ✅" : ""}
+                                  </span>
+                                )}
+                                {/* Anciens (MEMBER + BUREAU) */}
+                                {cot.total_anciens > 0 && (
+                                  <span
+                                    className={`inline-block px-2 py-0.5 rounded-full font-semibold text-xs ${
+                                      cot.anciens_all_paid
+                                        ? "bg-green-200 text-green-900"
+                                        : "bg-red-100 text-red-800"
+                                    }`}
+                                  >
+                                    👤 Anciens : {cot.anciens_payes}/
+                                    {cot.total_anciens}
+                                    {cot.anciens_all_paid ? " ✅" : ""}
+                                  </span>
+                                )}
+                              </>
+                            )}
                           </div>
                         ) : (
                           <div className="flex flex-col space-y-1">
                             <span
-                              className={`inline-block px-3 py-1 rounded-full font-semibold text-sm
-                              ${
+                              className={`inline-block px-3 py-1 rounded-full font-semibold text-sm ${
                                 item.statut === "paye"
                                   ? "bg-green-100 text-green-800"
                                   : item.statut === "reste"
@@ -426,40 +441,48 @@ export function DashboardCotisations() {
                         )}
                       </td>
 
-                      {/* Actions (admin seulement) */}
-                      {isAdmin && (
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex items-center space-x-2">
-                            <button
-                              className="text-blue-600 hover:text-blue-900"
-                              title="Voir les détails"
-                              onClick={() => setShowCotisationId(cot.id)}
-                            >
-                              <Eye className="w-4 h-4" />
-                            </button>
-                            <button
-                              className="text-green-600 hover:text-green-900"
-                              title="Modifier"
-                              onClick={() => {
-                                setCotisationToEdit(cot);
-                                setShowAddModal(true);
-                              }}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button
-                              className="text-red-600 hover:text-red-900"
-                              title="Supprimer"
-                              onClick={() => {
-                                setCotisationToDelete(cot);
-                                setShowDeleteModal(true);
-                              }}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      )}
+                      {/* Date début */}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatDate(cot.date_debut)}
+                      </td>
+
+                      {/* Date fin */}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatDate(cot.date_fin)}
+                      </td>
+                      {/* Actions*/}
+
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex items-center space-x-2">
+                          <button
+                            className="text-blue-600 hover:text-blue-900"
+                            title="Voir les détails"
+                            onClick={() => setShowCotisationId(cot.id)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            className="text-green-600 hover:text-green-900"
+                            title="Modifier"
+                            onClick={() => {
+                              setCotisationToEdit(cot);
+                              setShowAddModal(true);
+                            }}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            className="text-red-600 hover:text-red-900"
+                            title="Supprimer"
+                            onClick={() => {
+                              setCotisationToDelete(cot);
+                              setShowDeleteModal(true);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
                     </motion.tr>
                   );
                 })
