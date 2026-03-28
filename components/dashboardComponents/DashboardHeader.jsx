@@ -37,6 +37,7 @@ export function DashboardHeader({ onMenuClick, currentSection, onSectionChange }
       wssPort: 443,
       forceTLS: true,
       enabledTransports: ["ws", "wss"],
+      cluster: "mt1",
     });
 
     echo.channel("test-channel")
