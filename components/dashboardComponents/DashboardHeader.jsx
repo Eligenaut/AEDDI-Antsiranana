@@ -17,7 +17,6 @@ export function DashboardHeader({ onMenuClick, currentSection, onSectionChange }
   useEffect(() => {
     setIsClient(true);
     const userStr = localStorage.getItem('user');
-    console.log("user", userStr);
     if (userStr) {
       try {
         const userData = JSON.parse(userStr);
@@ -32,12 +31,18 @@ export function DashboardHeader({ onMenuClick, currentSection, onSectionChange }
     const echo = new Echo({
       broadcaster: "pusher",
       key: process.env.NEXT_PUBLIC_SOKETI_KEY,
+
       wsHost: process.env.NEXT_PUBLIC_SOKETI_HOST,
       wsPort: 443,
       wssPort: 443,
+
       forceTLS: true,
       enabledTransports: ["ws", "wss"],
+
       cluster: "mt1",
+
+      encrypted: true,
+      disableStats: true,
     });
 
     echo.channel("test-channel")
@@ -45,7 +50,13 @@ export function DashboardHeader({ onMenuClick, currentSection, onSectionChange }
         console.log("Notification reçue :", data);
         setNotificationsCount((prev) => prev + 1);
       });
+    echo.connector.pusher.connection.bind("connected", () => {
+      console.log("✅ WEBSOCKET CONNECTÉ");
+    });
 
+    echo.connector.pusher.connection.bind("error", (err) => {
+      console.log("❌ ERREUR WEBSOCKET :", err);
+    });
     return () => {
       echo.disconnect();
     };
