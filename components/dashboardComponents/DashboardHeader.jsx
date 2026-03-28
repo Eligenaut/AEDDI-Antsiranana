@@ -6,11 +6,14 @@ import { url } from '../context/url.js';
 import { getAuthHeaders } from '../context/headers.jsx';
 import { User, MessageCircle, Bell, LogOut } from 'lucide-react';
 import { UserAvatar } from '../uiComponents/UserAvatar.jsx';
+import Echo from "laravel-echo";
+import Pusher from "pusher-js";
 
 export function DashboardHeader({ onMenuClick, currentSection, onSectionChange }) {
   const [user, setUser] = useState(null);
   const [isClient, setIsClient] = useState(false);
   const [userRole, setUserRole] = useState('');
+  const [notificationsCount, setNotificationsCount] = useState(0);
 
   useEffect(() => {
     setIsClient(true);
@@ -23,6 +26,28 @@ export function DashboardHeader({ onMenuClick, currentSection, onSectionChange }
         setUser(null);
       }
     }
+  }, []);
+
+  useEffect(() => {
+    const echo = new Echo({
+      broadcaster: "pusher",
+      key: process.env.NEXT_PUBLIC_SOKETI_KEY,
+      wsHost: process.env.NEXT_PUBLIC_SOKETI_HOST,
+      wsPort: 443,
+      wssPort: 443,
+      forceTLS: true,
+      enabledTransports: ["ws", "wss"],
+    });
+
+    echo.channel("test-channel")
+      .listen(".test-event", (data) => {
+        console.log("Notification reçue :", data);
+        setNotificationsCount((prev) => prev + 1);
+      });
+
+    return () => {
+      echo.disconnect();
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -92,7 +117,7 @@ export function DashboardHeader({ onMenuClick, currentSection, onSectionChange }
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-white">Tableau de bord AEDDI</h2>          
+                <h2 className="text-xl sm:text-2xl font-bold text-white">Tableau de bord AEDDI</h2>
               </div>
             </div>
             <div className="flex-1 max-w-md mx-8">
@@ -113,7 +138,11 @@ export function DashboardHeader({ onMenuClick, currentSection, onSectionChange }
               <button className="relative p-2 text-white hover:text-purple-200 rounded-lg transition-colors flex items-center" title="Notifications">
                 <Bell className="w-6 h-6" />
                 <span className="ml-2 hidden xl:inline">Notification</span>
-                <span className="absolute -top-1 -right-1 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
+                {notificationsCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    {notificationsCount}
+                  </span>
+                )}
               </button>
               <button className="relative p-2 text-white hover:text-purple-200 rounded-lg transition-colors flex items-center" title="Messages">
                 <MessageCircle className="w-6 h-6" />
