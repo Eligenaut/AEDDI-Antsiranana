@@ -7,7 +7,6 @@ import { getAuthHeaders } from '../context/headers.jsx';
 import { User, MessageCircle, Bell, LogOut } from 'lucide-react';
 import { UserAvatar } from '../uiComponents/UserAvatar.jsx';
 import Echo from "laravel-echo";
-import Pusher from "pusher-js";
 
 export function DashboardHeader({ onMenuClick, currentSection, onSectionChange }) {
   const [user, setUser] = useState(null);
@@ -18,6 +17,7 @@ export function DashboardHeader({ onMenuClick, currentSection, onSectionChange }
   useEffect(() => {
     setIsClient(true);
     const userStr = localStorage.getItem('user');
+    console.log("user", userStr);
     if (userStr) {
       try {
         const userData = JSON.parse(userStr);
