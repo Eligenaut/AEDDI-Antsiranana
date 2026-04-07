@@ -2,7 +2,6 @@
 "use client";
 import { useNetwork } from "./hooks/useNetwork";
 import NoInternet from "./NoInternet";
-import NotificationProvider from "./NotificationProvider";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const isConnected = useNetwork();
@@ -13,7 +12,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
   return (
     <>
-      <NotificationProvider />
       {children}
     </>
   );
