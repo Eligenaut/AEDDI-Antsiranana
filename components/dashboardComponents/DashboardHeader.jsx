@@ -15,6 +15,7 @@ export function DashboardHeader({
   const [user, setUser] = useState(null);
   const [isClient, setIsClient] = useState(false);
   const [userRole, setUserRole] = useState("");
+  const notificationsCount = 0;
 
   useEffect(() => {
     setIsClient(true);
