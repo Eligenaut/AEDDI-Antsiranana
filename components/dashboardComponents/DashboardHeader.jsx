@@ -15,7 +15,6 @@ export function DashboardHeader({
   const [user, setUser] = useState(null);
   const [isClient, setIsClient] = useState(false);
   const [userRole, setUserRole] = useState("");
-  const notificationsCount = 0;
 
   useEffect(() => {
     setIsClient(true);
@@ -28,41 +27,6 @@ export function DashboardHeader({
         setUser(null);
       }
     }
-  }, []);
-
-  useEffect(() => {
-    const echo = new Echo({
-      broadcaster: "pusher",
-      key: process.env.NEXT_PUBLIC_SOKETI_KEY,
-
-      wsHost: process.env.NEXT_PUBLIC_SOKETI_HOST,
-      wsPort: 443,
-      wssPort: 443,
-
-      forceTLS: true,
-      enabledTransports: ["ws", "wss"],
-
-      cluster: "mt1",
-
-      encrypted: true,
-      disableStats: true,
-    });
-
-    echo.channel("test-channel")
-      .listen(".test-event", (data) => {
-        console.log("Notification reçue :", data);
-        setNotificationsCount((prev) => prev + 1);
-      });
-    echo.connector.pusher.connection.bind("connected", () => {
-      console.log("✅ WEBSOCKET CONNECTÉ");
-    });
-
-    echo.connector.pusher.connection.bind("error", (err) => {
-      console.log("❌ ERREUR WEBSOCKET :", err);
-    });
-    return () => {
-      echo.disconnect();
-    };
   }, []);
 
   const handleLogout = async () => {
@@ -218,11 +182,6 @@ export function DashboardHeader({
               >
                 <Bell className="w-6 h-6" />
                 <span className="ml-2 hidden xl:inline">Notification</span>
-                {notificationsCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                    {notificationsCount}
-                  </span>
-                )}
               </button>
               <button
                 className="relative p-2 text-white hover:text-purple-200 rounded-lg transition-colors flex items-center"
