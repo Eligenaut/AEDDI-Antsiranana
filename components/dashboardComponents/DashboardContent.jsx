@@ -12,6 +12,7 @@ import { DashboardActivites } from "./DashboardActivites";
 import UserDetail from "./UserDetail";
 import ManagePermission from "./ManagePermission";
 import ActivitePollingListener from "../polling/ActivitePollingListener";
+import { NotificationsDrawer } from "./NotificationsDrawer";
 
 const sectionToPath = {
   accueil: "/dashboard",
@@ -36,6 +37,7 @@ export function DashboardContent() {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
   const np = useRef(null);
 
   useEffect(() => {
@@ -144,6 +146,7 @@ export function DashboardContent() {
   return (
     <div className="flex h-screen bg-gray-50">
       <ActivitePollingListener intervalMs={10000} />
+      <NotificationsDrawer isOpen={notifOpen} onClose={() => setNotifOpen(false)} />
       <DashboardSidebar
         isOpen={sidebarOpen}
         onToggle={toggleSidebar}
@@ -156,6 +159,7 @@ export function DashboardContent() {
           onMenuClick={toggleSidebar}
           currentSection={currentSection}
           onSectionChange={handleSectionChange}
+          onOpenNotifications={() => setNotifOpen(true)}
         />
 
         <div className="flex-1 overflow-y-auto pb-16 lg:pb-0 lg:pt-0">

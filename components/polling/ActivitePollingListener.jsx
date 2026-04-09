@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Notiflix from "notiflix";
 import { url } from "../context/url.js";
 import { getAuthHeaders } from "../context/headers.jsx";
 
@@ -23,9 +22,8 @@ export default function ActivitePollingListener({ intervalMs = 10000 }) {
       }
     };
 
-    const incBadge = (delta) => {
-      const current = Number(localStorage.getItem("notif_activites_badge") || "0");
-      const next = Math.max(0, (Number.isFinite(current) ? current : 0) + delta);
+    const setBadge = (value) => {
+      const next = Math.max(0, Number(value) || 0);
       localStorage.setItem("notif_activites_badge", String(next));
       window.dispatchEvent(new Event("notif:activites"));
     };
@@ -35,10 +33,7 @@ export default function ActivitePollingListener({ intervalMs = 10000 }) {
 
       try {
         const afterId = readAfterId();
-        const endpoint =
-          afterId > 0
-            ? `${url}activites/latest?after_id=${encodeURIComponent(afterId)}&limit=5`
-            : `${url}activites/latest`;
+        const endpoint = `${url}notifications/poll?after_id=${encodeURIComponent(afterId)}&limit=20`;
 
         const res = await fetch(endpoint, {
           headers: getAuthHeaders(),
@@ -48,22 +43,11 @@ export default function ActivitePollingListener({ intervalMs = 10000 }) {
         const json = await res.json();
         if (!json?.success) return;
 
-        const items = Array.isArray(json.data) ? json.data : [];
-        if (items.length > 0) {
-          // Mettre à jour le curseur (max id)
-          const maxId =
-            Number(json?.meta?.max_id) ||
-            Math.max(...items.map((x) => Number(x?.id || 0)));
-          writeAfterId(maxId);
+        const unreadCount = Number(json?.meta?.unread_count);
+        if (Number.isFinite(unreadCount)) setBadge(unreadCount);
 
-          // Notif visuelle "temps réel"
-          const newest = items[items.length - 1];
-          const nom = newest?.nom || "Nouvelle activité";
-          Notiflix.Notify.info(`${nom} vient d'être ajoutée.`);
-
-          // Badge (nombre de nouveautés)
-          incBadge(items.length);
-        }
+        const maxId = Number(json?.meta?.max_id);
+        if (Number.isFinite(maxId) && maxId > 0) writeAfterId(maxId);
       } catch {
         // no-op
       } finally {

@@ -11,6 +11,7 @@ export function DashboardHeader({
   onMenuClick,
   currentSection,
   onSectionChange,
+  onOpenNotifications,
 }) {
   const [user, setUser] = useState(null);
   const [isClient, setIsClient] = useState(false);
@@ -191,6 +192,7 @@ export function DashboardHeader({
               <button
                 className="relative p-2 text-white hover:text-purple-200 rounded-lg transition-colors flex items-center"
                 title="Notifications"
+                onClick={onOpenNotifications}
               >
                 <Bell className="w-6 h-6" />
                 <span className="ml-2 hidden xl:inline">Notification</span>
