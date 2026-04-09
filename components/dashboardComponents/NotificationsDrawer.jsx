@@ -20,13 +20,14 @@ export function NotificationsDrawer({ isOpen, onClose }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [actionLoading, setActionLoading] = useState({ id: null, action: null });
 
   useEffect(() => setMounted(true), []);
 
   const readAndSyncBadge = (count) => {
     const next = Math.max(0, Number(count) || 0);
-    localStorage.setItem("notif_activites_badge", String(next));
-    window.dispatchEvent(new Event("notif:activites"));
+    localStorage.setItem("notif_unread_badge", String(next));
+    window.dispatchEvent(new Event("notif:unread"));
   };
 
   const fetchNotifications = async () => {
@@ -52,35 +53,82 @@ export function NotificationsDrawer({ isOpen, onClose }) {
   }, [isOpen]);
 
   const markRead = async (id) => {
-    await fetch(`${url}notifications/${id}/read`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-    });
-    await fetchNotifications();
+    setActionLoading({ id, action: "read" });
+    try {
+      await fetch(`${url}notifications/${id}/read`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+      });
+      setItems((prev) =>
+        prev.map((n) =>
+          n.id === id ? { ...n, read_at: new Date().toISOString() } : n,
+        ),
+      );
+      setUnreadCount((c) => {
+        const next = Math.max(0, c - 1);
+        readAndSyncBadge(next);
+        return next;
+      });
+    } finally {
+      setActionLoading({ id: null, action: null });
+    }
   };
 
   const markUnread = async (id) => {
-    await fetch(`${url}notifications/${id}/unread`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-    });
-    await fetchNotifications();
+    setActionLoading({ id, action: "unread" });
+    try {
+      await fetch(`${url}notifications/${id}/unread`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+      });
+      setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read_at: null } : n)));
+      setUnreadCount((c) => {
+        const next = c + 1;
+        readAndSyncBadge(next);
+        return next;
+      });
+    } finally {
+      setActionLoading({ id: null, action: null });
+    }
   };
 
   const readAll = async () => {
-    await fetch(`${url}notifications/read-all`, {
-      method: "POST",
-      headers: getAuthHeaders(),
-    });
-    await fetchNotifications();
+    setActionLoading({ id: "all", action: "read-all" });
+    try {
+      await fetch(`${url}notifications/read-all`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+      });
+      const now = new Date().toISOString();
+      setItems((prev) => prev.map((n) => (n.read_at ? n : { ...n, read_at: now })));
+      setUnreadCount(0);
+      readAndSyncBadge(0);
+    } finally {
+      setActionLoading({ id: null, action: null });
+    }
   };
 
   const remove = async (id) => {
-    await fetch(`${url}notifications/${id}`, {
-      method: "DELETE",
-      headers: getAuthHeaders(),
-    });
-    await fetchNotifications();
+    setActionLoading({ id, action: "delete" });
+    try {
+      await fetch(`${url}notifications/${id}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+      });
+      setItems((prev) => {
+        const removed = prev.find((x) => x.id === id);
+        if (removed && !removed.read_at) {
+          setUnreadCount((c) => {
+            const next = Math.max(0, c - 1);
+            readAndSyncBadge(next);
+            return next;
+          });
+        }
+        return prev.filter((n) => n.id !== id);
+      });
+    } finally {
+      setActionLoading({ id: null, action: null });
+    }
   };
 
   const empty = useMemo(() => !loading && items.length === 0, [loading, items]);
@@ -121,9 +169,12 @@ export function NotificationsDrawer({ isOpen, onClose }) {
               <div className="flex items-center gap-2">
                 <button
                   onClick={readAll}
+                  disabled={actionLoading.id === "all"}
                   className="bg-white/15 hover:bg-white/25 px-3 py-2 rounded-lg text-xs font-semibold transition"
                 >
-                  Tout marquer lu
+                  {actionLoading.id === "all" && actionLoading.action === "read-all"
+                    ? "Chargement..."
+                    : "Tout marquer lu"}
                 </button>
                 <button
                   onClick={onClose}
@@ -136,7 +187,18 @@ export function NotificationsDrawer({ isOpen, onClose }) {
 
             <div className="p-4 space-y-3">
               {loading && (
-                <div className="text-sm text-gray-600">Chargement...</div>
+                <div className="space-y-3">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="border rounded-xl p-3 animate-pulse bg-white"
+                    >
+                      <div className="h-4 bg-gray-200 rounded w-3/4" />
+                      <div className="h-3 bg-gray-100 rounded w-1/3 mt-2" />
+                      <div className="h-8 bg-gray-100 rounded w-full mt-3" />
+                    </div>
+                  ))}
+                </div>
               )}
 
               {empty && (
@@ -173,28 +235,43 @@ export function NotificationsDrawer({ isOpen, onClose }) {
                       {isUnread ? (
                         <button
                           onClick={() => markRead(n.id)}
-                          className="text-xs px-2 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700 flex items-center gap-1"
+                          disabled={actionLoading.id === n.id}
+                          className="text-xs px-2 py-1 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-60 flex items-center gap-1"
                           title="Marquer comme lue"
                         >
-                          <Check className="w-4 h-4" />
+                          {actionLoading.id === n.id && actionLoading.action === "read" ? (
+                            <span className="w-4 h-4 rounded-full border-2 border-white/70 border-t-transparent animate-spin" />
+                          ) : (
+                            <Check className="w-4 h-4" />
+                          )}
                           Lu
                         </button>
                       ) : (
                         <button
                           onClick={() => markUnread(n.id)}
-                          className="text-xs px-2 py-1 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 flex items-center gap-1"
+                          disabled={actionLoading.id === n.id}
+                          className="text-xs px-2 py-1 rounded-lg bg-gray-100 text-gray-800 hover:bg-gray-200 disabled:opacity-60 flex items-center gap-1"
                           title="Marquer comme non lue"
                         >
-                          <Undo2 className="w-4 h-4" />
+                          {actionLoading.id === n.id && actionLoading.action === "unread" ? (
+                            <span className="w-4 h-4 rounded-full border-2 border-gray-500/70 border-t-transparent animate-spin" />
+                          ) : (
+                            <Undo2 className="w-4 h-4" />
+                          )}
                           Non lu
                         </button>
                       )}
                       <button
                         onClick={() => remove(n.id)}
-                        className="text-xs px-2 py-1 rounded-lg bg-red-600 text-white hover:bg-red-700 flex items-center gap-1"
+                        disabled={actionLoading.id === n.id}
+                        className="text-xs px-2 py-1 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 flex items-center gap-1"
                         title="Supprimer"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        {actionLoading.id === n.id && actionLoading.action === "delete" ? (
+                          <span className="w-4 h-4 rounded-full border-2 border-white/70 border-t-transparent animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
                         Supprimer
                       </button>
                     </div>

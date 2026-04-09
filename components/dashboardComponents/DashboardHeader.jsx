@@ -34,12 +34,12 @@ export function DashboardHeader({
   useEffect(() => {
     if (!isClient) return;
     const read = () => {
-      const v = Number(localStorage.getItem("notif_activites_badge") || "0");
+      const v = Number(localStorage.getItem("notif_unread_badge") || "0");
       setActivitesBadge(Number.isFinite(v) ? v : 0);
     };
     read();
-    window.addEventListener("notif:activites", read);
-    return () => window.removeEventListener("notif:activites", read);
+    window.addEventListener("notif:unread", read);
+    return () => window.removeEventListener("notif:unread", read);
   }, [isClient]);
 
   const handleLogout = async () => {

@@ -12,20 +12,20 @@ export default function ActivitePollingListener({ intervalMs = 10000 }) {
     stopRef.current = false;
 
     const readAfterId = () => {
-      const v = Number(localStorage.getItem("activites_after_id") || "0");
+      const v = Number(localStorage.getItem("notifications_after_id") || "0");
       return Number.isFinite(v) ? v : 0;
     };
 
     const writeAfterId = (id) => {
       if (typeof id === "number" && id > 0) {
-        localStorage.setItem("activites_after_id", String(id));
+        localStorage.setItem("notifications_after_id", String(id));
       }
     };
 
     const setBadge = (value) => {
       const next = Math.max(0, Number(value) || 0);
-      localStorage.setItem("notif_activites_badge", String(next));
-      window.dispatchEvent(new Event("notif:activites"));
+      localStorage.setItem("notif_unread_badge", String(next));
+      window.dispatchEvent(new Event("notif:unread"));
     };
 
     const tick = async () => {
