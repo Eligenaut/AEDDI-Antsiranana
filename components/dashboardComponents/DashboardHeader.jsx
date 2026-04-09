@@ -15,6 +15,7 @@ export function DashboardHeader({
   const [user, setUser] = useState(null);
   const [isClient, setIsClient] = useState(false);
   const [userRole, setUserRole] = useState("");
+  const [activitesBadge, setActivitesBadge] = useState(0);
 
   useEffect(() => {
     setIsClient(true);
@@ -28,6 +29,17 @@ export function DashboardHeader({
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+    const read = () => {
+      const v = Number(localStorage.getItem("notif_activites_badge") || "0");
+      setActivitesBadge(Number.isFinite(v) ? v : 0);
+    };
+    read();
+    window.addEventListener("notif:activites", read);
+    return () => window.removeEventListener("notif:activites", read);
+  }, [isClient]);
 
   const handleLogout = async () => {
     try {
@@ -182,6 +194,11 @@ export function DashboardHeader({
               >
                 <Bell className="w-6 h-6" />
                 <span className="ml-2 hidden xl:inline">Notification</span>
+                {activitesBadge > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
+                    {activitesBadge > 99 ? "99+" : activitesBadge}
+                  </span>
+                )}
               </button>
               <button
                 className="relative p-2 text-white hover:text-purple-200 rounded-lg transition-colors flex items-center"

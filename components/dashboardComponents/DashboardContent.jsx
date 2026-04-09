@@ -11,6 +11,7 @@ import { DashboardCotisations } from "./DashboardCotisations";
 import { DashboardActivites } from "./DashboardActivites";
 import UserDetail from "./UserDetail";
 import ManagePermission from "./ManagePermission";
+import ActivitePollingListener from "../polling/ActivitePollingListener";
 
 const sectionToPath = {
   accueil: "/dashboard",
@@ -142,6 +143,7 @@ export function DashboardContent() {
 
   return (
     <div className="flex h-screen bg-gray-50">
+      <ActivitePollingListener intervalMs={10000} />
       <DashboardSidebar
         isOpen={sidebarOpen}
         onToggle={toggleSidebar}
