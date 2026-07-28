@@ -19,6 +19,8 @@ export function RegisterForm({ onSwitchToLogin, onRegistrationSubmit, isSubmitti
     niveau: '',
     promotion: '',
     logement: 'campus',
+    option_campus: '',
+    section_campus: '',
     blocCampus: '',
     quartier: '',
     telephone: '',
@@ -205,7 +207,7 @@ export function RegisterForm({ onSwitchToLogin, onRegistrationSubmit, isSubmitti
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="bg-white/80 dark:bg-gray-800/90 backdrop-blur-lg rounded-3xl w-full max-w-md flex flex-col items-center p-8 shadow-2xl"
+          className="bg-white/80 backdrop-blur-lg rounded-3xl w-full max-w-md flex flex-col items-center p-8 shadow-2xl"
           style={{
             boxShadow: '0 2px 16px 0 rgba(34, 197, 94, 0.2)',
             borderColor: '#86efac',
@@ -216,10 +218,10 @@ export function RegisterForm({ onSwitchToLogin, onRegistrationSubmit, isSubmitti
           <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mb-6 mt-6">
             <span className="text-4xl">✅</span>
           </div>
-          <h1 className="text-2xl font-extrabold mb-3 text-center text-gray-800 dark:text-white">
+          <h1 className="text-2xl font-extrabold mb-3 text-center text-gray-800">
             Inscription réussie !
           </h1>
-          <p className="text-gray-600 dark:text-gray-300 text-center text-sm mb-6">
+          <p className="text-gray-600 text-center text-sm mb-6">
             Un email a été envoyé à <strong>{formData.email}</strong>.<br />
             Cliquez sur le lien dans l'email pour créer votre mot de passe.
           </p>
@@ -244,7 +246,7 @@ export function RegisterForm({ onSwitchToLogin, onRegistrationSubmit, isSubmitti
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full bg-white p-6 dark:bg-gray-800/90 rounded-2xl shadow-lg max-h-[90vh] overflow-y-auto"
+      className="w-full bg-white p-6 rounded-2xl shadow-lg max-h-[90vh] overflow-y-auto"
     >
       <h1 className="text-2xl font-bold text-center mb-6 text-blue-600">
         Inscription Étudiant AEDDI

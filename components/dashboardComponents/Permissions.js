@@ -44,6 +44,17 @@ export const permissionCategories = [
       { id: "create_parametre", label: "Créer" },
     ],
   },
+  {
+    id: "tache",
+    name: "Tâches",
+    icon: "📋",
+    permissions: [
+      { id: "show_tache", label: "Voir" },
+      { id: "edit_tache", label: "Modifier" },
+      { id: "delete_tache", label: "Supprimer" },
+      { id: "create_tache", label: "Créer" },
+    ],
+  },
 ];
 
 export const allPermissionIds = permissionCategories.flatMap((c) =>

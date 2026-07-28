@@ -124,7 +124,7 @@ export function ResetPassword({ email, token, onPasswordReset }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="w-full bg-white p-8 dark:bg-gray-800/90 rounded-2xl shadow-lg max-w-md mx-auto"
+      className="w-full bg-white p-8 rounded-2xl shadow-lg max-w-md mx-auto"
     >
       <motion.div
         initial={{ opacity: 0 }}
@@ -137,13 +137,13 @@ export function ResetPassword({ email, token, onPasswordReset }) {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </div>
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">
           Réinitialiser votre mot de passe
         </h1>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-gray-600">
           Créez un nouveau mot de passe sécurisé
         </p>
-        <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+        <p className="text-sm text-gray-500 mt-1">
           {email}
         </p>
       </motion.div>
@@ -155,7 +155,7 @@ export function ResetPassword({ email, token, onPasswordReset }) {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
             Nouveau mot de passe
           </label>
           <div className="relative">
@@ -166,13 +166,13 @@ export function ResetPassword({ email, token, onPasswordReset }) {
               value={formData.password}
               onChange={handleChange}
               placeholder="Créez un mot de passe sécurisé"
-              className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all"
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
             >
               {showPassword ? (
@@ -193,9 +193,9 @@ export function ResetPassword({ email, token, onPasswordReset }) {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-2"
+              className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2"
             >
-              <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">Critères :</p>
+              <p className="text-xs font-semibold text-gray-700">Critères :</p>
               <div className="space-y-1">
                 {[
                   { label: '8 caractères minimum', valid: passwordValidation.checks.minLength },
@@ -208,14 +208,14 @@ export function ResetPassword({ email, token, onPasswordReset }) {
                     <span className={`w-4 h-4 rounded-full flex items-center justify-center text-xs ${
                       check.valid 
                         ? 'bg-green-500 text-white' 
-                        : 'bg-gray-300 dark:bg-gray-600 text-gray-400'
+                        : 'bg-gray-300 text-gray-400'
                     }`}>
                       {check.valid && '✓'}
                     </span>
                     <span className={`text-xs ${
                       check.valid 
-                        ? 'text-green-700 dark:text-green-400' 
-                        : 'text-gray-500 dark:text-gray-400'
+                        ? 'text-green-700' 
+                        : 'text-gray-500'
                     }`}>
                       {check.label}
                     </span>
@@ -232,7 +232,7 @@ export function ResetPassword({ email, token, onPasswordReset }) {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
             Confirmer le mot de passe
           </label>
           <div className="relative">
@@ -243,13 +243,13 @@ export function ResetPassword({ email, token, onPasswordReset }) {
               value={formData.confirmPassword}
               onChange={handleChange}
               placeholder="Confirmez votre mot de passe"
-              className="w-full px-4 py-3 pr-12 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all dark:bg-gray-700 dark:text-white"
+              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400 focus:outline-none transition-all"
               required
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               aria-label={showConfirmPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
             >
               {showConfirmPassword ? (
@@ -272,8 +272,8 @@ export function ResetPassword({ email, token, onPasswordReset }) {
               animate={{ opacity: 1, y: 0 }}
               className={`mt-2 p-2 rounded-lg flex items-center gap-2 ${
                 passwordsMatch
-                  ? 'bg-green-50 dark:bg-green-900/30'
-                  : 'bg-red-50 dark:bg-red-900/30'
+                  ? 'bg-green-50'
+                  : 'bg-red-50'
               }`}
             >
               <span className={`w-4 h-4 rounded-full ${
@@ -281,8 +281,8 @@ export function ResetPassword({ email, token, onPasswordReset }) {
               }`}></span>
               <span className={`text-xs font-medium ${
                 passwordsMatch
-                  ? 'text-green-700 dark:text-green-400'
-                  : 'text-red-700 dark:text-red-400'
+                  ? 'text-green-700'
+                  : 'text-red-700'
               }`}>
                 {passwordsMatch ? 'Les mots de passe correspondent' : 'Les mots de passe ne correspondent pas'}
               </span>
@@ -295,9 +295,9 @@ export function ResetPassword({ email, token, onPasswordReset }) {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-3 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg"
+            className="p-3 bg-green-50 border border-green-200 rounded-lg"
           >
-            <p className="text-sm text-green-800 dark:text-green-300">{message}</p>
+            <p className="text-sm text-green-800">{message}</p>
           </motion.div>
         )}
 
@@ -305,9 +305,9 @@ export function ResetPassword({ email, token, onPasswordReset }) {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 rounded-lg"
+            className="p-3 bg-red-50 border border-red-200 rounded-lg"
           >
-            <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+            <p className="text-sm text-red-800">{error}</p>
           </motion.div>
         )}
 
@@ -341,9 +341,9 @@ export function ResetPassword({ email, token, onPasswordReset }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7 }}
-        className="mt-6 p-4 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg"
+        className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg"
       >
-        <p className="text-xs text-purple-800 dark:text-purple-300">
+        <p className="text-xs text-purple-800">
           <strong>🔒 Sécurité :</strong> Votre mot de passe est chiffré et stocké de manière sécurisée. 
           Ne le partagez jamais avec d'autres personnes.
         </p>

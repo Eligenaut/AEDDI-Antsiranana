@@ -1,13 +1,11 @@
 import { Capacitor } from '@capacitor/core';
+import { url_backend } from '../../components/context/url.js';
 
 export const signInWithGoogle = async () => {
   const isNative = Capacitor.isNativePlatform();
-  console.log('=== Google Auth ===');
-  console.log('isNative:', isNative);
 
   if (!isNative) {
-    window.location.href =
-      'https://aeddi-backend-production.up.railway.app/auth/google';
+    window.location.href = `${url_backend}/auth/google`;
     return null;
   }
 

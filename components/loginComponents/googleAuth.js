@@ -6,7 +6,7 @@ export const signInWithGoogle = async () => {
 
   if (platform === 'web') {
     // Redirige vers le backend OAuth
-    window.location.href = 'https://aeddi-backend-production.up.railway.app/auth/google';
+    window.location.href = 'http://localhost:8000/auth/google';
     return null;
   }
 

@@ -58,13 +58,13 @@ export function LoginForm({ onSwitchToRegister }) {
           borderWidth: 2,
           borderStyle: 'solid',
         }}
-        className="bg-white/80 dark:bg-gray-800/90 backdrop-blur-lg rounded-3xl w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl flex flex-col items-center relative transition-all duration-300 px-4 sm:px-6 md:px-8 py-6 sm:py-6 md:py-8"
+        className="bg-white/80 backdrop-blur-lg rounded-3xl w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl flex flex-col items-center relative transition-all duration-300 px-4 sm:px-6 md:px-8 py-6 sm:py-6 md:py-8"
       >
         <div className="w-20 h-20 bg-gradient-to-r from-purple-600 to-pink-500 rounded-full flex items-center justify-center mb-4 drop-shadow-lg">
           <span className="text-3xl text-white">🔐</span>
         </div>
 
-        <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-800 dark:text-white tracking-tight px-2">
+        <h1 className="text-3xl font-extrabold mb-6 text-center text-gray-800 tracking-tight px-2">
           Connexion à AEDDI-DIEGO
         </h1>
 
@@ -104,10 +104,10 @@ export function LoginForm({ onSwitchToRegister }) {
           className="relative w-full mb-6 mt-6"
         >
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300 dark:border-gray-60" />
+            <div className="w-full border-t border-gray-300" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-4 bg-white/80 dark:bg-gray-800/90 text-gray-500 dark:text-gray-400">ou</span>
+            <span className="px-4 bg-white/80 text-gray-500">ou</span>
           </div>
         </motion.div>
 
@@ -117,7 +117,7 @@ export function LoginForm({ onSwitchToRegister }) {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4 }}
           >
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Email
             </label>
             <div className="relative">
@@ -126,7 +126,7 @@ export function LoginForm({ onSwitchToRegister }) {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full p-3 pl-10 border rounded-[6px] focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 dark:bg-gray-700/70 text-gray-900 dark:text-white shadow-sm transition-all"
+                className="w-full p-3 pl-10 border rounded-[6px] focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 text-gray-900 shadow-sm transition-all"
                 placeholder="exemple@aeddi.mg"
                 required
                 autoComplete="email"
@@ -145,7 +145,7 @@ export function LoginForm({ onSwitchToRegister }) {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.5 }}
           >
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Mot de passe
             </label>
             <div className="relative">
@@ -154,7 +154,7 @@ export function LoginForm({ onSwitchToRegister }) {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full p-3 pl-10 pr-10 border rounded-[6px] focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 dark:bg-gray-700/70 text-gray-900 dark:text-white shadow-sm transition-all"
+                className="w-full p-3 pl-10 pr-10 border rounded-[6px] focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 text-gray-900 shadow-sm transition-all"
                 placeholder="Votre mot de passe"
                 required
                 autoComplete="current-password"
@@ -225,7 +225,7 @@ export function LoginForm({ onSwitchToRegister }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.9 }}
-          className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400 px-2"
+          className="mt-2 text-center text-sm text-gray-600 px-2"
         >
           <p>Pas encore membre ?</p>
           <button

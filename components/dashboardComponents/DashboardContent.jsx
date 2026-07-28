@@ -9,8 +9,10 @@ import { DashboardMain } from "./DashboardMain";
 import { DashboardUser } from "./DashboardUser";
 import { DashboardCotisations } from "./DashboardCotisations";
 import { DashboardActivites } from "./DashboardActivites";
+import { DashboardTaches } from "./DashboardTaches";
 import UserDetail from "./UserDetail";
 import ManagePermission from "./ManagePermission";
+import DataRegisterAdmin from "./DataRegisterAdmin";
 import ActivitePollingListener from "../polling/ActivitePollingListener";
 import { NotificationsDrawer } from "./NotificationsDrawer";
 
@@ -19,8 +21,10 @@ const sectionToPath = {
   membres: "/dashboard/membres",
   cotisations: "/dashboard/cotisations",
   activites: "/dashboard/activites",
+  taches: "/dashboard/taches",
   moncompte: "/dashboard/parametres/moncompte",
   permissions: "/dashboard/parametres/permissions",
+  dataregister: "/dashboard/parametres/dataregister",
 };
 
 const pathToSection = {
@@ -28,8 +32,10 @@ const pathToSection = {
   "/dashboard/membres": "membres",
   "/dashboard/cotisations": "cotisations",
   "/dashboard/activites": "activites",
+  "/dashboard/taches": "taches",
   "/dashboard/parametres/moncompte": "moncompte",
   "/dashboard/parametres/permissions": "permissions",
+  "/dashboard/parametres/dataregister": "dataregister",
 };
 
 export function DashboardContent() {
@@ -127,6 +133,8 @@ export function DashboardContent() {
         return <DashboardCotisations />;
       case "activites":
         return <DashboardActivites />;
+      case "taches":
+        return <DashboardTaches />;
       case "moncompte":
         return <UserDetail />;
       case "permissions":
@@ -138,6 +146,8 @@ export function DashboardContent() {
             onBack={() => handleSectionChange("accueil")}
           />
         );
+      case "dataregister":
+        return <DataRegisterAdmin />;
       default:
         return <DashboardMain />;
     }

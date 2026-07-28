@@ -18,15 +18,15 @@ function GoogleErrorContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="text-center max-w-md mx-auto p-6">
         <div className="w-20 h-20 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center mb-4 mx-auto">
           <span className="text-3xl text-white">✗</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+        <h1 className="text-2xl font-bold text-gray-800 mb-2">
           Erreur de connexion
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-gray-600 mb-6">
           Une erreur s&apos;est produite lors de la connexion avec Google.
         </p>
         <button

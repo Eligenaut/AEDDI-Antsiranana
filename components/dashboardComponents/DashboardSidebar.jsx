@@ -17,6 +17,8 @@ import {
   ChevronRight,
   ChevronLeft,
   ChevronDown,
+  ClipboardList,
+  Database,
 } from "lucide-react";
 
 const menuItems = [
@@ -36,11 +38,19 @@ const menuItems = [
     active: false,
     badge: null,
   },
+  {
+    id: "taches",
+    label: "Tâches",
+    icon: ClipboardList,
+    active: false,
+    badge: null,
+  },
 ];
 
 const parametresSubItems = [
   { id: "moncompte", label: "Mon compte", icon: User },
   { id: "permissions", label: "Permissions", icon: Settings },
+  { id: "dataregister", label: "Données inscription", icon: Database },
 ];
 
 const userMenuItems = [
@@ -69,26 +79,18 @@ export function DashboardSidebar({
   };
 
   const [isExpanded, setIsExpanded] = useState(getInitialExpanded);
-  const [isDesktop, setIsDesktop] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.innerWidth >= 1024;
-  });
-  const wasDesktopRef = useRef(isDesktop);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const wasDesktopRef = useRef(false);
 
   useEffect(() => {
     setActiveItem(currentSection);
-    // Ouvrir le sous-menu si l'item actif est dans paramètres
     if (parametresSubItems.some((item) => item.id === currentSection)) {
       setParametresExpanded(true);
     }
   }, [currentSection]);
 
   useEffect(() => {
-    let isMounted = true;
-
     const checkIsDesktop = () => {
-      if (!isMounted) return;
-
       const desktop = window.innerWidth >= 1024;
       const wasDesktop = wasDesktopRef.current;
 
@@ -106,15 +108,16 @@ export function DashboardSidebar({
       setIsDesktop(desktop);
       wasDesktopRef.current = desktop;
     };
+
+    checkIsDesktop();
+
     const desktop = window.innerWidth >= 1024;
     if (!desktop) {
       setIsExpanded(true);
     }
+
     window.addEventListener("resize", checkIsDesktop);
-    return () => {
-      isMounted = false;
-      window.removeEventListener("resize", checkIsDesktop);
-    };
+    return () => window.removeEventListener("resize", checkIsDesktop);
   }, []);
 
   const handleMenuClick = (itemId) => {

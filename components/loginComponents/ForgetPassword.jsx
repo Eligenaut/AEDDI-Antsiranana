@@ -78,7 +78,7 @@ export function ForgetPassword({ onBack }) {
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="bg-white/80 dark:bg-gray-800/90 backdrop-blur-lg rounded-3xl w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl flex flex-col items-center relative transition-all duration-300 px-4 sm:px-6 md:px-8 py-6 sm:py-6 md:py-8"
+        className="bg-white/80 backdrop-blur-lg rounded-3xl w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl flex flex-col items-center relative transition-all duration-300 px-4 sm:px-6 md:px-8 py-6 sm:py-6 md:py-8"
         style={{
           boxShadow: '0 2px 16px 0 rgba(124, 58, 237, 0.15)',
           borderColor: '#a78bfa',
@@ -90,13 +90,13 @@ export function ForgetPassword({ onBack }) {
           <span className="text-3xl text-white">🔑</span>
         </div>
         
-        <h1 className="text-3xl font-extrabold mb-2 text-center text-gray-800 dark:text-white tracking-tight px-2">
+        <h1 className="text-3xl font-extrabold mb-2 text-center text-gray-800 tracking-tight px-2">
           Réinitialiser votre mot de passe
         </h1>
 
         {!success ? (
           <>
-            <p className="text-center text-gray-600 dark:text-gray-400 text-sm mb-6 px-2">
+            <p className="text-center text-gray-600 text-sm mb-6 px-2">
               Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
             </p>
 
@@ -108,7 +108,7 @@ export function ForgetPassword({ onBack }) {
               onSubmit={handleEmailSubmit}
             >
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Adresse email
                 </label>
                 <div className="relative">
@@ -117,7 +117,7 @@ export function ForgetPassword({ onBack }) {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full p-3 pl-10 border border-gray-300 dark:border-gray-600 rounded-[6px] focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 dark:bg-gray-700/70 text-gray-900 dark:text-white shadow-sm transition-all"
+                    className="w-full p-3 pl-10 border border-gray-300 rounded-[6px] focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 text-gray-900 shadow-sm transition-all"
                     placeholder="exemple@aeddi.mg"
                     required
                   />
@@ -152,17 +152,17 @@ export function ForgetPassword({ onBack }) {
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-3xl">✅</span>
             </div>
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-3">
+            <h2 className="text-xl font-bold text-gray-800 mb-3">
               Email envoyé avec succès !
             </h2>
-            <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
+            <p className="text-gray-600 text-sm mb-4">
               Nous avons envoyé un lien de réinitialisation à :
             </p>
-            <p className="text-gray-800 dark:text-white font-semibold mb-6">
+            <p className="text-gray-800 font-semibold mb-6">
               {formData.email}
             </p>
-            <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4 mb-6">
-              <p className="text-sm text-blue-800 dark:text-blue-300">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-blue-800">
                 📧 Vérifiez votre boîte mail et vos spams. Le lien expire dans 24 heures.
               </p>
             </div>
@@ -174,7 +174,7 @@ export function ForgetPassword({ onBack }) {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7 }}
-          className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400 px-2"
+          className="mt-6 text-center text-sm text-gray-600 px-2"
         >
           <button
             type="button"
