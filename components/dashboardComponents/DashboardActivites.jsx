@@ -9,6 +9,7 @@ import { getAuthHeaders } from '../context/headers.jsx';
 import { AddActivite } from './AddActivite';
 import { ShowActivite } from './ShowActivite';
 import { ModalConfirmation } from '../common/ModalConfirmation.jsx';
+import { usePermissions } from '../context/permissions';
 import Notiflix from 'notiflix';
 
 export function DashboardActivites() {
@@ -20,6 +21,11 @@ export function DashboardActivites() {
   const [activiteToEdit, setActiviteToEdit] = useState(null);
   const [activiteToDelete, setActiviteToDelete] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const { ready, can } = usePermissions();
+  const canCreate = ready && can('create_activite');
+  const canEdit = ready && can('edit_activite');
+  const canDelete = ready && can('delete_activite');
 
   const fetchActivities = async () => {
     try {
@@ -42,13 +48,7 @@ export function DashboardActivites() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      fetchActivities();
-    } else {
-      setError('Vous devez être connecté pour accéder à cette page');
-      setLoading(false);
-    }
+    fetchActivities();
   }, []);
   const formatDate = (date) => {
     return new Date(date).toLocaleDateString('fr-FR');
@@ -107,15 +107,17 @@ export function DashboardActivites() {
           <div>
             <h1 className="text-lg font-semibold text-gray-900 mb-1 sm:text-3xl sm:font-bold sm:mb-2">Gestion des Activités 📅</h1>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowAddModal(true)}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-2 py-1.5 text-xs rounded-lg flex items-center space-x-2 transition-colors sm:px-3 sm:py-2 sm:text-sm"
-          >
-            <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span>Nouvelle activité</span>
-          </motion.button>
+          {canCreate && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowAddModal(true)}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-2 py-1.5 text-xs rounded-lg flex items-center space-x-2 transition-colors sm:px-3 sm:py-2 sm:text-sm"
+            >
+              <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Nouvelle activité</span>
+            </motion.button>
+          )}
         </div>
       </motion.div>
       <motion.div
@@ -254,24 +256,28 @@ export function DashboardActivites() {
                         <button className="text-blue-600 hover:text-blue-900" title="Voir les détails" onClick={() => setShowActiviteId(activity.id)}>
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button
-                          className="text-green-600 hover:text-green-900"
-                          title="Modifier"
-                          onClick={() => fetchActiviteById(activity.id)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
+                        {canEdit && (
+                          <button
+                            className="text-green-600 hover:text-green-900"
+                            title="Modifier"
+                            onClick={() => fetchActiviteById(activity.id)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        )}
 
-                        <button
-                          className="text-red-600 hover:text-red-900"
-                          title="Supprimer"
-                          onClick={() => {
-                            setActiviteToDelete(activity);
-                            setShowDeleteModal(true);
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>                  F
+                        {canDelete && (
+                          <button
+                            className="text-red-600 hover:text-red-900"
+                            title="Supprimer"
+                            onClick={() => {
+                              setActiviteToDelete(activity);
+                              setShowDeleteModal(true);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}                  F
                       </div>
                     </td>
                   </motion.tr>

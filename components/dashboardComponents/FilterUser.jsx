@@ -1,11 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Filter, Download } from 'lucide-react';
-import { etablissements, getPromotionsOptions } from '../loginComponents/DataRegister';
+import { etablissements, getPromotionsOptions, refreshData } from '../loginComponents/DataRegister';
 
-export function FilterUser({ onFiltersChange, className = '', currentUser, onExportXLSX }) {
+export function FilterUser({ onFiltersChange, className = '', currentUser, onExportXLSX, canExport = true }) {
+  useEffect(() => { refreshData(); }, []);
+
   const [filters, setFilters] = useState({
     etablissement: '',
     promotion: ''
@@ -55,6 +57,7 @@ export function FilterUser({ onFiltersChange, className = '', currentUser, onExp
           <h3 className="text-lg font-semibold text-gray-900">Filtres des membres</h3>
         </div>
         <div className="flex items-center space-x-2">
+            {canExport && (
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -66,6 +69,7 @@ export function FilterUser({ onFiltersChange, className = '', currentUser, onExp
               <Download className="w-4 h-4" />
               <span>{exporting ? 'Export...' : 'XLSX'}</span>
             </motion.button>
+            )}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

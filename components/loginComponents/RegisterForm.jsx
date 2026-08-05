@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { Button } from '../uiComponents/Button';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { url, url_frontend } from '../context/url.js';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import { InfoPersonnelles } from './InfoPersonnelles';
@@ -10,6 +11,7 @@ import { InfoAcademiques } from './InfoAcademiques';
 import { Logement } from './Logement';
 
 export function RegisterForm({ onSwitchToLogin, onRegistrationSubmit, isSubmitting = false, initialEmail = '' }) {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     nom: '',
     prenom: '',
@@ -18,16 +20,16 @@ export function RegisterForm({ onSwitchToLogin, onRegistrationSubmit, isSubmitti
     parcours: '',
     niveau: '',
     promotion: '',
-    logement: 'campus',
+    hasCampusLogement: false,
+    type_logement: '',
     option_campus: '',
     section_campus: '',
-    blocCampus: '',
+    bloc_campus: '',
     quartier: '',
     telephone: '',
     image: null,
   });
 
-  const [currentStep, setCurrentStep] = useState('form');
   const [isLoading, setIsLoading] = useState(false);
   const [emailValidation, setEmailValidation] = useState({
     isValid: false,
@@ -101,7 +103,7 @@ export function RegisterForm({ onSwitchToLogin, onRegistrationSubmit, isSubmitti
     // Vérifier que les champs obligatoires sont remplis
     if (!formData.nom || !formData.prenom || !formData.etablissement || 
         !formData.parcours || !formData.niveau || !formData.promotion || 
-        !formData.telephone) {
+        !formData.telephone || !formData.quartier) {
       Notify.failure('Veuillez remplir tous les champs obligatoires');
       return;
     }
@@ -186,9 +188,9 @@ export function RegisterForm({ onSwitchToLogin, onRegistrationSubmit, isSubmitti
       }
 
       if (registerData.success) {
-        Notify.success('Inscription réussie ! Vérifiez votre email pour créer votre mot de passe.');
+        Notify.success('Inscription réussie ! Un code à 6 chiffres vous a été envoyé par email.');
         if (onRegistrationSubmit) onRegistrationSubmit(registerData);
-        setCurrentStep('success');
+        router.replace(`/verification-code?email=${encodeURIComponent(email)}`);
       } else {
         Notify.failure(registerData.message || "Erreur lors de l'inscription");
       }
@@ -199,48 +201,6 @@ export function RegisterForm({ onSwitchToLogin, onRegistrationSubmit, isSubmitti
       setIsLoading(false);
     }
   };
-
-  if (currentStep === 'success') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="bg-white/80 backdrop-blur-lg rounded-3xl w-full max-w-md flex flex-col items-center p-8 shadow-2xl"
-          style={{
-            boxShadow: '0 2px 16px 0 rgba(34, 197, 94, 0.2)',
-            borderColor: '#86efac',
-            borderWidth: 2,
-            borderStyle: 'solid'
-          }}
-        >
-          <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mb-6 mt-6">
-            <span className="text-4xl">✅</span>
-          </div>
-          <h1 className="text-2xl font-extrabold mb-3 text-center text-gray-800">
-            Inscription réussie !
-          </h1>
-          <p className="text-gray-600 text-center text-sm mb-6">
-            Un email a été envoyé à <strong>{formData.email}</strong>.<br />
-            Cliquez sur le lien dans l'email pour créer votre mot de passe.
-          </p>
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 w-full">
-            <p className="text-sm text-blue-800 text-center">
-              📧 Vérifiez votre boîte mail et vos spams.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onSwitchToLogin || (() => window.location.href = '/acceuil')}
-            className="mt-6 text-blue-600 hover:underline text-sm font-medium"
-          >
-            ← Retour à la connexion
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
 
   return (
     <motion.div

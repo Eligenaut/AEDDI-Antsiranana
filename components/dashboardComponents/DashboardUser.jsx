@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Users,
   Plus,
@@ -13,6 +14,7 @@ import {
   Eye,
   DollarSign,
   Download,
+  Mail,
 } from "lucide-react";
 import axios from "axios";
 import { url } from "../context/url.js";
@@ -22,8 +24,10 @@ import { ShowMember } from "./ShowMember";
 import { FilterUser } from "./FilterUser";
 import AddAuthorizedEmail from "../loginComponents/AddAuthorizedEmail.jsx";
 import UserEdit from "./UserEdit";
+import { usePermissions } from "../context/permissions";
 
 export function DashboardUser() {
+  const router = useRouter();
   const [showAddModal, setShowAddModal] = useState(false);
   const [members, setMembers] = useState([]);
   const [filteredMembers, setFilteredMembers] = useState([]);
@@ -35,6 +39,14 @@ export function DashboardUser() {
   const [editUser, setEditUser] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [exporting, setExporting] = useState(false);
+
+  const { ready, can } = usePermissions();
+  const canCreateMember = ready && can("create_membre");
+  const canEditMember = ready && can("edit_membre");
+  const canDeleteMember = ready && can("delete_membre");
+  const canManageCotisation = ready && can("edit_cotisation");
+  const canExport = ready && can("show_membre");
+
 
   const handleOpenEdit = async (member) => {
     try {
@@ -75,12 +87,6 @@ export function DashboardUser() {
   const fetchMembers = async () => {
     try {
       setLoading(true);
-      // ✅ localStorage uniquement côté client
-      const token =
-        typeof window !== "undefined"
-          ? localStorage.getItem("auth_token")
-          : null;
-      if (!token) throw new Error("Token d'authentification manquant");
 
       const response = await axios.get(`${url}members`, {
         headers: getAuthHeaders(),
@@ -98,14 +104,7 @@ export function DashboardUser() {
   };
 
   useEffect(() => {
-    const token =
-      typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-    if (token) {
-      fetchMembers();
-    } else {
-      setError("Vous devez être connecté pour accéder à cette page");
-      setLoading(false);
-    }
+    fetchMembers();
   }, []);
 
   const handleExportXLSX = async () => {
@@ -236,12 +235,21 @@ export function DashboardUser() {
             </div>
             <div className="flex items-center space-x-2">
               <button
-                onClick={() => setShowAddModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1.5 text-xs rounded-lg flex items-center space-x-2 transition-colors sm:px-3 sm:py-2 sm:text-sm"
+                onClick={() => router.push("/dashboard/membres/email")}
+                className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 px-2 py-1.5 text-xs rounded-lg flex items-center space-x-2 transition-colors sm:px-3 sm:py-2 sm:text-sm"
               >
-                <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-                <span>Ajouter un membre</span>
+                <Mail className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span>Emails autorisés</span>
               </button>
+              {canCreateMember && (
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1.5 text-xs rounded-lg flex items-center space-x-2 transition-colors sm:px-3 sm:py-2 sm:text-sm"
+                >
+                  <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+                  <span>Ajouter un membre</span>
+                </button>
+              )}
             </div>
           </div>
         </motion.div>
@@ -257,6 +265,7 @@ export function DashboardUser() {
             className="w-full"
             currentUser={currentUser}
             onExportXLSX={handleExportXLSX}
+            canExport={canExport}
           />
         </motion.div>
 
@@ -402,27 +411,33 @@ export function DashboardUser() {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button
-                            className="text-green-600 hover:text-green-900"
-                            title="Modifier le membre"
-                            onClick={() => handleOpenEdit(member)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => setModalUser(member)}
-                            className="p-1 md:p-2 rounded-full hover:bg-green-100 transition-colors"
-                            title="Gérer les cotisations"
-                          >
-                            <DollarSign className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
-                          </button>
-                          <button
-                            className="text-red-600 hover:text-red-900"
-                            onClick={() => handleDeleteMember(member.id)}
-                            title="Supprimer le membre"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {canEditMember && (
+                            <button
+                              className="text-green-600 hover:text-green-900"
+                              title="Modifier le membre"
+                              onClick={() => handleOpenEdit(member)}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                          )}
+                          {canManageCotisation && (
+                            <button
+                              onClick={() => setModalUser(member)}
+                              className="p-1 md:p-2 rounded-full hover:bg-green-100 transition-colors"
+                              title="Gérer les cotisations"
+                            >
+                              <DollarSign className="h-4 w-4 md:h-5 md:w-5 text-green-600" />
+                            </button>
+                          )}
+                          {canDeleteMember && (
+                            <button
+                              className="text-red-600 hover:text-red-900"
+                              onClick={() => handleDeleteMember(member.id)}
+                              title="Supprimer le membre"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </motion.tr>

@@ -1,24 +1,18 @@
 "use client";
 
-import { motion } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { AnimatePresence, motion } from "framer-motion";
 import { DashboardSidebar } from "./DashboardSidebar";
 import { DashboardHeader } from "./DashboardHeader";
-import { DashboardMain } from "./DashboardMain";
-import { DashboardUser } from "./DashboardUser";
-import { DashboardCotisations } from "./DashboardCotisations";
-import { DashboardActivites } from "./DashboardActivites";
-import { DashboardTaches } from "./DashboardTaches";
-import UserDetail from "./UserDetail";
-import ManagePermission from "./ManagePermission";
-import DataRegisterAdmin from "./DataRegisterAdmin";
-import ActivitePollingListener from "../polling/ActivitePollingListener";
 import { NotificationsDrawer } from "./NotificationsDrawer";
+import { AccesRefuse } from "../common/AccesRefuse";
+import { usePermissions, SECTION_PERMISSIONS } from "../context/permissions";
 
 const sectionToPath = {
   accueil: "/dashboard",
   membres: "/dashboard/membres",
+  membres_email: "/dashboard/membres/email",
   cotisations: "/dashboard/cotisations",
   activites: "/dashboard/activites",
   taches: "/dashboard/taches",
@@ -30,6 +24,7 @@ const sectionToPath = {
 const pathToSection = {
   "/dashboard": "accueil",
   "/dashboard/membres": "membres",
+  "/dashboard/membres/email": "membres_email",
   "/dashboard/cotisations": "cotisations",
   "/dashboard/activites": "activites",
   "/dashboard/taches": "taches",
@@ -38,13 +33,14 @@ const pathToSection = {
   "/dashboard/parametres/dataregister": "dataregister",
 };
 
-export function DashboardContent() {
+export function DashboardLayout({ children }) {
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const np = useRef(null);
+  const { ready, can } = usePermissions();
 
   useEffect(() => {
     import("nprogress").then((mod) => {
@@ -61,6 +57,9 @@ export function DashboardContent() {
 
   const getSectionFromPath = (path) => pathToSection[path] || "accueil";
   const currentSection = getSectionFromPath(pathname);
+
+  const requiredPermission = SECTION_PERMISSIONS[currentSection];
+  const allowed = ready && (requiredPermission ? can(requiredPermission) : true);
 
   useEffect(() => {
     const checkIsMobile = () => {
@@ -123,40 +122,12 @@ export function DashboardContent() {
     }
   };
 
-  const renderCurrentSection = () => {
-    switch (currentSection) {
-      case "accueil":
-        return <DashboardMain />;
-      case "membres":
-        return <DashboardUser />;
-      case "cotisations":
-        return <DashboardCotisations />;
-      case "activites":
-        return <DashboardActivites />;
-      case "taches":
-        return <DashboardTaches />;
-      case "moncompte":
-        return <UserDetail />;
-      case "permissions":
-        return (
-          <ManagePermission
-            onSave={(permissions) => {
-              console.log("Permissions sauvegardées:", permissions);
-            }}
-            onBack={() => handleSectionChange("accueil")}
-          />
-        );
-      case "dataregister":
-        return <DataRegisterAdmin />;
-      default:
-        return <DashboardMain />;
-    }
-  };
-
   return (
-    <div className="flex h-screen bg-gray-50">
-      <ActivitePollingListener intervalMs={10000} />
-      <NotificationsDrawer isOpen={notifOpen} onClose={() => setNotifOpen(false)} />
+    <div className="flex h-screen overflow-hidden bg-gray-50">
+      <NotificationsDrawer
+        isOpen={notifOpen}
+        onClose={() => setNotifOpen(false)}
+      />
       <DashboardSidebar
         isOpen={sidebarOpen}
         onToggle={toggleSidebar}
@@ -164,7 +135,7 @@ export function DashboardContent() {
         onSectionChange={handleSectionChange}
       />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <DashboardHeader
           onMenuClick={toggleSidebar}
           currentSection={currentSection}
@@ -172,10 +143,22 @@ export function DashboardContent() {
           onOpenNotifications={() => setNotifOpen(true)}
         />
 
-        <div className="flex-1 overflow-y-auto pb-16 lg:pb-0 lg:pt-0">
-          {renderCurrentSection()}
+        <div className="flex-1 overflow-y-auto pb-16 lg:pb-0">
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              {!ready ? null : allowed ? children : <AccesRefuse />}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
     </div>
   );
 }
+
+export default DashboardLayout;

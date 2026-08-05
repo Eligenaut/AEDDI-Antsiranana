@@ -9,7 +9,7 @@ export { LoginForm } from './loginComponents/LoginForm';
 export { RegisterForm } from './loginComponents/RegisterForm';
 
 // Dashboard Components
-export { DashboardContent } from './dashboardComponents/DashboardContent';
+export { DashboardLayout } from './dashboardComponents/DashboardContent';
 export { DashboardSidebar } from './dashboardComponents/DashboardSidebar';
 export { DashboardHeader } from './dashboardComponents/DashboardHeader';
 export { DashboardMain } from './dashboardComponents/DashboardMain';

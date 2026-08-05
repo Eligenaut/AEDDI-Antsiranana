@@ -14,6 +14,7 @@ import axios from "axios";
 import { url } from "../context/url.js";
 import { getAuthHeaders } from "../context/headers.jsx";
 import Notiflix from "notiflix";
+import { MultiSelect } from "./MultiSelect";
 
 const PRIORITES = [
   { value: "basse", label: "Basse" },
@@ -35,7 +36,7 @@ export function AddTache({ isOpen, onClose, onSubmit, initialValues }) {
     titre: "",
     description: "",
     date_debut: "",
-    assigned_to: "",
+    assigned_to: [],
     priorite: "moyenne",
     date_echeance: "",
     statut: "en_attente",
@@ -52,7 +53,7 @@ export function AddTache({ isOpen, onClose, onSubmit, initialValues }) {
         titre: initialValues.titre || "",
         description: initialValues.description || "",
         date_debut: initialValues.date_debut || "",
-        assigned_to: initialValues.assigned_to?.id?.toString() || "",
+        assigned_to: initialValues.assigned_to?.map((u) => u.id) || [],
         priorite: initialValues.priorite || "moyenne",
         date_echeance: initialValues.date_echeance || "",
         statut: initialValues.statut || "en_attente",
@@ -88,7 +89,7 @@ export function AddTache({ isOpen, onClose, onSubmit, initialValues }) {
       titre: "",
       description: "",
       date_debut: "",
-      assigned_to: "",
+      assigned_to: [],
       priorite: "moyenne",
       date_echeance: "",
       statut: "en_attente",
@@ -104,8 +105,8 @@ export function AddTache({ isOpen, onClose, onSubmit, initialValues }) {
   const validateForm = () => {
     const newErrors = {};
     if (!formData.titre.trim()) newErrors.titre = "Le titre est requis";
-    if (!formData.assigned_to)
-      newErrors.assigned_to = "Veuillez assigner la tâche à un membre";
+    if (!formData.assigned_to || formData.assigned_to.length === 0)
+      newErrors.assigned_to = "Veuillez assigner la tâche à au moins un membre";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -120,7 +121,7 @@ export function AddTache({ isOpen, onClose, onSubmit, initialValues }) {
         titre: formData.titre.trim(),
         description: formData.description.trim(),
         date_debut: formData.date_debut || null,
-        assigned_to: parseInt(formData.assigned_to),
+        assigned_to: formData.assigned_to,
         priorite: formData.priorite,
         date_echeance: formData.date_echeance || null,
         statut: formData.statut,
@@ -241,26 +242,14 @@ export function AddTache({ isOpen, onClose, onSubmit, initialValues }) {
                 <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-1">
                   <User className="w-3.5 h-3.5" /> Assigner à *
                 </label>
-                <select
-                  value={formData.assigned_to}
-                  onChange={(e) =>
-                    handleInputChange("assigned_to", e.target.value)
-                  }
-                  className={`w-full border rounded-lg text-black px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent ${errors.assigned_to ? "border-red-300" : "border-gray-300"}`}
+                <MultiSelect
+                  options={bureauMembers}
+                  selectedValues={formData.assigned_to}
+                  onChange={(values) => handleInputChange("assigned_to", values)}
+                  placeholder="Sélectionner un ou plusieurs membres"
                   disabled={isSubmitting}
-                >
-                  <option value="">Sélectionner un membre</option>
-                  {bureauMembers.map((member) => (
-                    <option key={member.id} value={member.id}>
-                      {member.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.assigned_to && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.assigned_to}
-                  </p>
-                )}
+                  error={errors.assigned_to}
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">

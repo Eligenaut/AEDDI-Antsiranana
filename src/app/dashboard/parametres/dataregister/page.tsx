@@ -1,11 +1,7 @@
-'use client';
+"use client";
 
-import { DashboardContent } from '../../../../../components/dashboardComponents/DashboardContent.jsx';
+import DataRegisterAdmin from "../../../../../components/dashboardComponents/DataRegisterAdmin.jsx";
 
 export default function DataRegisterPage() {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <DashboardContent />
-    </div>
-  );
+  return <DataRegisterAdmin />;
 }

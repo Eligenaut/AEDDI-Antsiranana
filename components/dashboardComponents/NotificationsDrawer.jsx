@@ -34,6 +34,7 @@ export function NotificationsDrawer({ isOpen, onClose }) {
     setLoading(true);
     try {
       const res = await fetch(`${url}notifications?limit=30`, {
+        credentials: "include",
         headers: getAuthHeaders(),
       });
       const json = await res.json();
@@ -57,6 +58,7 @@ export function NotificationsDrawer({ isOpen, onClose }) {
     try {
       await fetch(`${url}notifications/${id}/read`, {
         method: "POST",
+        credentials: "include",
         headers: getAuthHeaders(),
       });
       setItems((prev) =>
@@ -79,6 +81,7 @@ export function NotificationsDrawer({ isOpen, onClose }) {
     try {
       await fetch(`${url}notifications/${id}/unread`, {
         method: "POST",
+        credentials: "include",
         headers: getAuthHeaders(),
       });
       setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read_at: null } : n)));
@@ -97,6 +100,7 @@ export function NotificationsDrawer({ isOpen, onClose }) {
     try {
       await fetch(`${url}notifications/read-all`, {
         method: "POST",
+        credentials: "include",
         headers: getAuthHeaders(),
       });
       const now = new Date().toISOString();
@@ -113,6 +117,7 @@ export function NotificationsDrawer({ isOpen, onClose }) {
     try {
       await fetch(`${url}notifications/${id}`, {
         method: "DELETE",
+        credentials: "include",
         headers: getAuthHeaders(),
       });
       setItems((prev) => {

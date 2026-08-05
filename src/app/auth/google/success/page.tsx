@@ -7,15 +7,15 @@ function GoogleSuccessContent() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    const token = searchParams.get('token');
     const userParam = searchParams.get('user');
 
-    if (token && userParam) {
+    if (userParam) {
       try {
         const user = JSON.parse(userParam);
-        localStorage.setItem('auth_token', token);
+        // Le token est posé en cookie httpOnly par le backend.
+        // On conserve uniquement les infos utilisateur pour l'affichage.
         localStorage.setItem('user', JSON.stringify(user));
-        
+
         console.log('Connexion Google réussie:', user);
         window.location.href = '/dashboard';
       } catch (error) {

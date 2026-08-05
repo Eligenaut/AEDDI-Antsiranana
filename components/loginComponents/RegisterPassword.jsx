@@ -1,16 +1,42 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '../uiComponents/Button.jsx';
 import { url } from '../context/url.js';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 
-export function RegisterPassword({ email, token, onPasswordCreated }) {
+export function RegisterPassword({ email, onPasswordCreated }) {
+  const router = useRouter();
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: ''
   });
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    const check = async () => {
+      try {
+        const res = await fetch(`${url}auth/check-verification`, {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (!data.verified) {
+          router.replace(`/verification-code?email=${encodeURIComponent(email)}`);
+          return;
+        }
+      } catch {
+        router.replace(`/verification-code?email=${encodeURIComponent(email)}`);
+        return;
+      }
+      setIsChecking(false);
+    };
+    check();
+  }, [email, router]);
   const [isCreating, setIsCreating] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -69,13 +95,13 @@ export function RegisterPassword({ email, token, onPasswordCreated }) {
     try {
       const response = await fetch(`${url}auth/create-password`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
         body: JSON.stringify({ 
-          email, 
-          token,
+          email,
           password: formData.password, 
           confirmPassword: formData.confirmPassword 
         })
@@ -95,12 +121,10 @@ export function RegisterPassword({ email, token, onPasswordCreated }) {
         setMessage('✅ Mot de passe créé avec succès ! Redirection en cours...');
         Notify.success('Mot de passe créé avec succès !');
         
-        // Stocker le token d'authentification retourné par le serveur
-        if (data.token) {
-          localStorage.setItem('auth_token', data.token);
-          localStorage.setItem('user_id', data.user?.id);
-          localStorage.setItem('user_email', email);
-          localStorage.setItem('user_name', data.user?.name);
+        // L'authentification est désormais gérée par cookie httpOnly (backend).
+        // On conserve uniquement les infos utilisateur pour l'affichage.
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
         }
 
         setTimeout(() => {
@@ -141,13 +165,19 @@ export function RegisterPassword({ email, token, onPasswordCreated }) {
           Créer votre mot de passe
         </h1>
         <p className="text-gray-600">
-          Votre email a été vérifié avec succès !
+          Saisissez le code reçu par email pour créer votre mot de passe.
         </p>
         <p className="text-sm text-gray-500 mt-1">
           {email}
         </p>
       </motion.div>
 
+      {isChecking ? (
+        <div className="text-center py-8">
+          <span className="animate-spin inline-block w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full" />
+          <p className="text-gray-500 mt-2">Vérification...</p>
+        </div>
+      ) : (
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Champ Mot de Passe */}
         <motion.div
@@ -335,6 +365,7 @@ export function RegisterPassword({ email, token, onPasswordCreated }) {
           </Button>
         </motion.div>
       </form>
+      )}
 
       {/* Message de sécurité */}
       <motion.div

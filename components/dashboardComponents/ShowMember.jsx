@@ -8,6 +8,12 @@ import axios from "axios";
 import { url } from "../context/url.js";
 import { getAuthHeaders } from "../context/headers.jsx";
 
+const ROLE_LABELS = {
+  NOVICE: 'Novice',
+  MEMBER: 'Ancien',
+  BUREAU: 'Membre du bureau',
+};
+
 const SUB_ROLE_LABELS = {
   PRESIDENT: 'Président',
   VICE_PRESIDENT: 'Vice-Président',
@@ -153,7 +159,7 @@ export function ShowMember({ isOpen, onClose, memberId }) {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <Label>Rôle</Label>
-                      <Field value={member.role} />
+                      <Field value={ROLE_LABELS[member.role] || member.role} />
                     </div>
                     {member.sub_role?.length > 0 && (
                       <div>

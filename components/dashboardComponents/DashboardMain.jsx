@@ -6,12 +6,16 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { url } from '../context/url.js';
 import { getAuthHeaders } from '../context/headers.jsx';
+import { usePermissions } from '../context/permissions';
 
 export function DashboardMain() {
   const [dashboardStats, setDashboardStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [userRole, setUserRole] = useState('');
+  const { user } = usePermissions();
+  const isManagement =
+    user?.role === 'ADMIN' || user?.role === 'BUREAU';
   const formatMontant = (montant) => {
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
@@ -43,11 +47,8 @@ export function DashboardMain() {
 
   useEffect(() => {
     setIsClient(true);
-    
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      fetchDashboardStats();
-    }
+
+    fetchDashboardStats();
   }, []);
   const membersChartData = {
     labels: ['Bureau', 'Membres'],
@@ -125,9 +126,8 @@ export function DashboardMain() {
               <div>
                 <p className="text-sm text-gray-500 mb-1">Cotisations (Total de cotisation)</p>
                 <h3 className="text-2xl font-bold text-gray-800">
-   
 
-                    {loading ? <LoadingSpinner /> : (dashboardStats ? dashboardStats.cotisations.total_cotisations : '-')}
+                    {loading ? <LoadingSpinner /> : (dashboardStats ? (isManagement ? dashboardStats.cotisations.total_cotisations : formatMontant(dashboardStats.cotisations.montant_total)) : '-')}
 
                 </h3>
               </div>
@@ -277,7 +277,7 @@ export function DashboardMain() {
                         <div className="w-full bg-gray-200 rounded-full h-3">
                           <div 
                             className="bg-green-500 h-3 rounded-full transition-all duration-500"
-                            style={{ width: `${(dashboardStats.cotisations.total_paye / dashboardStats.cotisations.total_cotisations) * 100}%` }}
+                            style={{ width: `${(dashboardStats.cotisations.total_paye / (dashboardStats.cotisations.total_cotisations || 1)) * 100}%` }}
                           ></div>
                         </div>
                       </div>
@@ -291,7 +291,7 @@ export function DashboardMain() {
                         <div className="w-full bg-gray-200 rounded-full h-3">
                           <div 
                             className="bg-red-500 h-3 rounded-full transition-all duration-500"
-                            style={{ width: `${(dashboardStats.cotisations.total_non_paye / dashboardStats.cotisations.total_cotisations) * 100}%` }}
+                            style={{ width: `${(dashboardStats.cotisations.total_non_paye / (dashboardStats.cotisations.total_cotisations || 1)) * 100}%` }}
                           ></div>
                         </div>
                       </div>
@@ -301,13 +301,13 @@ export function DashboardMain() {
                         <div className="grid grid-cols-2 gap-4 text-center">
                           <div>
                             <div className="text-lg font-bold text-green-600">
-                              {Math.round((dashboardStats.cotisations.total_paye / dashboardStats.cotisations.total_cotisations) * 100)}%
+                              {Math.round((dashboardStats.cotisations.total_paye / (dashboardStats.cotisations.total_cotisations || 1)) * 100)}%
                             </div>
                             <div className="text-xs text-gray-500">Payées</div>
                           </div>
                           <div>
                             <div className="text-lg font-bold text-red-600">
-                              {Math.round((dashboardStats.cotisations.total_non_paye / dashboardStats.cotisations.total_cotisations) * 100)}%
+                              {Math.round((dashboardStats.cotisations.total_non_paye / (dashboardStats.cotisations.total_cotisations || 1)) * 100)}%
                             </div>
                             <div className="text-xs text-gray-500">Non payé</div>
                           </div>

@@ -54,6 +54,8 @@ export default function UserDetail() {
         setUserData({
           ...data.user,
           blocCampus: data.user.blocCampus || data.user.bloc_campus || '',
+          option_campus: data.user.option_campus || '',
+          section_campus: data.user.section_campus || '',
         });
       } else throw new Error('Format utilisateur invalide');
     } catch (err) {
@@ -104,6 +106,7 @@ export default function UserDetail() {
         {editing ? (
           <div className="bg-white rounded-xl shadow-lg p-6">
             <UserEdit
+              isOpen={true}
               initialData={userData}
               onSave={handleSave}
               onCancel={handleCancel}

@@ -15,20 +15,15 @@ import {
   Calendar,
   Home,
   MapPin,
+  ChevronDown,
   Save,
   X,
 } from "lucide-react";
 
 const TABS = [
-  { id: "etablissements", label: "Établissements", icon: Building2, dataKey: "etablissements", nested: true },
-  { id: "parcours", label: "Parcours", icon: GraduationCap, dataKey: "parcours", nested: false },
-  { id: "niveaux", label: "Niveaux", icon: Layers, dataKey: "niveaux", nested: false },
-  { id: "promotions", label: "Promotions", icon: Calendar, dataKey: "promotions", nested: false },
-  { id: "types-logement", label: "Types logement", icon: Home, dataKey: "types_logement", nested: true },
-  { id: "options-campus", label: "Options campus", icon: MapPin, dataKey: "options_campus", nested: true },
-  { id: "sections-campus", label: "Sections campus", icon: MapPin, dataKey: "sections_campus", nested: true },
-  { id: "blocs-campus", label: "Blocs campus", icon: MapPin, dataKey: "blocs_campus", nested: false },
-  { id: "quartiers", label: "Quartiers", icon: MapPin, dataKey: "quartiers", nested: false },
+  { id: "etablissements", label: "Établissements", icon: Building2, dataKey: "etablissements", nested: true, crud: "etablissements" },
+  { id: "promotions", label: "Promotions", icon: Calendar, dataKey: "promotions", nested: false, crud: "promotions" },
+  { id: "logements", label: "Logements", icon: Home, dataKey: "types_logement", nested: true, crud: "types-logement" },
 ];
 
 function entityLabel(entity) {
@@ -37,10 +32,12 @@ function entityLabel(entity) {
     parcours: "parcours",
     niveaux: "niveau",
     promotions: "promotion",
+    logements: "logement",
     "types-logement": "type de logement",
     "options-campus": "option campus",
     "sections-campus": "section campus",
     "blocs-campus": "bloc campus",
+    villes: "ville",
     quartiers: "quartier",
   };
   return labels[entity] || entity;
@@ -51,6 +48,24 @@ export default function DataRegisterAdmin() {
   const [data, setData] = useState({});
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
+  const [expandedTop, setExpandedTop] = useState(null);
+  const [expandedMid, setExpandedMid] = useState(null);
+  const [expandedLeaf, setExpandedLeaf] = useState(null);
+
+  const toggleTop = (id) => {
+    setExpandedTop(prev => prev === id ? null : id);
+    setExpandedMid(null);
+    setExpandedLeaf(null);
+  };
+
+  const toggleMid = (id) => {
+    setExpandedMid(prev => prev === id ? null : id);
+    setExpandedLeaf(null);
+  };
+
+  const toggleLeaf = (id) => {
+    setExpandedLeaf(prev => prev === id ? null : id);
+  };
 
   const activeTabDef = TABS.find((t) => t.id === activeTab);
   const activeDataKey = activeTabDef?.dataKey;
@@ -82,6 +97,7 @@ export default function DataRegisterAdmin() {
     try {
       const res = await fetch(endpoint, {
         method,
+        credentials: "include",
         headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -103,6 +119,7 @@ export default function DataRegisterAdmin() {
     try {
       const res = await fetch(`${url}admin/data-register/${entity}/${id}`, {
         method: "DELETE",
+        credentials: "include",
         headers: getAuthHeaders(),
       });
       const json = await res.json();
@@ -181,18 +198,24 @@ export default function DataRegisterAdmin() {
             key={item.id}
             className="bg-white rounded-lg border border-gray-200 overflow-hidden"
           >
-            <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200">
-              <span className="font-semibold text-gray-800">{item.nom}</span>
-              <div className="flex items-center gap-2">
+            <div
+              className="flex items-center justify-between px-4 py-3 bg-gray-50 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors select-none"
+              onClick={() => toggleTop(item.id)}
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <ChevronDown className={`w-4 h-4 text-gray-500 flex-shrink-0 transition-transform ${expandedTop === item.id ? 'rotate-0' : '-rotate-90'}`} />
+                <span className="font-semibold text-gray-800 truncate">{item.nom}</span>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
                 <button
-                  onClick={() => openModal("edit", entity, { item })}
+                  onClick={(e) => { e.stopPropagation(); openModal("edit", entity, { item }); }}
                   className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
                   title="Modifier"
                 >
                   <Edit3 className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => deleteWithConfirm(entity, item)}
+                  onClick={(e) => { e.stopPropagation(); deleteWithConfirm(entity, item); }}
                   className="p-1.5 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
                   title="Supprimer"
                 >
@@ -201,26 +224,32 @@ export default function DataRegisterAdmin() {
               </div>
             </div>
 
-            {entity === "etablissements" && Array.isArray(item.parcours) && (
+            {expandedTop === item.id && entity === "etablissements" && Array.isArray(item.parcours) && (
               <div className="border-t border-gray-100">
                 {item.parcours.map((p) => (
                   <div key={p.id} className="border-b border-gray-50 last:border-0">
-                    <div className="flex items-center justify-between px-4 py-2 pl-8 text-sm">
-                      <span className="text-gray-700 font-medium">{p.nom}</span>
-                      <div className="flex gap-1">
-                        <button onClick={() => openModal("edit", "parcours", { item: p, defaultParent: item.id, parentField: "etablissement_id" })} className="p-1 text-blue-500 hover:bg-blue-50 rounded" title="Modifier">
+                    <div
+                      className="flex items-center justify-between px-4 py-2 pl-8 text-sm cursor-pointer hover:bg-gray-50 transition-colors select-none"
+                      onClick={() => toggleMid(p.id)}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <ChevronDown className={`w-3.5 h-3.5 text-gray-400 flex-shrink-0 transition-transform ${expandedMid === p.id ? 'rotate-0' : '-rotate-90'}`} />
+                        <span className="text-gray-700 font-medium truncate">{p.nom}</span>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button onClick={(e) => { e.stopPropagation(); openModal("edit", "parcours", { item: p, defaultParent: item.id, parentField: "etablissement_id" }); }} className="p-1 text-blue-500 hover:bg-blue-50 rounded" title="Modifier">
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => deleteWithConfirm("parcours", p)} className="p-1 text-red-500 hover:bg-red-50 rounded" title="Supprimer">
+                        <button onClick={(e) => { e.stopPropagation(); deleteWithConfirm("parcours", p); }} className="p-1 text-red-500 hover:bg-red-50 rounded" title="Supprimer">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => openModal("create", "niveaux", { parent: p, parentField: "parcours_id" })} className="p-1 text-green-500 hover:bg-green-50 rounded" title="Ajouter un niveau">
+                        <button onClick={(e) => { e.stopPropagation(); openModal("create", "niveaux", { parent: p, parentField: "parcours_id" }); }} className="p-1 text-green-500 hover:bg-green-50 rounded" title="Ajouter un niveau">
                           <Plus className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
-                    {Array.isArray(p.niveaux) && (
-                      <div className="pl-12 pb-2 space-y-1">
+                    {expandedMid === p.id && Array.isArray(p.niveaux) && (
+                      <div className="pl-14 pb-2 space-y-1">
                         {p.niveaux.map((n) => (
                           <div key={n.id} className="flex items-center justify-between py-0.5 text-xs text-gray-600">
                             <span>{n.nom}</span>
@@ -253,44 +282,56 @@ export default function DataRegisterAdmin() {
               </div>
             )}
 
-            {entity === "types-logement" && Array.isArray(item.options_campus) && (
+            {expandedTop === item.id && (entity === "logements" || entity === "types-logement") && Array.isArray(item.options_campus) && item.nom !== "Ville" && (
               <div className="border-t border-gray-100">
                 {item.options_campus.map((o) => (
                   <div key={o.id} className="border-b border-gray-50 last:border-0">
-                    <div className="flex items-center justify-between px-4 py-2 pl-8 text-sm">
-                      <span className="text-gray-700 font-medium">{o.nom}</span>
-                      <div className="flex gap-1">
-                        <button onClick={() => openModal("edit", "options-campus", { item: o, defaultParent: item.id, parentField: "type_logement_id" })} className="p-1 text-blue-500 hover:bg-blue-50 rounded" title="Modifier">
+                    <div
+                      className="flex items-center justify-between px-4 py-2 pl-8 text-sm cursor-pointer hover:bg-gray-50 transition-colors select-none"
+                      onClick={() => toggleMid(o.id)}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <ChevronDown className={`w-3.5 h-3.5 text-gray-400 flex-shrink-0 transition-transform ${expandedMid === o.id ? 'rotate-0' : '-rotate-90'}`} />
+                        <span className="text-gray-700 font-medium truncate">{o.nom}</span>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button onClick={(e) => { e.stopPropagation(); openModal("edit", "options-campus", { item: o, defaultParent: item.id, parentField: "type_logement_id" }); }} className="p-1 text-blue-500 hover:bg-blue-50 rounded" title="Modifier">
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => deleteWithConfirm("options-campus", o)} className="p-1 text-red-500 hover:bg-red-50 rounded" title="Supprimer">
+                        <button onClick={(e) => { e.stopPropagation(); deleteWithConfirm("options-campus", o); }} className="p-1 text-red-500 hover:bg-red-50 rounded" title="Supprimer">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => openModal("create", "sections-campus", { parent: o, parentField: "option_campus_id" })} className="p-1 text-green-500 hover:bg-green-50 rounded" title="Ajouter une section">
+                        <button onClick={(e) => { e.stopPropagation(); openModal("create", "sections-campus", { parent: o, parentField: "option_campus_id" }); }} className="p-1 text-green-500 hover:bg-green-50 rounded" title="Ajouter une section">
                           <Plus className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
-                    {Array.isArray(o.sections) && (
-                      <div className="pl-12 pb-2 space-y-1">
+                    {expandedMid === o.id && Array.isArray(o.sections) && (
+                      <div className="border-t border-gray-50">
                         {o.sections.map((s) => (
                           <div key={s.id} className="border-b border-gray-50 last:border-0">
-                            <div className="flex items-center justify-between py-1 pl-2 text-xs text-gray-600">
-                              <span className="font-medium">{s.nom}</span>
-                              <div className="flex gap-1">
-                                <button onClick={() => openModal("edit", "sections-campus", { item: s, defaultParent: o.id, parentField: "option_campus_id" })} className="p-0.5 text-blue-400 hover:bg-blue-50 rounded">
+                            <div
+                              className="flex items-center justify-between py-1.5 pl-14 text-xs cursor-pointer hover:bg-gray-50 transition-colors select-none"
+                              onClick={() => toggleLeaf(s.id)}
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <ChevronDown className={`w-3 h-3 text-gray-400 flex-shrink-0 transition-transform ${expandedLeaf === s.id ? 'rotate-0' : '-rotate-90'}`} />
+                                <span className="font-medium text-gray-600 truncate">{s.nom}</span>
+                              </div>
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                <button onClick={(e) => { e.stopPropagation(); openModal("edit", "sections-campus", { item: s, defaultParent: o.id, parentField: "option_campus_id" }); }} className="p-0.5 text-blue-400 hover:bg-blue-50 rounded">
                                   <Edit3 className="w-3 h-3" />
                                 </button>
-                                <button onClick={() => deleteWithConfirm("sections-campus", s)} className="p-0.5 text-red-400 hover:bg-red-50 rounded">
+                                <button onClick={(e) => { e.stopPropagation(); deleteWithConfirm("sections-campus", s); }} className="p-0.5 text-red-400 hover:bg-red-50 rounded">
                                   <Trash2 className="w-3 h-3" />
                                 </button>
-                                <button onClick={() => openModal("create", "blocs-campus", { parent: s, parentField: "section_campus_id" })} className="p-0.5 text-green-400 hover:bg-green-50 rounded" title="Ajouter un bloc">
+                                <button onClick={(e) => { e.stopPropagation(); openModal("create", "blocs-campus", { parent: s, parentField: "section_campus_id" }); }} className="p-0.5 text-green-400 hover:bg-green-50 rounded" title="Ajouter un bloc">
                                   <Plus className="w-3 h-3" />
                                 </button>
                               </div>
                             </div>
-                            {Array.isArray(s.blocs) && (
-                              <div className="pl-4 space-y-0.5">
+                            {expandedLeaf === s.id && Array.isArray(s.blocs) && (
+                              <div className="pl-20 pb-2 space-y-0.5">
                                 {s.blocs.map((b) => (
                                   <div key={b.id} className="flex items-center justify-between py-0.5 text-xs text-gray-500">
                                     <span>{b.nom}</span>
@@ -316,7 +357,7 @@ export default function DataRegisterAdmin() {
                         ))}
                         <button
                           onClick={() => openModal("create", "sections-campus", { parent: o, parentField: "option_campus_id" })}
-                          className="text-xs text-blue-600 hover:text-blue-800 pl-2 py-1"
+                          className="text-xs text-blue-600 hover:text-blue-800 pl-14 py-1"
                         >
                           + Ajouter une section
                         </button>
@@ -333,81 +374,59 @@ export default function DataRegisterAdmin() {
               </div>
             )}
 
-            {entity === "options-campus" && Array.isArray(item.sections) && (
+            {expandedTop === item.id && (entity === "logements" || entity === "types-logement") && item.nom === "Ville" && Array.isArray(data.villes) && (
               <div className="border-t border-gray-100">
-                {item.sections.map((s) => (
-                  <div key={s.id} className="border-b border-gray-50 last:border-0">
-                    <div className="flex items-center justify-between px-4 py-2 pl-8 text-sm">
-                      <span className="text-gray-700 font-medium">{s.nom}</span>
-                      <div className="flex gap-1">
-                        <button onClick={() => openModal("edit", "sections-campus", { item: s, defaultParent: item.id, parentField: "option_campus_id" })} className="p-1 text-blue-500 hover:bg-blue-50 rounded" title="Modifier">
+                {data.villes.map((v) => (
+                  <div key={v.id} className="border-b border-gray-50 last:border-0">
+                    <div
+                      className="flex items-center justify-between px-4 py-2 pl-8 text-sm cursor-pointer hover:bg-gray-50 transition-colors select-none"
+                      onClick={() => toggleMid(v.id)}
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <ChevronDown className={`w-3.5 h-3.5 text-gray-400 flex-shrink-0 transition-transform ${expandedMid === v.id ? 'rotate-0' : '-rotate-90'}`} />
+                        <span className="text-gray-700 font-medium truncate">{v.nom}</span>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button onClick={(e) => { e.stopPropagation(); openModal("edit", "villes", { item: v }); }} className="p-1 text-blue-500 hover:bg-blue-50 rounded" title="Modifier">
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => deleteWithConfirm("sections-campus", s)} className="p-1 text-red-500 hover:bg-red-50 rounded" title="Supprimer">
+                        <button onClick={(e) => { e.stopPropagation(); deleteWithConfirm("villes", v); }} className="p-1 text-red-500 hover:bg-red-50 rounded" title="Supprimer">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => openModal("create", "blocs-campus", { parent: s, parentField: "section_campus_id" })} className="p-1 text-green-500 hover:bg-green-50 rounded" title="Ajouter un bloc">
+                        <button onClick={(e) => { e.stopPropagation(); openModal("create", "quartiers", { parent: v, parentField: "ville_id" }); }} className="p-1 text-green-500 hover:bg-green-50 rounded" title="Ajouter un quartier">
                           <Plus className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
-                    {Array.isArray(s.blocs) && (
-                      <div className="pl-12 pb-2 space-y-1">
-                        {s.blocs.map((b) => (
-                          <div key={b.id} className="flex items-center justify-between py-0.5 text-xs text-gray-600">
-                            <span>{b.nom}</span>
-                            <div className="flex gap-1">
-                              <button onClick={() => openModal("edit", "blocs-campus", { item: b, defaultParent: s.id, parentField: "section_campus_id" })} className="p-0.5 text-blue-400 hover:bg-blue-50 rounded">
-                                <Edit3 className="w-3 h-3" />
-                              </button>
-                              <button onClick={() => deleteWithConfirm("blocs-campus", b)} className="p-0.5 text-red-400 hover:bg-red-50 rounded">
-                                <Trash2 className="w-3 h-3" />
-                              </button>
+                    {expandedMid === v.id && (
+                      <div className="pl-14 pb-2 space-y-1">
+                        {Array.isArray(v.quartiers) && v.quartiers.length > 0 ? (
+                          v.quartiers.map((q) => (
+                            <div key={q.id} className="flex items-center justify-between py-1 text-sm text-gray-600">
+                              <span>{q.nom}</span>
+                              <div className="flex gap-1">
+                                <button onClick={() => openModal("edit", "quartiers", { item: q, defaultParent: v.id, parentField: "ville_id" })} className="p-1 text-blue-500 hover:bg-blue-50 rounded" title="Modifier">
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                </button>
+                                <button onClick={() => deleteWithConfirm("quartiers", q)} className="p-1 text-red-500 hover:bg-red-50 rounded" title="Supprimer">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                        <button
-                          onClick={() => openModal("create", "blocs-campus", { parent: s, parentField: "section_campus_id" })}
-                          className="text-xs text-blue-600 hover:text-blue-800 pl-2 py-1"
-                        >
-                          + Ajouter un bloc
-                        </button>
+                          ))
+                        ) : (
+                          <p className="text-gray-400 text-xs pl-2 py-2">Aucun quartier</p>
+                        )}
                       </div>
                     )}
                   </div>
                 ))}
                 <button
-                  onClick={() => openModal("create", "sections-campus", { defaultParent: item.id, parentField: "option_campus_id" })}
+                  onClick={() => openModal("create", "villes")}
                   className="text-xs text-blue-600 hover:text-blue-800 pl-8 py-2"
                 >
-                  + Ajouter une section
+                  + Ajouter une ville
                 </button>
-              </div>
-            )}
-
-            {entity === "sections-campus" && Array.isArray(item.blocs) && (
-              <div className="border-t border-gray-100">
-                <div className="pl-8 pb-2 space-y-1">
-                  {item.blocs.map((b) => (
-                    <div key={b.id} className="flex items-center justify-between py-1 text-sm text-gray-600">
-                      <span>{b.nom}</span>
-                      <div className="flex gap-1">
-                        <button onClick={() => openModal("edit", "blocs-campus", { item: b, defaultParent: item.id, parentField: "section_campus_id" })} className="p-1 text-blue-500 hover:bg-blue-50 rounded" title="Modifier">
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
-                        <button onClick={() => deleteWithConfirm("blocs-campus", b)} className="p-1 text-red-500 hover:bg-red-50 rounded" title="Supprimer">
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                  <button
-                    onClick={() => openModal("create", "blocs-campus", { parent: item, parentField: "section_campus_id" })}
-                    className="text-xs text-blue-600 hover:text-blue-800 pl-2 py-1"
-                  >
-                    + Ajouter un bloc
-                  </button>
-                </div>
               </div>
             )}
           </div>
@@ -426,9 +445,14 @@ export default function DataRegisterAdmin() {
 
     switch (entity) {
       case "etablissements":
-      case "quartiers":
+      case "villes":
       case "types-logement":
         return [{ name: "nom", label: "Nom", type: "text" }];
+      case "quartiers":
+        return [
+          { name: "ville_id", label: "Ville", type: "select", options: data.villes, defaultParentId: modal.type === "create" ? (parent?.id || defaultParent) : item?.ville_id },
+          { name: "nom", label: "Nom", type: "text" },
+        ];
       case "parcours":
         return [
           { name: "etablissement_id", label: "Établissement", type: "select", options: data.etablissements, defaultParentId: modal.type === "create" ? (parent?.id || defaultParent) : item?.etablissement_id },
@@ -520,8 +544,9 @@ export default function DataRegisterAdmin() {
       );
     }
 
-    const entity = activeTabDef.id;
+    const entity = activeTabDef.crud;
     const dataKey = activeTabDef.dataKey;
+    const renderEntity = activeTabDef.id === "logements" ? "types-logement" : activeTabDef.id;
 
     if (activeTabDef.nested) {
       return (
@@ -535,7 +560,7 @@ export default function DataRegisterAdmin() {
               <Plus className="w-4 h-4" /> Ajouter
             </button>
           </div>
-          {renderNestedList(entity, dataKey)}
+          {renderNestedList(renderEntity, dataKey)}
         </div>
       );
     }
@@ -577,7 +602,7 @@ export default function DataRegisterAdmin() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Gestion des données d'inscription</h1>
         <p className="text-gray-500 text-sm mt-1">
-          Gérez les établissements, parcours, niveaux, promotions et options de logement.
+          Gérez les établissements, promotions et logements (Campus & Ville).
         </p>
       </div>
 

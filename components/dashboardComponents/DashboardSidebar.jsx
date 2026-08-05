@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { url } from "../context/url.js";
 import { getAuthHeaders } from "../context/headers.jsx";
+import { usePermissions, SECTION_PERMISSIONS } from "../context/permissions";
 import {
   Home,
   Calendar,
@@ -67,6 +68,15 @@ export function DashboardSidebar({
 }) {
   const [activeItem, setActiveItem] = useState(currentSection);
   const [parametresExpanded, setParametresExpanded] = useState(false);
+  const { ready, can } = usePermissions();
+
+  const visibleMenuItems = (ready ? menuItems : []).filter((item) =>
+    can(SECTION_PERMISSIONS[item.id])
+  );
+  const visibleParametresItems = (ready ? parametresSubItems : []).filter(
+    (item) => can(SECTION_PERMISSIONS[item.id])
+  );
+  const showParametres = visibleParametresItems.length > 0;
 
   const getInitialExpanded = () => {
     if (typeof window === "undefined") return false;
@@ -79,7 +89,9 @@ export function DashboardSidebar({
   };
 
   const [isExpanded, setIsExpanded] = useState(getInitialExpanded);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(
+    () => typeof window !== "undefined" && window.innerWidth >= 1024
+  );
   const wasDesktopRef = useRef(false);
 
   useEffect(() => {
@@ -139,28 +151,21 @@ export function DashboardSidebar({
 
   const handleLogout = async () => {
     try {
-      const token = localStorage.getItem("auth_token");
-      if (token) {
-        await fetch(`${url}auth/logout`, {
-          method: "POST",
-          headers: getAuthHeaders(),
-        });
-      }
+      await fetch(`${url}auth/logout`, {
+        method: "POST",
+        credentials: "include",
+        headers: getAuthHeaders(),
+      });
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
     } finally {
-      localStorage.removeItem("auth_token");
       localStorage.removeItem("user");
       window.location.href = "/";
     }
   };
 
   const sidebarExpanded = isDesktop ? isExpanded : isOpen;
-  const sidebarWidth = isDesktop
-    ? sidebarExpanded
-      ? "w-64"
-      : "w-20"
-    : "w-full";
+  const sidebarWidth = sidebarExpanded ? "lg:w-64" : "lg:w-20";
 
   return (
     <>
@@ -175,14 +180,14 @@ export function DashboardSidebar({
         className={`
     fixed lg:static top-[140px] lg:top-0 bottom-16 lg:bottom-0 left-0 z-50 bg-white shadow-xl border-r border-gray-200
     flex flex-col transition-all duration-300 ease-in-out
-    ${sidebarWidth}
+    w-full ${sidebarWidth}
     ${isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
   `}
       >
         {isDesktop && (
           <button
             onClick={toggleExpand}
-            className="absolute top-20 -right-3 z-10 bg-white border border-gray-200 rounded-full p-1.5 shadow-md hover:shadow-lg transition-all duration-200 hover:bg-gray-50 group"
+            className="absolute top-[88px] -right-3 z-10 bg-white border border-gray-200 rounded-full p-1.5 shadow-md hover:shadow-lg transition-all duration-200 hover:bg-gray-50 group"
             aria-label={
               isExpanded ? "Réduire la sidebar" : "Agrandir la sidebar"
             }
@@ -195,7 +200,29 @@ export function DashboardSidebar({
           </button>
         )}
 
-        <nav className="mt-0 lg:mt-6 px-4 flex-1 overflow-y-auto lg:pb-0">
+        <div
+          className={`flex items-center gap-3 py-5 px-4 ${
+            sidebarExpanded ? "" : "justify-center px-2"
+          }`}
+        >
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/30 flex-shrink-0">
+            <span className="text-white font-extrabold text-lg">A</span>
+          </div>
+          <div
+            className={`transition-all duration-300 overflow-hidden ${
+              sidebarExpanded ? "opacity-100 max-w-full" : "opacity-0 max-w-0"
+            }`}
+          >
+            <p className="text-lg font-extrabold text-gray-900 leading-tight whitespace-nowrap">
+              AEDDI
+            </p>
+            <p className="text-[11px] text-gray-500 whitespace-nowrap">
+              Espace administration
+            </p>
+          </div>
+        </div>
+
+        <nav className="mt-0 px-4 flex-1 overflow-y-auto lg:pb-0">
           <div className="mb-6">
             <div
               className={`flex items-center justify-between mb-2 px-3 transition-all duration-300 ${
@@ -218,7 +245,7 @@ export function DashboardSidebar({
               )}
             </div>
             <ul className="space-y-1">
-              {menuItems.map((item) => (
+              {visibleMenuItems.map((item) => (
                 <li key={item.id}>
                   <button
                     onClick={() => handleMenuClick(item.id)}
@@ -227,7 +254,7 @@ export function DashboardSidebar({
                         ? "justify-between px-4 py-3"
                         : "justify-center px-2 py-3"
                     } ${
-                      activeItem === item.id
+                      activeItem === item.id || (item.id === "membres" && activeItem === "membres_email")
                         ? "bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 border-l-4 border-purple-500"
                         : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                     }`}
@@ -259,7 +286,8 @@ export function DashboardSidebar({
               ))}
 
               {/* Paramètres - juste un toggle, pas un lien */}
-              <li key="parametres">
+              {showParametres && (
+                <li key="parametres">
                 <button
                   onClick={toggleParametres}
                   className={`w-full flex items-center transition-all duration-200 rounded-lg ${
@@ -297,7 +325,7 @@ export function DashboardSidebar({
                 {/* Sous-menu Paramètres */}
                 {parametresExpanded && sidebarExpanded && (
                   <ul className="mt-1 space-y-1 pl-4 border-l-2 border-purple-200">
-                    {parametresSubItems.map((item) => (
+                    {visibleParametresItems.map((item) => (
                       <li key={item.id}>
                         <button
                           onClick={() => handleMenuClick(item.id)}
@@ -318,7 +346,7 @@ export function DashboardSidebar({
                 {/* Version condensée - afficher les sous-items en icônes quand sidebar réduite */}
                 {parametresExpanded && !sidebarExpanded && (
                   <ul className="mt-1 space-y-1">
-                    {parametresSubItems.map((item) => (
+                    {visibleParametresItems.map((item) => (
                       <li key={item.id}>
                         <button
                           onClick={() => handleMenuClick(item.id)}
@@ -336,6 +364,7 @@ export function DashboardSidebar({
                   </ul>
                 )}
               </li>
+            )}
             </ul>
           </div>
 

@@ -31,7 +31,7 @@ export function LoginForm({ onSwitchToRegister }) {
   };
 
   const handleForgotPassword = () => {
-    router.push('/forget-password');
+    router.push('/mot-de-passe-oublie');
   };
 
   const handleDevenirMembre = () => {

@@ -1,9 +1,7 @@
 "use client";
-import { DashboardContent } from "../../../../../components/dashboardComponents/DashboardContent.jsx";
+
+import UserDetail from "../../../../../components/dashboardComponents/UserDetail.jsx";
+
 export default function DashboardParametresPage() {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <DashboardContent />
-    </div>
-  );
+  return <UserDetail />;
 }

@@ -27,6 +27,7 @@ export function ManagePermission({ onSave, onBack } = {}) {
 
       const response = await fetch(`${url}permissions/get?${params}`, {
         method: "GET",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
       });
 
@@ -73,6 +74,7 @@ export function ManagePermission({ onSave, onBack } = {}) {
     try {
       const response = await fetch(`${url}permissions/reset`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           role: selectedRole,
@@ -102,6 +104,7 @@ export function ManagePermission({ onSave, onBack } = {}) {
     try {
       const response = await fetch(`${url}permissions/add`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });

@@ -69,6 +69,7 @@ export function ResetPassword({ email, token, onPasswordReset }) {
     try {
       const response = await fetch(`${url}auth/reset-password`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 
           'Content-Type': 'application/json',
           'Accept': 'application/json'
@@ -95,12 +96,10 @@ export function ResetPassword({ email, token, onPasswordReset }) {
         setMessage('✅ Mot de passe réinitialisé avec succès ! Redirection en cours...');
         Notify.success('Mot de passe réinitialisé avec succès !');
         
-        // Stocker le token d'authentification retourné par le serveur
-        if (data.token) {
-          localStorage.setItem('auth_token', data.token);
-          localStorage.setItem('user_id', data.user?.id);
-          localStorage.setItem('user_email', email);
-          localStorage.setItem('user_name', data.user?.name);
+        // L'authentification est désormais gérée par cookie httpOnly (backend).
+        // On conserve uniquement les infos utilisateur pour l'affichage.
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
         }
 
         setTimeout(() => {

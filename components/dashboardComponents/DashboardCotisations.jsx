@@ -20,6 +20,7 @@ import { getAuthHeaders } from "../context/headers.jsx";
 import { ShowCotisation } from "./ShowCotisation";
 import Notiflix from "notiflix";
 import { ModalConfirmation } from "../common/ModalConfirmation";
+import { usePermissions } from "../context/permissions";
 
 export function DashboardCotisations() {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -32,12 +33,14 @@ export function DashboardCotisations() {
   const [cotisationToDelete, setCotisationToDelete] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const [isAdmin, setIsAdmin] = useState(false);
-
-  useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-    setIsAdmin(user?.role === "ADMIN");
-  }, []);
+  const { ready, user, can } = usePermissions();
+  const isAdmin = user?.role === "ADMIN";
+  const isBureau = user?.role === "BUREAU";
+  const isManagement = isAdmin || isBureau;
+  const canCreate = ready && can("create_cotisation");
+  const canEdit = ready && can("edit_cotisation");
+  const canDelete = ready && can("delete_cotisation");
+  const showActions = canEdit || canDelete;
   const fetchCotisations = async () => {
     try {
       setLoading(true);
@@ -59,13 +62,7 @@ export function DashboardCotisations() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("auth_token");
-    if (token) {
-      fetchCotisations();
-    } else {
-      setError("Vous devez être connecté pour accéder à cette page");
-      setLoading(false);
-    }
+    fetchCotisations();
   }, []);
 
   const formatMontant = (montant) => {
@@ -115,7 +112,7 @@ export function DashboardCotisations() {
   );
 
   // ─── Cards stats depuis le backend ────────────────────────
-  const statsCards = isAdmin
+  const statsCards = isManagement
     ? [
         {
           label: "Total Cotisations",
@@ -198,7 +195,7 @@ export function DashboardCotisations() {
           <h1 className="text-lg font-semibold text-gray-900 sm:text-3xl sm:font-bold">
             Gestion des Cotisations
           </h1>
-          {isAdmin && (
+          {canCreate && (
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -284,7 +281,7 @@ export function DashboardCotisations() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Date fin
                 </th>
-                {isAdmin && (
+                {showActions && (
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
@@ -295,7 +292,7 @@ export function DashboardCotisations() {
               {loading ? (
                 <tr>
                   <td
-                    colSpan={isAdmin ? 7 : 6}
+                    colSpan={showActions ? 7 : 6}
                     className="px-6 py-8 text-center text-gray-500"
                   >
                     <div className="flex items-center justify-center space-x-2">
@@ -307,7 +304,7 @@ export function DashboardCotisations() {
               ) : cotisationsSafe.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={isAdmin ? 7 : 6}
+                    colSpan={showActions ? 7 : 6}
                     className="px-6 py-12 text-center text-gray-500"
                   >
                     <div className="flex flex-col items-center space-y-4">
@@ -347,7 +344,7 @@ export function DashboardCotisations() {
 
                       {/* Montant */}
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {isAdmin ? (
+                        {isManagement ? (
                           <div className="flex flex-col">
                             <span className="text-xs text-gray-500">
                               Novice:{" "}
@@ -367,19 +364,21 @@ export function DashboardCotisations() {
                             <span className="text-sm font-bold text-gray-900">
                               {formatMontant(cot.montant)}
                             </span>
-                            <span className="text-xs text-gray-500">
-                              Restant:{" "}
-                              <span className="font-semibold text-red-600">
-                                {formatMontant(item.montant_restant)}
+                            {item.statut === "reste" && (
+                              <span className="text-xs text-gray-500">
+                                Restant:{" "}
+                                <span className="font-semibold text-red-600">
+                                  {formatMontant(item.montant_restant)}
+                                </span>
                               </span>
-                            </span>
+                            )}
                           </div>
                         )}
                       </td>
 
                       {/* Paiements / Statut */}
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {isAdmin ? (
+                        {isManagement ? (
                           <div className="flex flex-col space-y-1">
                             {cot.all_paid ? (
                               <span className="inline-block bg-green-200 text-green-900 px-2 py-0.5 rounded-full font-semibold text-xs">
@@ -435,10 +434,6 @@ export function DashboardCotisations() {
                                 ? "⏳ Reste"
                                 : "❌ Non payé"}
                             </span>
-                            <span className="text-xs text-gray-500">
-                              {cot.membres_payes}/{cot.total_membres} membres
-                              payés
-                            </span>
                           </div>
                         )}
                       </td>
@@ -454,37 +449,43 @@ export function DashboardCotisations() {
                       </td>
                       {/* Actions*/}
 
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex items-center space-x-2">
-                          <button
-                            className="text-blue-600 hover:text-blue-900"
-                            title="Voir les détails"
-                            onClick={() => setShowCotisationId(cot.id)}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button
-                            className="text-green-600 hover:text-green-900"
-                            title="Modifier"
-                            onClick={() => {
-                              setCotisationToEdit(cot);
-                              setShowAddModal(true);
-                            }}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            className="text-red-600 hover:text-red-900"
-                            title="Supprimer"
-                            onClick={() => {
-                              setCotisationToDelete(cot);
-                              setShowDeleteModal(true);
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
+                      {showActions && (
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex items-center space-x-2">
+                            <button
+                              className="text-blue-600 hover:text-blue-900"
+                              title="Voir les détails"
+                              onClick={() => setShowCotisationId(cot.id)}
+                            >
+                              <Eye className="w-4 h-4" />
+                            </button>
+                            {canEdit && (
+                              <button
+                                className="text-green-600 hover:text-green-900"
+                                title="Modifier"
+                                onClick={() => {
+                                  setCotisationToEdit(cot);
+                                  setShowAddModal(true);
+                                }}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                            )}
+                            {canDelete && (
+                              <button
+                                className="text-red-600 hover:text-red-900"
+                                title="Supprimer"
+                                onClick={() => {
+                                  setCotisationToDelete(cot);
+                                  setShowDeleteModal(true);
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      )}
                     </motion.tr>
                   );
                 })
@@ -495,7 +496,7 @@ export function DashboardCotisations() {
       </motion.div>
 
       {/* MODALS */}
-      {isAdmin && (
+      {canCreate && (
         <AddCotisation
           isOpen={showAddModal}
           onClose={() => {
@@ -514,7 +515,7 @@ export function DashboardCotisations() {
         cotisations={cotisations}
       />
 
-      {isAdmin && (
+      {canDelete && (
         <ModalConfirmation
           isOpen={showDeleteModal}
           onClose={() => {

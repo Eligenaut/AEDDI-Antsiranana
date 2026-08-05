@@ -9,6 +9,7 @@ import { getAuthHeaders } from '../context/headers.jsx';
 import { AddTache } from './AddTache';
 import { ShowTache } from './ShowTache';
 import { ModalConfirmation } from '../common/ModalConfirmation.jsx';
+import { usePermissions } from '../context/permissions';
 import Notiflix from 'notiflix';
 
 const PRIORITY_LABELS = {
@@ -51,6 +52,11 @@ export function DashboardTaches() {
   const [filterStatut, setFilterStatut] = useState('');
   const [filterPriorite, setFilterPriorite] = useState('');
 
+  const { ready, can } = usePermissions();
+  const canCreate = ready && can('create_tache');
+  const canEdit = ready && can('edit_tache');
+  const canDelete = ready && can('delete_tache');
+
   const fetchTaches = async () => {
     try {
       setLoading(true);
@@ -76,13 +82,7 @@ export function DashboardTaches() {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token');
-    if (token) {
-      fetchTaches();
-    } else {
-      setError('Vous devez être connecté pour accéder à cette page');
-      setLoading(false);
-    }
+    fetchTaches();
   }, [filterStatut, filterPriorite]);
 
   const formatDate = (date) => {
@@ -144,15 +144,17 @@ export function DashboardTaches() {
           <div>
             <h1 className="text-lg font-semibold text-gray-900 mb-1 sm:text-3xl sm:font-bold sm:mb-2">Gestion des Tâches 📋</h1>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setShowAddModal(true)}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-2 py-1.5 text-xs rounded-lg flex items-center space-x-2 transition-colors sm:px-3 sm:py-2 sm:text-sm"
-          >
-            <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
-            <span>Nouvelle tâche</span>
-          </motion.button>
+                    {canCreate && (
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowAddModal(true)}
+              className="bg-purple-600 hover:bg-purple-700 text-white px-2 py-1.5 text-xs rounded-lg flex items-center space-x-2 transition-colors sm:px-3 sm:py-2 sm:text-sm"
+            >
+              <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Nouvelle tâche</span>
+            </motion.button>
+          )}
         </div>
       </motion.div>
 
@@ -315,8 +317,19 @@ export function DashboardTaches() {
                         <div className="text-xs text-gray-500 max-w-xs truncate">{tache.description}</div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{tache.assigned_to?.name || 'N/A'}</div>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-wrap gap-1">
+                        {tache.assigned_to?.length > 0
+                          ? tache.assigned_to.map((u) => (
+                              <span
+                                key={u.id}
+                                className="inline-block bg-purple-100 text-purple-700 rounded-full px-2 py-0.5 text-xs font-medium"
+                              >
+                                {u.name}
+                              </span>
+                            ))
+                          : <span className="text-sm text-gray-400">N/A</span>}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ${PRIORITY_COLORS[tache.priorite] || 'text-gray-500 bg-gray-100'}`}>
@@ -343,23 +356,27 @@ export function DashboardTaches() {
                         >
                           <Eye className="w-4 h-4" />
                         </button>
-                        <button
-                          className="text-green-600 hover:text-green-900"
-                          title="Modifier"
-                          onClick={() => fetchTacheById(tache.id)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          className="text-red-600 hover:text-red-900"
-                          title="Supprimer"
-                          onClick={() => {
-                            setTacheToDelete(tache);
-                            setShowDeleteModal(true);
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        {canEdit && (
+                          <button
+                            className="text-green-600 hover:text-green-900"
+                            title="Modifier"
+                            onClick={() => fetchTacheById(tache.id)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            className="text-red-600 hover:text-red-900"
+                            title="Supprimer"
+                            onClick={() => {
+                              setTacheToDelete(tache);
+                              setShowDeleteModal(true);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </motion.tr>

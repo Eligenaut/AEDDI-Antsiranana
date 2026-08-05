@@ -1,10 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { url } from "../context/url.js";
-import { getAuthHeaders } from "../context/headers.jsx";
-import { User, MessageCircle, Bell, LogOut } from "lucide-react";
+import { MessageCircle, Bell } from "lucide-react";
 import { UserAvatar } from "../uiComponents/UserAvatar.jsx";
 
 export function DashboardHeader({
@@ -42,27 +39,23 @@ export function DashboardHeader({
     return () => window.removeEventListener("notif:unread", read);
   }, [isClient]);
 
-  const handleLogout = async () => {
-    try {
-      const token = localStorage.getItem("auth_token");
-      if (token) {
-        await fetch(`${url}auth/logout`, {
-          method: "POST",
-          headers: getAuthHeaders(),
-        });
-      }
-    } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
-    } finally {
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("user");
-      window.location.href = "/";
-    }
+  const sectionTitles = {
+    accueil: "Tableau de bord",
+    membres: "Membres",
+    membres_email: "Emails autorisés",
+    cotisations: "Cotisations",
+    activites: "Activités",
+    taches: "Tâches",
+    moncompte: "Mon compte",
+    permissions: "Permissions",
+    dataregister: "Données d'inscription",
   };
+  const title = sectionTitles[currentSection] || "Tableau de bord";
+
   return (
     <>
-      <header className="bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 shadow-lg border-b border-purple-500">
-        <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 px-2 py-2 h-16 flex items-center justify-between">
+      <header className="relative z-30 bg-gradient-to-r from-violet-700 via-purple-600 to-indigo-700 shadow-lg shadow-purple-900/20 border-b border-white/10">
+        <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-violet-700 via-purple-600 to-indigo-700 px-2 py-2 h-14 flex items-center justify-between">
           <button
             onClick={onMenuClick}
             className="p-2 rounded-lg text-white hover:bg-purple-500 hover:text-white transition-colors"
@@ -92,8 +85,8 @@ export function DashboardHeader({
           </div>
           <UserAvatar user={user} size="lg" />
         </div>
-        <div className="lg:hidden h-16"></div>
-        <div className="lg:hidden px-4 py-2 border-t border-purple-500/30">
+        <div className="lg:hidden h-14"></div>
+        <div className="lg:hidden px-4 py-1.5 border-t border-purple-500/30">
           <div className="flex items-center justify-between">
             <button
               className="p-3 text-white hover:bg-purple-500 rounded-lg transition-colors"
@@ -155,20 +148,23 @@ export function DashboardHeader({
             </div>
           </div>
         </div>
-        <div className="hidden lg:block px-6 py-4">
+        <div className="hidden lg:block px-6 py-2.5">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-white">
-                  Tableau de bord AEDDI
+                <h2 className="text-lg sm:text-xl font-bold text-white leading-tight">
+                  {title}
                 </h2>
+                <p className="text-purple-200 text-[11px] leading-tight">
+                  AEDDI · Association des Étudiants Dynamique de Diego
+                </p>
               </div>
             </div>
             <div className="flex-1 max-w-md mx-8">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <svg
-                    className="h-5 w-5 text-gray-400"
+                    className="h-4 w-4 text-purple-200"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -184,51 +180,50 @@ export function DashboardHeader({
                 <input
                   type="text"
                   placeholder="Rechercher formations, événements, membres..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-300 focus:border-purple-300 transition-all bg-white/90 backdrop-blur-sm"
+                  className="w-full pl-10 pr-4 py-1.5 text-sm rounded-xl border border-white/20 bg-white/10 text-white placeholder-purple-200/70 focus:bg-white focus:text-gray-800 focus:placeholder-gray-400 focus:border-white focus:ring-2 focus:ring-purple-300 transition-all shadow-inner"
                 />
               </div>
             </div>
-            <div className="hidden lg:flex items-center space-x-4 ml-4">
+            <div className="hidden lg:flex items-center gap-2 ml-4">
               <button
-                className="relative p-2 text-white hover:text-purple-200 rounded-lg transition-colors flex items-center"
+                className="relative p-2 text-white bg-white/10 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-all hover:scale-105 active:scale-95 flex items-center"
                 title="Notifications"
                 onClick={onOpenNotifications}
               >
-                <Bell className="w-6 h-6" />
-                <span className="ml-2 hidden xl:inline">Notification</span>
+                <Bell className="w-5 h-5" />
+                <span className="ml-1.5 hidden xl:inline text-xs font-medium">
+                  Notifications
+                </span>
                 {activitesBadge > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white">
+                  <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-purple-600">
                     {activitesBadge > 99 ? "99+" : activitesBadge}
                   </span>
                 )}
               </button>
               <button
-                className="relative p-2 text-white hover:text-purple-200 rounded-lg transition-colors flex items-center"
+                className="relative p-2 text-white bg-white/10 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-all hover:scale-105 active:scale-95 flex items-center"
                 title="Messages"
               >
-                <MessageCircle className="w-6 h-6" />
-                <span className="ml-2 hidden xl:inline">Message</span>
-                <span className="absolute -top-1 -right-1 block h-2 w-2 rounded-full bg-blue-400 ring-2 ring-white"></span>
+                <MessageCircle className="w-5 h-5" />
+                <span className="ml-1.5 hidden xl:inline text-xs font-medium">
+                  Messages
+                </span>
+                <span className="absolute -top-1 -right-1 block h-2 w-2 rounded-full bg-blue-400 ring-2 ring-purple-600"></span>
               </button>
               <button
-                className="p-2 text-white hover:text-purple-200 rounded-lg transition-colors flex items-center"
+                className="p-1.5 pr-3 text-white bg-white/10 hover:bg-white/20 rounded-xl backdrop-blur-sm transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
                 title="Mon compte"
               >
-                <UserAvatar user={user} size="lg" />
-                <span className="ml-2 hidden xl:inline">Mon compte</span>
-              </button>
-              <button
-                onClick={handleLogout}
-                className="p-2 text-white hover:text-red-200 hover:bg-red-500/20 rounded-lg transition-colors flex items-center"
-                title="Se déconnecter"
-              >
-                <LogOut className="w-6 h-6" />
+                <UserAvatar user={user} size="md" />
+                <span className="hidden xl:inline text-xs font-medium">
+                  Mon compte
+                </span>
               </button>
             </div>
           </div>
         </div>
       </header>
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 shadow-t rounded-t-lg border-t border-purple-500/30 flex justify-around items-center py-2 lg:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-violet-700 via-purple-600 to-indigo-700 shadow-t rounded-t-lg border-t border-white/10 flex justify-around items-center py-2 lg:hidden">
         <button
           className={`flex flex-col items-center transition-colors ${
             currentSection === "accueil"

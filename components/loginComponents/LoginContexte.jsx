@@ -11,15 +11,15 @@ export function useLogin() {
   return useContext(LoginContext);
 }
 
-const sendFcmToken = async (authToken) => {
+const sendFcmToken = async () => {
   try {
     const fcmToken = localStorage.getItem("fcm_token");
     if (!fcmToken) return;
     await fetch(`${url}fcm-token`, {
       method: "POST",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${authToken}`,
       },
       body: JSON.stringify({ fcm_token: fcmToken }),
     });
@@ -39,15 +39,15 @@ export function LoginProvider({ children }) {
     try {
       const response = await fetch(`${url}auth/login`, {
         method: "POST",
+        credentials: "include",
         headers: baseHeaders,
         body: JSON.stringify({ email, password }),
       });
       const data = await response.json();
       if (data.success) {
-        localStorage.setItem("auth_token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
         setUser(data.user);
-        await sendFcmToken(data.token);
+        await sendFcmToken();
         Notify.success("Connexion réussie !");
         router.push("/dashboard");
         return { success: true };
@@ -76,6 +76,7 @@ export function LoginProvider({ children }) {
 
       const response = await fetch(`${url}auth/google/mobile`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id_token: googleUser.idToken,
@@ -88,10 +89,9 @@ export function LoginProvider({ children }) {
       const data = await response.json();
 
       if (data.success) {
-        localStorage.setItem("auth_token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
         setUser(data.user);
-        await sendFcmToken(data.token);
+        await sendFcmToken();
         Notify.success("Connexion Google réussie !");
         router.push("/dashboard");
       } else {
@@ -105,13 +105,12 @@ export function LoginProvider({ children }) {
     }
   };
 
-  // ─── Appelé depuis la page /auth/google/callback ──────
-  const connecterGoogleCallback = async (token, userData) => {
+  // ─── Appelé depuis la page /auth/google/success ──────
+  const connecterGoogleCallback = async (userData) => {
     try {
-      localStorage.setItem("auth_token", token);
       localStorage.setItem("user", JSON.stringify(userData));
       setUser(userData);
-      await sendFcmToken(token);
+      await sendFcmToken();
       Notify.success("Connexion Google réussie !");
       router.push("/dashboard");
       return { success: true };
@@ -121,8 +120,16 @@ export function LoginProvider({ children }) {
     }
   };
 
-  const deconnecter = () => {
-    localStorage.removeItem("auth_token");
+  const deconnecter = async () => {
+    try {
+      await fetch(`${url}auth/logout`, {
+        method: "POST",
+        credentials: "include",
+        headers: baseHeaders,
+      });
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion:", error);
+    }
     localStorage.removeItem("user");
     localStorage.removeItem("fcm_token");
     setUser(null);

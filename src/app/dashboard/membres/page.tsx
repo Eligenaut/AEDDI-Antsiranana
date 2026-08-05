@@ -1,11 +1,7 @@
 'use client';
 
-import { DashboardContent } from '../../../../components/dashboardComponents/DashboardContent.jsx';
-export default function DashboardMembresPage() {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <DashboardContent />
-    </div>
-  );
-}
+import { DashboardUser } from '../../../../components/dashboardComponents/DashboardUser.jsx';
 
+export default function DashboardMembresPage() {
+  return <DashboardUser />;
+}

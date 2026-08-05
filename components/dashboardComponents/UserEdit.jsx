@@ -9,6 +9,7 @@ import {
   quartiers,
   getNiveauxOptions,
   getPromotionsOptions,
+  refreshData,
 } from "../loginComponents/DataRegister";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -57,7 +58,7 @@ const Label = ({ children, required }) => (
 const Input = ({ ...props }) => (
   <input
     {...props}
-    className="w-full px-3 py-2 border border-gray-400 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+    className="w-full px-3 py-2 border border-gray-400 rounded-lg text-black font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
   />
 );
 
@@ -65,7 +66,7 @@ const Input = ({ ...props }) => (
 const Select = ({ children, ...props }) => (
   <select
     {...props}
-    className="w-full px-3 py-2 border border-gray-400 rounded-lg text-gray-900 font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+    className="w-full px-3 py-2 border border-gray-400 rounded-lg text-black font-medium focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
   >
     {children}
   </select>
@@ -97,7 +98,7 @@ export default function UserEdit({
     parcours: "",
     niveau: "",
     promotion: "",
-    logement: "campus",
+    logement: "",
     blocCampus: "",
     quartier: "",
     image: null,
@@ -110,17 +111,76 @@ export default function UserEdit({
   const [selectedEtablissement, setSelectedEtablissement] = useState("");
   const [selectedParcours, setSelectedParcours] = useState("");
   const [selectedCampusType, setSelectedCampusType] = useState("");
+  const [selectedSection, setSelectedSection] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
+  const [dataReady, setDataReady] = useState(false);
 
   useEffect(() => setMounted(true), []);
 
-  useEffect(() => {
-    if (!mounted || !isOpen || !userId) return;
+  useEffect(() => { refreshData().then(() => setDataReady(true)); }, []);
 
-    const fetchMemberData = async () => {
+  useEffect(() => {
+    if (!mounted) return;
+
+    if (userId && isOpen) {
+      fetchMemberData();
+      return;
+    }
+
+    if (initialData?.nom) {
+      setFormData({
+        role: initialData.role || "MEMBER",
+        sub_role: Array.isArray(initialData.sub_role) ? initialData.sub_role : [],
+        nom: initialData.nom || "",
+        prenom: initialData.prenom || "",
+        email: initialData.email || "",
+        telephone: initialData.telephone || "",
+        etablissement: initialData.etablissement || "",
+        parcours: initialData.parcours || "",
+        niveau: initialData.niveau || "",
+        promotion: initialData.promotion || "",
+        logement: initialData.logement || "",
+        blocCampus: initialData.blocCampus || initialData.bloc_campus || "",
+        quartier: initialData.quartier || "",
+        image: null,
+      });
+      setSelectedEtablissement(initialData.etablissement || "");
+      setSelectedParcours(initialData.parcours || "");
+      setImagePreview(initialData.avatar || null);
+      if (initialData.logement === "campus") {
+        const blocName = initialData.blocCampus || initialData.bloc_campus || "";
+        const optName = initialData.option_campus || "";
+        const secName = initialData.section_campus || "";
+
+        if (optName && optionsCampus[optName]) {
+          setSelectedCampusType(optName);
+          if (secName && optionsCampus[optName]?.sections?.[secName]) {
+            setSelectedSection(secName);
+          }
+        } else if (blocName) {
+          const type = Object.keys(optionsCampus).find((key) =>
+            Object.values(optionsCampus[key]?.sections || {}).some((blocs) =>
+              blocs.includes(blocName),
+            ),
+          );
+          if (type) {
+            setSelectedCampusType(type);
+            const sec = Object.keys(optionsCampus[type].sections).find((s) =>
+              optionsCampus[type].sections[s].includes(blocName),
+            );
+            if (sec) setSelectedSection(sec);
+          }
+        }
+      }
+      setLoadingData(false);
+    }
+  }, [isOpen, userId, mounted, initialData, dataReady]);
+
+  const fetchMemberData = async () => {
       setLoadingData(true);
       try {
         const res = await fetch(`${url}members/${userId}`, {
+          credentials: "include",
           headers: getAuthHeaders(),
         });
         const data = await res.json();
@@ -150,11 +210,30 @@ export default function UserEdit({
           setSelectedParcours(d.parcours || "");
           setImagePreview(d.avatar || null);
 
-          if (d.bloc_campus) {
-            const type = Object.keys(optionsCampus).find((key) =>
-              optionsCampus[key].options.includes(d.bloc_campus),
-            );
-            setSelectedCampusType(type || "");
+          if (d.logement === "campus") {
+            const bloc = d.bloc_campus || "";
+            const opt = d.option_campus || "";
+            const sec = d.section_campus || "";
+
+            if (opt && optionsCampus[opt]) {
+              setSelectedCampusType(opt);
+              if (sec && optionsCampus[opt]?.sections?.[sec]) {
+                setSelectedSection(sec);
+              }
+            } else if (bloc) {
+              const type = Object.keys(optionsCampus).find((key) =>
+                Object.values(optionsCampus[key]?.sections || {}).some((blocs) =>
+                  blocs.includes(bloc),
+                ),
+              );
+              if (type) {
+                setSelectedCampusType(type);
+                const s = Object.keys(optionsCampus[type].sections).find((s) =>
+                  optionsCampus[type].sections[s].includes(bloc),
+                );
+                if (s) setSelectedSection(s);
+              }
+            }
           }
         }
       } catch (err) {
@@ -163,9 +242,6 @@ export default function UserEdit({
         setLoadingData(false);
       }
     };
-
-    fetchMemberData();
-  }, [isOpen, userId, mounted]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -221,6 +297,13 @@ export default function UserEdit({
   const handleCampusTypeChange = (e) => {
     const value = e.target.value;
     setSelectedCampusType(value);
+    setSelectedSection("");
+    setFormData((prev) => ({ ...prev, blocCampus: "" }));
+  };
+
+  const handleSectionChange = (e) => {
+    const value = e.target.value;
+    setSelectedSection(value);
     setFormData((prev) => ({ ...prev, blocCampus: "" }));
   };
 
@@ -246,12 +329,6 @@ export default function UserEdit({
       );
       return;
     }
-    if (formData.logement === "ville" && !formData.quartier) {
-      setError(
-        'Le champ "quartier" est requis lorsque le logement est en ville.',
-      );
-      return;
-    }
 
     setSaving(true);
     try {
@@ -266,7 +343,7 @@ export default function UserEdit({
         promotion: formData.promotion,
         logement: formData.logement,
         blocCampus: formData.logement === "campus" ? formData.blocCampus : "",
-        quartier: formData.logement === "ville" ? formData.quartier : "",
+        quartier: formData.quartier,
       };
 
       if (showRole) {
@@ -286,8 +363,8 @@ export default function UserEdit({
         payload.imageName = formData.image.name;
         payload.imageType = formData.image.type;
       }
-      const response = `${url}members/${userId}`;
-      const res = await fetch(response, {
+      const endpoint = userId ? `${url}members/${userId}` : `${url}auth/me`;
+      const res = await fetch(endpoint, {
         method: "PUT",
         headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
         credentials: "include",
@@ -327,6 +404,7 @@ export default function UserEdit({
           setError("");
           setSuccess("");
           setImagePreview(null);
+          setSelectedSection("");
           onCancel();
           onClose();
           setNotifyCloseOnExit(false);
@@ -486,14 +564,15 @@ export default function UserEdit({
                       <div>
                         <Label>Établissement</Label>
                         <Select
+                          key={`etab-${dataReady}`}
                           value={selectedEtablissement}
                           onChange={handleEtablissementChange}
                         >
                           <option value="">Sélectionner</option>
-                          {/* ✅ etablissements est un objet */}
+                          {/* ✅ etablissements est un objet, la clé est le nom */}
                           {Object.entries(etablissements).map(([key, val]) => (
                             <option key={key} value={key}>
-                              {val.nom}
+                              {key}
                             </option>
                           ))}
                         </Select>
@@ -564,33 +643,42 @@ export default function UserEdit({
                     <h3 className="text-base font-bold text-gray-800 mb-3 pb-1 border-b border-gray-200">
                       Logement
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label>Type de logement</Label>
-                        <Select
-                          name="logement"
-                          value={formData.logement}
-                          onChange={handleChange}
-                        >
-                          <option value="campus">Campus</option>
-                          <option value="ville">Ville</option>
-                        </Select>
-                      </div>
+                    <div className="space-y-4">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.logement === "campus"}
+                          onChange={(e) => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              logement: e.target.checked ? "campus" : "",
+                              blocCampus: e.target.checked ? prev.blocCampus : "",
+                            }));
+                            if (!e.target.checked) {
+                              setSelectedCampusType("");
+                            }
+                          }}
+                          className="w-5 h-5 border-gray-400 rounded"
+                        />
+                        <span className="text-sm font-semibold text-gray-800">
+                          Je loge au campus
+                        </span>
+                      </label>
 
                       {formData.logement === "campus" && (
-                        <>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pl-7">
                           <div>
                             <Label>Type de campus</Label>
                             <Select
+                              key={`campus-${dataReady}`}
                               value={selectedCampusType}
                               onChange={handleCampusTypeChange}
                             >
                               <option value="">Sélectionner</option>
-                              {/* ✅ optionsCampus est un objet avec nom et options */}
                               {Object.entries(optionsCampus).map(
-                                ([key, val]) => (
+                                ([key]) => (
                                   <option key={key} value={key}>
-                                    {val.nom}
+                                    {key}
                                   </option>
                                 ),
                               )}
@@ -598,44 +686,59 @@ export default function UserEdit({
                           </div>
                           {selectedCampusType && (
                             <div>
-                              <Label required>Bloc campus</Label>
+                              <Label>Bâtiment</Label>
                               <Select
-                                name="blocCampus"
-                                value={formData.blocCampus}
-                                onChange={handleChange}
+                                value={selectedSection}
+                                onChange={handleSectionChange}
                               >
                                 <option value="">Sélectionner</option>
-                                {optionsCampus[selectedCampusType]?.options.map(
-                                  (opt) => (
-                                    <option key={opt} value={opt}>
-                                      {opt}
+                                {Object.keys(optionsCampus[selectedCampusType]?.sections || {}).map(
+                                  (s) => (
+                                    <option key={s} value={s}>
+                                      {s}
                                     </option>
                                   ),
                                 )}
                               </Select>
                             </div>
                           )}
-                        </>
-                      )}
-
-                      {formData.logement === "ville" && (
-                        <div>
-                          <Label required>Quartier</Label>
-                          <Select
-                            name="quartier"
-                            value={formData.quartier}
-                            onChange={handleChange}
-                          >
-                            <option value="">Sélectionner un quartier</option>
-                            {/* ✅ quartiers est un tableau de strings */}
-                            {quartiers.map((q) => (
-                              <option key={q} value={q}>
-                                {q}
-                              </option>
-                            ))}
-                          </Select>
+                          {selectedSection && (
+                            <div>
+                              <Label required>Bloc</Label>
+                              <Select
+                                name="blocCampus"
+                                value={formData.blocCampus}
+                                onChange={handleChange}
+                              >
+                                <option value="">Sélectionner</option>
+                                {(optionsCampus[selectedCampusType]?.sections?.[selectedSection] || []).map(
+                                  (b) => (
+                                    <option key={b} value={b}>
+                                      {b}
+                                    </option>
+                                  ),
+                                )}
+                              </Select>
+                            </div>
+                          )}
                         </div>
                       )}
+
+                      <div className={formData.logement === "campus" ? "pl-7" : ""}>
+                        <Label required>Quartier</Label>
+                        <Select
+                          name="quartier"
+                          value={formData.quartier}
+                          onChange={handleChange}
+                        >
+                          <option value="">Sélectionner un quartier</option>
+                          {quartiers.map((q) => (
+                            <option key={q} value={q}>
+                              {q}
+                            </option>
+                          ))}
+                        </Select>
+                      </div>
                     </div>
                   </div>
 

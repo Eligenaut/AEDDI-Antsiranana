@@ -141,9 +141,18 @@ export function ShowTache({ isOpen, onClose, tacheId }) {
                         <User className="w-4 h-4" />
                         <span>Assigné à</span>
                       </div>
-                      <p className="font-semibold text-gray-900">
-                        {tache.assigned_to?.name || "N/A"}
-                      </p>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {tache.assigned_to?.length > 0
+                          ? tache.assigned_to.map((u) => (
+                              <span
+                                key={u.id}
+                                className="inline-block bg-purple-100 text-purple-700 rounded-full px-2 py-0.5 text-xs font-medium"
+                              >
+                                {u.name}
+                              </span>
+                            ))
+                          : <p className="font-semibold text-gray-900">N/A</p>}
+                      </div>
                     </div>
 
                     <div className="bg-gray-50 rounded-lg p-4">

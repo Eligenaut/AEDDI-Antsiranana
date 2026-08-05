@@ -2,8 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { url, url_frontend } from '../context/url.js';
-import { baseHeaders } from '../context/headers.jsx';
+import { url } from '../context/url.js';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import { useRouter } from 'next/navigation.js';
 
@@ -22,7 +21,6 @@ export function ForgetPassword({ onBack }) {
     email: ''
   });
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -39,13 +37,11 @@ export function ForgetPassword({ onBack }) {
       const response = await fetch(`${url}auth/forgot-password`, {
         method: 'POST',
         headers: {
-          ...baseHeaders,
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
         body: JSON.stringify({ 
-          email: formData.email,
-          url_frontend: url_frontend
+          email: formData.email
         }),
       });
 
@@ -59,8 +55,8 @@ export function ForgetPassword({ onBack }) {
       const data = await response.json();
 
       if (data.success) {
-        Notify.success(data.message || 'Email de réinitialisation envoyé avec succès');
-        setSuccess(true);
+        Notify.success('Code de réinitialisation envoyé !');
+        router.push(`/verification-code?email=${encodeURIComponent(formData.email)}`);
       } else {
         Notify.failure(data.message || 'Erreur lors de l\'envoi de l\'email');
       }
@@ -94,80 +90,51 @@ export function ForgetPassword({ onBack }) {
           Réinitialiser votre mot de passe
         </h1>
 
-        {!success ? (
-          <>
-            <p className="text-center text-gray-600 text-sm mb-6 px-2">
-              Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.
-            </p>
+        <p className="text-center text-gray-600 text-sm mb-6 px-2">
+          Entrez votre adresse email et nous vous enverrons un code pour réinitialiser votre mot de passe.
+        </p>
 
-            <motion.form
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
-              className="space-y-4 w-full px-0"
-              onSubmit={handleEmailSubmit}
-            >
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Adresse email
-                </label>
-                <div className="relative">
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="w-full p-3 pl-10 border border-gray-300 rounded-[6px] focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 text-gray-900 shadow-sm transition-all"
-                    placeholder="exemple@aeddi.mg"
-                    required
-                  />
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M4 4h16v16H4z"/>
-                      <path d="M22 6l-10 7L2 6"/>
-                    </svg>
-                  </span>
-                </div>
-              </div>
+        <motion.form
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+          className="space-y-4 w-full px-0"
+          onSubmit={handleEmailSubmit}
+        >
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Adresse email
+            </label>
+            <div className="relative">
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="w-full p-3 pl-10 border border-gray-300 rounded-[6px] focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white/70 text-gray-900 shadow-sm transition-all"
+                placeholder="exemple@aeddi.mg"
+                required
+              />
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 4h16v16H4z"/>
+                  <path d="M22 6l-10 7L2 6"/>
+                </svg>
+              </span>
+            </div>
+          </div>
 
-              <button
-                type="submit"
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold py-3 rounded-[6px] shadow-lg transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={loading}
-              >
-                {loading && (
-                  <span className="animate-spin inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full"></span>
-                )}
-                {loading ? 'Envoi...' : 'Envoyer le lien'}
-              </button>
-            </motion.form>
-          </>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-center w-full"
+          <button
+            type="submit"
+            className="w-full bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white font-bold py-3 rounded-[6px] shadow-lg transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading}
           >
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">✅</span>
-            </div>
-            <h2 className="text-xl font-bold text-gray-800 mb-3">
-              Email envoyé avec succès !
-            </h2>
-            <p className="text-gray-600 text-sm mb-4">
-              Nous avons envoyé un lien de réinitialisation à :
-            </p>
-            <p className="text-gray-800 font-semibold mb-6">
-              {formData.email}
-            </p>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-blue-800">
-                📧 Vérifiez votre boîte mail et vos spams. Le lien expire dans 24 heures.
-              </p>
-            </div>
-          </motion.div>
-        )}
+            {loading && (
+              <span className="animate-spin inline-block w-5 h-5 border-2 border-white border-t-transparent rounded-full"></span>
+            )}
+            {loading ? 'Envoi...' : 'Envoyer le code'}
+          </button>
+        </motion.form>
 
         {/* Bouton retour */}
         <motion.div

@@ -18,7 +18,7 @@ function GoogleNotFoundContent() {
         <p className="mb-6">Vous pouvez devenir membre en créant un compte :</p>
         <button
           className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
-          onClick={() => router.push(`/register?email=${encodeURIComponent(email)}`)}
+          onClick={() => router.push(`/devenir-membre?email=${encodeURIComponent(email)}`)}
         >
           Devenir membre
         </button>
